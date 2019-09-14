@@ -1,2 +1,2 @@
-# bitmit
+# bigmit
 retro computing code
