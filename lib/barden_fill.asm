@@ -1,16 +1,21 @@
+; William Barden, Jr. 'TRS-80 Assembly-Language Programming', 1979 pg 189.
+;
 ; Fills a block of memory with a given 8-bit value.
-; ENTRY: (D)  data to be filled
-;        (HL) addr start of fill area
-;        (BC) # of bytes to fill
-;        CALL FILL
-; EXIT:  (D)  same
-;        (HL) addr end of fill area + 1
-;        (BC) 0
-;        (A)  0
-fill:	ld (hl),d	; Actually do fill
+;
+; Uses: a, bc, d, hl
+;
+; Entry: d   data to be filled (the 8-bit value)
+;        hl  start addr of the fill area
+;        bc  # of bytes to fill
+; Exit:  d   same
+;        hl  end addr of the fill area + 1
+;        bc  0
+;        a   0
+barden_fill:
+	ld (hl),d	; Actually do fill
 	inc hl		; To next addr
 	dec bc		; Count down byte count
 	ld a,b		; Goto FILL if byte count != 0
 	or c
-	jr nz,fill
+	jr nz,barden_fill
 	ret
