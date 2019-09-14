@@ -1,4 +1,9 @@
-; Only works on Model III or Model 4
+; Timer test ticking up a character on the screen.
+;
+; Expect a banner at the top and a single character that changes on the
+; second line
+;
+; Only works on Model 3 or Model 4
         org     0x4a00
 video   equ     0x3c00
         jmp     cls ; Skip interrupt handler; jump to setup code
