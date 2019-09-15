@@ -64,12 +64,10 @@ draw_char	macro	side,?hh1,?hh2,?hh3
 		ret
 ?hh2:		dec c
 		jr nz,?hh3
-		add_bot_`side`dot
-		add_mid_`side`dot
+		add_bot2_`side`dot
 		ld (ix),a
 		ld a,b
-		add_top_`side`dot
-		add_mid_`side`dot
+		add_top2_`side`dot
 		ld (iy),a
 		ret
 ?hh3:		add_all_`side`dot

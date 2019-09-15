@@ -11,17 +11,29 @@ add_all_ldot	macro
 add_all_rdot	macro
 		or      $aa
 		endm
-add_mid_ldot	macro
-		or      $84
+add_top2_ldot	macro
+		or      $85
 		endm
-add_mid_rdot	macro
-		or      $88
+add_top2_rdot	macro
+		or      $8a
+		endm
+add_bot2_ldot	macro
+		or      $94
+		endm
+add_bot2_rdot	macro
+		or      $a8
 		endm
 add_top_ldot	macro
 		or      $81
 		endm
 add_top_rdot	macro
 		or      $82
+		endm
+add_mid_ldot	macro
+		or      $84
+		endm
+add_mid_rdot	macro
+		or      $88
 		endm
 add_bot_ldot	macro
 		or      $90
