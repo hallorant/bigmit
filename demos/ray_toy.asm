@@ -81,7 +81,7 @@ draw_char	macro	side,?hh1,?hh2,?hh3
 char_above_addr	defw	0
 char_below_addr	defw	0
 
-next_char_pos	macro
+next_char_pos:
 		ld de,64
 		ld hl,(char_below_addr)
 		add hl,de
@@ -91,7 +91,7 @@ next_char_pos	macro
 		ld (char_above_addr),hl
 		ld ix,(char_above_addr)
 		ld iy,(char_below_addr)
-		endm
+		ret
 
 ; Draw a vertical line with the middle postion at (ix) on the
 ; left-hand-side graphics position of the character.
@@ -99,16 +99,18 @@ next_char_pos	macro
 ray_lhs:	draw_mid_char l
 		ld (char_above_addr),ix
 		ld (char_below_addr),ix
-		next_char_pos
+		; We have five lines above and below the center line.
+		call next_char_pos
 		draw_char l
-		next_char_pos
+		call next_char_pos
 		draw_char l
-		next_char_pos
+		call next_char_pos
 		draw_char l
-		next_char_pos
+		call next_char_pos
 		draw_char l
-		next_char_pos
+		call next_char_pos
 		draw_char l
+		ret
 
 ; Draw a vertical line with the middle postion at (ix) on the
 ; right-hand-side graphics position of the character.
@@ -116,15 +118,16 @@ ray_lhs:	draw_mid_char l
 ray_rhs:	draw_mid_char r
 		ld (char_above_addr),ix
 		ld (char_below_addr),ix
-		next_char_pos
+		; We have five lines above and below the center line.
+		call next_char_pos
 		draw_char r
-		next_char_pos
+		call next_char_pos
 		draw_char r
-		next_char_pos
+		call next_char_pos
 		draw_char r
-		next_char_pos
+		call next_char_pos
 		draw_char r
-		next_char_pos
+		call next_char_pos
 		draw_char r
 		ret
 main:
