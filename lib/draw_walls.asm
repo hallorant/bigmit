@@ -10,10 +10,16 @@
 ;                       position with the given half-height.
 import 'graphics_dots.asm'
 
-; The center character position has one or two half-height.
-; side = 'l' for left, or 'r' for right
+; Draws the center character position of a solid wall. The center
+; character position, unlike all others, has only a one or two
+; half-height. 'side' must be either 'l' for left or 'r' for right
+; Entry:
+;  ix = addr of the center char position.
+;  iy = addr of the half-height of the desired line
+; Exit:
+;  c = the remaining half-height of the desired line
 ; @private
-draw_center_wall_seg	macro	side,?hh1,?hh2
+solid_center_wall_seg	macro	side,?hh1,?hh2
 			ld a,(iy)
 			; We'll hold the remaining half-height in c.
 			ld c,a
@@ -31,11 +37,15 @@ draw_center_wall_seg	macro	side,?hh1,?hh2
 			ld (ix),a
 			endm
 
-; side = 'l' for left, or 'r' for right
-; ix = addr of the char position above the center.
-; iy = addr of the char position below the center.
+; Draws a segment of the solid wall above and below the center character
+; position. 'side' must be either 'l' for left, or 'r' for right
+; Entry:
+;  ix = addr of the char position above the center.
+;  iy = addr of the char position below the center.
+; Exit:
+;  c = the remaining half-height of the desired line
 ; @private
-draw_wall_seg		macro	side,?hh1,?hh2,?hh3
+solid_wall_seg		macro	side,?hh1,?hh2,?hh3
 			dec c
 			jr nz,?hh1
 			ret
@@ -67,6 +77,9 @@ draw_wall_seg		macro	side,?hh1,?hh2,?hh3
 
 ; Stepping up and down from the address passed the the ray drawing routine
 ; by a line (64 bytes) this routine updates the memory locations:
+; Exit:
+;  ix = addr of the char position above the center.
+;  iy = addr of the char position below the center.
 ; @private
 char_above_addr	defw	0
 char_below_addr	defw	0
@@ -85,39 +98,39 @@ next_char_pos:	ld de,64
 ; left-hand-side graphics position of the character.
 ; (iy) gives the half-height of the vertical line (0,17).
 ; @public
-draw_solid_wall_lhs:	draw_center_wall_seg l
+draw_solid_wall_lhs:	solid_center_wall_seg l
 			ld (char_above_addr),ix
 			ld (char_below_addr),ix
 			; We have five lines above and below the center line.
 			call next_char_pos
-			draw_wall_seg l
+			solid_wall_seg l
 			call next_char_pos
-			draw_wall_seg l
+			solid_wall_seg l
 			call next_char_pos
-			draw_wall_seg l
+			solid_wall_seg l
 			call next_char_pos
-			draw_wall_seg l
+			solid_wall_seg l
 			call next_char_pos
-			draw_wall_seg l
+			solid_wall_seg l
 			ret
 
 ; Draw a vertical line with the middle postion at (ix) on the
 ; right-hand-side graphics position of the character.
 ; (iy) gives the half-height of the vertical line (0,17).
 ; @public
-draw_solid_wall_rhs:	draw_center_wall_seg r
+draw_solid_wall_rhs:	solid_center_wall_seg r
 			ld (char_above_addr),ix
 			ld (char_below_addr),ix
 			; We have five lines above and below the center line.
 			call next_char_pos
-			draw_wall_seg r
+			solid_wall_seg r
 			call next_char_pos
-			draw_wall_seg r
+			solid_wall_seg r
 			call next_char_pos
-			draw_wall_seg r
+			solid_wall_seg r
 			call next_char_pos
-			draw_wall_seg r
+			solid_wall_seg r
 			call next_char_pos
-			draw_wall_seg r
+			solid_wall_seg r
 			ret
 
