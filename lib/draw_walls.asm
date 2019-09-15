@@ -1,18 +1,35 @@
-; Draws vertical lines that act as walls for a ray caster.
+; Draws vertical lines that act as walls for a ray caster. Two types are
+; supported:
+;         solid: |    outline: ·
+;                | |             ·
+;                |             ·
+;
+; Note that the two types allow drawing of running into X or Y walls in the
+; raycaster.
+;
+; All lines may only take up 11 vertical character positions on the screen.
+; If displaying the top, then pass a character address on the 6th line of the
+; display (or back buffer representing the display.
 ;
 ; All of this is implementation details (up top) except:
 ;
-; draw_solid_wall_lhs : draws a vertical line in the left-hand-side
-;                       graphics centered on the passed character
-;                       position with the given half-height.
-; draw_solid_wall_rhs : draws a vertical line in the right-hand-side
-;                       graphics centered on the passed character
-;                       position with the given half-height.
+; draw_solid_wall_lhs   : draws a vertical line in the left-hand-side
+;                         graphics centered on the passed character
+;                         position with the given half-height.
+; draw_solid_wall_rhs   : draws a vertical line in the right-hand-side
+;                         graphics centered on the passed character
+;                         position with the given half-height.
+; draw_outline_wall_lhs : draws the top and bottom dot of a vertical line
+;                         in the left-hand-side graphics centered on the
+;                         passed character position with the given half-height.
+; draw_outline_wall_rhs : draws the top and bottom dot of a vertical line
+;                         in the right-hand-side graphics centered on the
+;                         passed character position with the given half-height.
 import 'graphics_dots.asm'
 
 ; Draws the center character position of a solid wall. The center
 ; character position, unlike all others, has only a one or two
-; half-height. 'side' must be either 'l' for left or 'r' for right
+; half-height. 'side' must be either 'l' for left or 'r' for right.
 ; Entry:
 ;  ix = addr of the center char position.
 ;  iy = addr of the half-height of the desired line
@@ -37,8 +54,41 @@ solid_center_wall_seg	macro	side,?hh1,?hh2
 			ld (ix),a
 			endm
 
+; Draws the outline at the center character position of a black wall,
+; if necessary. The center character position, unlike all others, has
+; only a one or two half-height. 'side' must be either 'l' for left
+; or 'r' for right.
+; Entry:
+;  ix = addr of the center char position.
+;  iy = addr of the half-height of the desired line
+; Exit:
+;  c = the remaining half-height of the desired line
+; @private
+outline_center_wall_seg	macro	side,?hh1,?hh2,?hh3
+			ld a,(iy)
+			; We'll hold the remaining half-height in c.
+			ld c,a
+			or a
+			; Check if the half-height is zero.
+			jr nz,?hh1
+			ret
+?hh1:			dec c
+			jr nz,?hh2
+			ld a,(ix)
+			add_mid_`side`dot
+			ld (ix),a
+			ret
+?hh2:			dec c
+			jr nz,?hh3
+			ld a,(ix)
+			add_topbot_`side`dot
+			ld (ix),a
+			ret
+?hh3:			nop
+			endm
+
 ; Draws a segment of the solid wall above and below the center character
-; position. 'side' must be either 'l' for left, or 'r' for right
+; position. 'side' must be either 'l' for left or 'r' for right.
 ; Entry:
 ;  ix = addr of the char position above the center.
 ;  iy = addr of the char position below the center.
@@ -75,6 +125,46 @@ solid_wall_seg		macro	side,?hh1,?hh2,?hh3
 			ld (iy),a
 			endm
 
+; Draws the outline of a black wall above and below the center character
+; position, if necessary. 'side' must be either 'l' for left
+; or 'r' for right.
+; Entry:
+;  ix = addr of the char position above the center.
+;  iy = addr of the char position below the center.
+; Exit:
+;  c = the remaining half-height of the desired line
+; @private
+outline_wall_seg	macro	side,?hh2,?hh3,?hh4
+			dec c
+			jr nz,?hh2
+			ld a,(ix)
+			add_bot_`side`dot
+			ld (ix),a
+			ld a,(iy)
+			add_top_`side`dot
+			ld (iy),a
+			ret
+?hh2:			dec c
+			jr nz,?hh3
+			ld a,(ix)
+			add_mid_`side`dot
+			ld (ix),a
+			ld a,(iy)
+			add_mid_`side`dot
+			ld (iy),a
+			ret
+?hh3:			dec c
+			jr nz,?hh4
+			ld a,(ix)
+			add_top_`side`dot
+			ld (ix),a
+			ld a,(iy)
+			add_bot_`side`dot
+			ld (iy),a
+			ret
+?hh4:			nop
+			endm
+
 ; Stepping up and down from the address passed the the ray drawing routine
 ; by a line (64 bytes) this routine updates the memory locations:
 ; Exit:
@@ -97,6 +187,9 @@ next_char_pos:	ld de,64
 ; Draw a vertical line with the middle postion at (ix) on the
 ; left-hand-side graphics position of the character.
 ; (iy) gives the half-height of the vertical line (0,17).
+; Enter:
+;  ix = addr of the center char position.
+;  iy = addr of the half-height of the desired line
 ; @public
 draw_solid_wall_lhs:	solid_center_wall_seg l
 			ld (char_above_addr),ix
@@ -114,9 +207,35 @@ draw_solid_wall_lhs:	solid_center_wall_seg l
 			solid_wall_seg l
 			ret
 
+; Draw the outline of a vertical line with the middle postion
+; at (ix) on the left-hand-side graphics position of the character.
+; (iy) gives the half-height of the vertical line (0,17).
+; Enter:
+;  ix = addr of the center char position.
+;  iy = addr of the half-height of the desired line
+; @public
+draw_outline_wall_lhs:	outline_center_wall_seg l
+			ld (char_above_addr),ix
+			ld (char_below_addr),ix
+			; We have five lines above and below the center line.
+			call next_char_pos
+			outline_wall_seg l
+			call next_char_pos
+			outline_wall_seg l
+			call next_char_pos
+			outline_wall_seg l
+			call next_char_pos
+			outline_wall_seg l
+			call next_char_pos
+			outline_wall_seg l
+			ret
+
 ; Draw a vertical line with the middle postion at (ix) on the
 ; right-hand-side graphics position of the character.
 ; (iy) gives the half-height of the vertical line (0,17).
+; Enter:
+;  ix = addr of the center char position.
+;  iy = addr of the half-height of the desired line
 ; @public
 draw_solid_wall_rhs:	solid_center_wall_seg r
 			ld (char_above_addr),ix
@@ -132,5 +251,28 @@ draw_solid_wall_rhs:	solid_center_wall_seg r
 			solid_wall_seg r
 			call next_char_pos
 			solid_wall_seg r
+			ret
+
+; Draw the outline of a vertical line with the middle postion
+; at (ix) on the right-hand-side graphics position of the character.
+; (iy) gives the half-height of the vertical line (0,17).
+; Enter:
+;  ix = addr of the center char position.
+;  iy = addr of the half-height of the desired line
+; @public
+draw_outline_wall_rhs:	outline_center_wall_seg r
+			ld (char_above_addr),ix
+			ld (char_below_addr),ix
+			; We have five lines above and below the center line.
+			call next_char_pos
+			outline_wall_seg r
+			call next_char_pos
+			outline_wall_seg r
+			call next_char_pos
+			outline_wall_seg r
+			call next_char_pos
+			outline_wall_seg r
+			call next_char_pos
+			outline_wall_seg r
 			ret
 

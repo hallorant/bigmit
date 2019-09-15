@@ -41,4 +41,10 @@ add_bot_ldot	macro
 add_bot_rdot	macro
 		or      $a0
 		endm
+add_topbot_ldot	macro
+		or      $91
+		endm
+add_topbot_rdot	macro
+		or      $a2
+		endm
 ; -------------------------------------------

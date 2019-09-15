@@ -94,5 +94,68 @@ main:
 	ld iy,hh18
 	call draw_solid_wall_rhs
 
+	ld ix,screen_mid+40
+	ld iy,hh1
+	call draw_outline_wall_lhs
+	ld ix,screen_mid+40
+	ld iy,hh2
+	call draw_outline_wall_rhs
+
+	ld ix,screen_mid+41
+	ld iy,hh3
+	call draw_outline_wall_lhs
+	ld ix,screen_mid+41
+	ld iy,hh4
+	call draw_outline_wall_rhs
+
+	ld ix,screen_mid+42
+	ld iy,hh5
+	call draw_outline_wall_lhs
+	ld ix,screen_mid+42
+	ld iy,hh6
+	call draw_outline_wall_rhs
+
+	ld ix,screen_mid+43
+	ld iy,hh7
+	call draw_outline_wall_lhs
+	ld ix,screen_mid+43
+	ld iy,hh8
+	call draw_outline_wall_rhs
+
+	ld ix,screen_mid+44
+	ld iy,hh9
+	call draw_outline_wall_lhs
+	ld ix,screen_mid+44
+	ld iy,hh10
+	call draw_outline_wall_rhs
+
+	ld ix,screen_mid+45
+	ld iy,hh11
+	call draw_outline_wall_lhs
+	ld ix,screen_mid+45
+	ld iy,hh12
+	call draw_outline_wall_rhs
+
+	ld ix,screen_mid+46
+	ld iy,hh13
+	call draw_outline_wall_lhs
+	ld ix,screen_mid+46
+	ld iy,hh14
+	call draw_outline_wall_rhs
+
+	ld ix,screen_mid+47
+	ld iy,hh15
+	call draw_outline_wall_lhs
+	ld ix,screen_mid+47
+	ld iy,hh16
+	call draw_outline_wall_rhs
+
+	ld ix,screen_mid+48
+	ld iy,hh17
+	call draw_outline_wall_lhs
+	ld ix,screen_mid+48
+	ld iy,hh18
+	call draw_outline_wall_rhs
+
 hcf:	jr hcf
 	end main
