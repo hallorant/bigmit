@@ -10,6 +10,9 @@
 ; If displaying the top of the screen, then pass a character address on
 ; the 6th line of video memory (or back buffer representing the display).
 ;
+; Why 'lhs' and 'rhs' varients below? TRS-80 graphics map vertical bars into
+; two per video memory position.
+;
 ; All of the code below is implementation details except:
 ;
 ; draw_solid_wall_lhs   : draws a vertical line in the left-hand-side
@@ -24,6 +27,9 @@
 ; draw_outline_wall_rhs : draws the top and bottom dot of a vertical line
 ;                         in the right-hand-side graphics centered on the
 ;                         passed character position with the given half-height.
+;
+; All of the above calls OR the new bits into position so that any bits set
+; on the screen are not lost.
 import 'graphics_dots.asm'
 
 ; Draws the center character position of a solid wall. The center
@@ -182,6 +188,10 @@ next_char_pos:	ld de,64
 		ld ix,(char_above_addr)
 		ld iy,(char_below_addr)
 		ret
+
+; Implementation note: The below four sets of helpers make it possible
+; to reduce macro expansion down to once for each of the four public
+; calls. This greatly reduces the memory size of this module.
 
 ; Helpers for draw_solid_wall_lhs.
 ; @private
