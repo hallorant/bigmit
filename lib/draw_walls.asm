@@ -1,17 +1,16 @@
-; Draws vertical lines that act as walls for a ray caster. Two types are
-; supported:
+; Draws vertical lines that act as walls for a 11-line ray caster.
+; Two types of walls are supported:
 ;         solid: |    outline: ·
 ;                | |             ·
 ;                |             ·
+; Why two types? We want to allow drawing of running into X or Y walls in the
+; raycaster in different styles -- this looks much better to the user.
 ;
-; Note that the two types allow drawing of running into X or Y walls in the
-; raycaster.
+; Walls may only take up to 11 vertical character positions on the screen.
+; If displaying the top of the screen, then pass a character address on
+; the 6th line of video memory (or back buffer representing the display).
 ;
-; All lines may only take up 11 vertical character positions on the screen.
-; If displaying the top, then pass a character address on the 6th line of the
-; display (or back buffer representing the display.
-;
-; All of this is implementation details (up top) except:
+; All of the code below is implementation details except:
 ;
 ; draw_solid_wall_lhs   : draws a vertical line in the left-hand-side
 ;                         graphics centered on the passed character
@@ -184,6 +183,50 @@ next_char_pos:	ld de,64
 		ld iy,(char_below_addr)
 		ret
 
+; Helpers for draw_solid_wall_lhs.
+; @private
+solid_wall_seg_lhs:	call next_char_pos
+			solid_wall_seg l
+			ret
+check_done_solid_lhs	macro
+			xor a
+			or c
+			jr z,_draw_solid_wall_lhs
+			endm
+
+; Helpers for draw_solid_wall_rhs.
+; @private
+solid_wall_seg_rhs:	call next_char_pos
+			solid_wall_seg r
+			ret
+check_done_solid_rhs	macro
+			xor a
+			or c
+			jr z,_draw_solid_wall_rhs
+			endm
+
+; Helpers for draw_outline_wall_lhs.
+; @private
+outline_wall_seg_lhs:	call next_char_pos
+			outline_wall_seg l
+			ret
+check_done_outline_lhs	macro
+			xor a
+			or c
+			jr z,_draw_outline_wall_lhs
+			endm
+
+; Helpers for draw_outline_wall_rhs.
+; @private
+outline_wall_seg_rhs:	call next_char_pos
+			outline_wall_seg r
+			ret
+check_done_outline_rhs	macro
+			xor a
+			or c
+			jr z,_draw_outline_wall_rhs
+			endm
+
 ; Draw a vertical line with the middle postion at (ix) on the
 ; left-hand-side graphics position of the character.
 ; (iy) gives the half-height of the vertical line (0,17).
@@ -195,40 +238,16 @@ draw_solid_wall_lhs:	solid_center_wall_seg l
 			ld (char_above_addr),ix
 			ld (char_below_addr),ix
 			; We have five lines above and below the center line.
-			call next_char_pos
-			solid_wall_seg l
-			call next_char_pos
-			solid_wall_seg l
-			call next_char_pos
-			solid_wall_seg l
-			call next_char_pos
-			solid_wall_seg l
-			call next_char_pos
-			solid_wall_seg l
-			ret
-
-; Draw the outline of a vertical line with the middle postion
-; at (ix) on the left-hand-side graphics position of the character.
-; (iy) gives the half-height of the vertical line (0,17).
-; Enter:
-;  ix = addr of the center char position.
-;  iy = addr of the half-height of the desired line
-; @public
-draw_outline_wall_lhs:	outline_center_wall_seg l
-			ld (char_above_addr),ix
-			ld (char_below_addr),ix
-			; We have five lines above and below the center line.
-			call next_char_pos
-			outline_wall_seg l
-			call next_char_pos
-			outline_wall_seg l
-			call next_char_pos
-			outline_wall_seg l
-			call next_char_pos
-			outline_wall_seg l
-			call next_char_pos
-			outline_wall_seg l
-			ret
+			call solid_wall_seg_lhs
+			check_done_solid_lhs
+			call solid_wall_seg_lhs
+			check_done_solid_lhs
+			call solid_wall_seg_lhs
+			check_done_solid_lhs
+			call solid_wall_seg_lhs
+			check_done_solid_lhs
+			call solid_wall_seg_lhs
+_draw_solid_wall_lhs:	ret
 
 ; Draw a vertical line with the middle postion at (ix) on the
 ; right-hand-side graphics position of the character.
@@ -241,17 +260,39 @@ draw_solid_wall_rhs:	solid_center_wall_seg r
 			ld (char_above_addr),ix
 			ld (char_below_addr),ix
 			; We have five lines above and below the center line.
-			call next_char_pos
-			solid_wall_seg r
-			call next_char_pos
-			solid_wall_seg r
-			call next_char_pos
-			solid_wall_seg r
-			call next_char_pos
-			solid_wall_seg r
-			call next_char_pos
-			solid_wall_seg r
-			ret
+			call solid_wall_seg_rhs
+			check_done_solid_rhs
+			call solid_wall_seg_rhs
+			check_done_solid_rhs
+			call solid_wall_seg_rhs
+			check_done_solid_rhs
+			call solid_wall_seg_rhs
+			check_done_solid_rhs
+			call solid_wall_seg_rhs
+_draw_solid_wall_rhs:	ret
+
+; Draw the outline of a vertical line with the middle postion
+; at (ix) on the left-hand-side graphics position of the character.
+; (iy) gives the half-height of the vertical line (0,17).
+; Enter:
+;  ix = addr of the center char position.
+;  iy = addr of the half-height of the desired line
+; @public
+draw_outline_wall_lhs:	outline_center_wall_seg l
+			ld (char_above_addr),ix
+			ld (char_below_addr),ix
+			; We have five lines above and below the center line.
+			call outline_wall_seg_lhs
+			check_done_outline_lhs
+			call outline_wall_seg_lhs
+			check_done_outline_lhs
+			call outline_wall_seg_lhs
+			check_done_outline_lhs
+			call outline_wall_seg_lhs
+			check_done_outline_lhs
+			call outline_wall_seg_lhs
+			check_done_outline_lhs
+_draw_outline_wall_lhs:	ret
 
 ; Draw the outline of a vertical line with the middle postion
 ; at (ix) on the right-hand-side graphics position of the character.
@@ -264,15 +305,15 @@ draw_outline_wall_rhs:	outline_center_wall_seg r
 			ld (char_above_addr),ix
 			ld (char_below_addr),ix
 			; We have five lines above and below the center line.
-			call next_char_pos
-			outline_wall_seg r
-			call next_char_pos
-			outline_wall_seg r
-			call next_char_pos
-			outline_wall_seg r
-			call next_char_pos
-			outline_wall_seg r
-			call next_char_pos
-			outline_wall_seg r
-			ret
+			call outline_wall_seg_rhs
+			check_done_outline_rhs
+			call outline_wall_seg_rhs
+			check_done_outline_rhs
+			call outline_wall_seg_rhs
+			check_done_outline_rhs
+			call outline_wall_seg_rhs
+			check_done_outline_rhs
+			call outline_wall_seg_rhs
+			check_done_outline_rhs
+_draw_outline_wall_rhs:	ret
 
