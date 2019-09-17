@@ -26,8 +26,8 @@
 		org $4a00
 
 import '../lib/barden_fill.asm'
-import '../lib/barden_move.asm'
 import '../lib/draw_walls.asm'
+import '../lib/phillips_14byte_move.asm'
 
 screen		equ	$3c00
 ; An 11-line video back buffer.
@@ -49,44 +49,12 @@ shot		defb	0
 hha		defb	5
 hhb		defb	17
 
-to_video	macro	addr
-		ld hl,(addr)
-		push hl
-		endm
-
-line_to_video	macro	addr
-		to_video addr+62
-		to_video addr+60
-		to_video addr+58
-		to_video addr+56
-		to_video addr+54
-		to_video addr+52
-		to_video addr+50
-		to_video addr+48
-		to_video addr+46
-		to_video addr+44
-		to_video addr+42
-		to_video addr+40
-		to_video addr+38
-		to_video addr+36
-		to_video addr+34
-		to_video addr+32
-		to_video addr+30
-		to_video addr+28
-		to_video addr+26
-		to_video addr+24
-		to_video addr+22
-		to_video addr+20
-		to_video addr+18
-		to_video addr+16
-		to_video addr+14
-		to_video addr+12
-		to_video addr+10
-		to_video addr+8
-		to_video addr+6
-		to_video addr+4
-		to_video addr+2
-		to_video addr
+line_to_video	macro	src, dst
+		; A line is 64 bytes.
+		phillips_14byte_move src, dst
+		phillips_14byte_move src+14, dst+14
+		phillips_14byte_move src+28, dst+28
+		phillips_14byte_move src+42, dst+42
 		endm
 
 main:
@@ -100,14 +68,10 @@ main:
 		ld hl,screen
 		ld bc,64
 		call barden_fill
-		ld d,$bf
-		ld hl,screen+64
-		ld bc,64
-		call barden_fill
-		ld d,$bf
-		ld hl,screen+64*11
-		ld bc,64
-		call barden_fill
+		;ld d,$bf
+		;ld hl,screen+64*11
+		;ld bc,64
+		;call barden_fill
 		ld d,$bf
 		ld hl,screen+64*12
 		ld bc,64
@@ -258,15 +222,17 @@ not_in_vblank:	in a,($ff)
 		jr z, not_in_vblank
 		; VBLANK is beginning when we fall through to here.
 
-		line_to_video buff11
-		line_to_video buff10
-		line_to_video buff09
-		line_to_video buff08
-		line_to_video buff07
-		line_to_video buff06
-		line_to_video buff05
-		line_to_video buff04
-		line_to_video buff03
+		line_to_video buff01,screen+64*1
+		line_to_video buff02,screen+64*2
+		line_to_video buff03,screen+64*3
+		line_to_video buff04,screen+64*4
+		line_to_video buff05,screen+64*5
+		line_to_video buff06,screen+64*6
+		line_to_video buff07,screen+64*7
+		line_to_video buff08,screen+64*8
+		line_to_video buff09,screen+64*9
+		line_to_video buff10,screen+64*10
+		line_to_video buff11,screen+64*11
 		ld sp,(save_sp)		; Restore SP
 
 		; Now go back to the top of the game loop and repeat.
