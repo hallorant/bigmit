@@ -25,7 +25,9 @@
 
 		org $4a00
 
+import '../lib/barden_move.asm'
 import '../lib/barden_fill.asm'
+import '../lib/barden_hexcv.asm'
 import '../lib/draw_walls.asm'
 import '../lib/phillips_14byte_move.asm'
 
@@ -42,6 +44,15 @@ buff08		defs	64
 buff09		defs	64
 buff10		defs	64
 buff11		defs	64
+
+; 0 means up, circle divided into 256 divisions.
+player_dir	defb	0
+player_x	defw	0
+player_y	defw	0
+
+pos_text	defb	'PLAYER'	; 6
+dir_text	defb	'DIRECTION'	; 9
+comma		equ	','
 
 save_sp		defw	0
 toggle		defb	1
@@ -72,6 +83,18 @@ main:
 		ld hl,screen+64*12
 		ld bc,64
 		call barden_fill
+		; Show 'PLAYER' on the screen.
+		ld hl,pos_text
+		ld de,screen+64*14-12
+		ld bc,6
+		call barden_move
+		ld a,comma
+		ld (screen+64*14-3),a
+		; Show 'DIRECTION' on the screen.
+		ld hl,dir_text
+		ld de,screen+64*15-12
+		ld bc,9
+		call barden_move
 
 game_loop:	; Clear the video back buffer.
 		ld d,$80
@@ -80,9 +103,24 @@ game_loop:	; Clear the video back buffer.
 		call barden_fill
 
 		; Check for input from the user.
-		; TODO
+		ld a,($3840)	; A keyboard row
+		ld c,a		; ...goes into c
+		bit 5,c		; Check bit 5: [<-]
+		jr z,tst_rarrow_key
+		; User is pressing the left-arrow key (<-) so we change the
+		; player's direction one to the left.
+		ld a,(player_dir)
+		dec a
+		ld (player_dir),a
+tst_rarrow_key:	bit 6,c		; Check bit 6: [->]
+		jr z,raycast
+		; User is pressing the right-arrow key (<-) so we change the
+		; player's direction one to the right.
+		ld a,(player_dir)
+		inc a
+		ld (player_dir),a
 
-		; Raycast into the video back buffer.
+raycast:	; Raycast into the video back buffer.
 		; TODO
 
 		; SUPER ROUGH STUFF TO TEST BACK TO SCREEN TIMING
@@ -220,6 +258,19 @@ not_in_vblank:	in a,($ff)
 		line_to_video buff10,screen+64*10
 		line_to_video buff11,screen+64*11
 		ld sp,(save_sp)		; Restore SP
+
+		; Output stats to the screen.
+		; Show the player position on the screen.
+		ld a,(player_y)
+		call barden_hexcv
+		ld (screen+64*14-2),hl
+		ld a,(player_x)
+		call barden_hexcv
+		ld (screen+64*14-5),hl
+		; Show the player direction on the screen.
+		ld a,(player_dir)
+		call barden_hexcv
+		ld (screen+64*15-2),hl
 
 		; Now go back to the top of the game loop and repeat.
 		jp game_loop
