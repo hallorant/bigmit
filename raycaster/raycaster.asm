@@ -63,29 +63,13 @@ main:
 		ld hl,screen
 		ld bc,64*16
 		call barden_fill
-		; Draw a line at lines 1, 2, and 12 to separate the screen.
-		ld d,$bf
+		; Draw at lines 1 and 13 to define the raycasting window.
+		ld d,$b0
 		ld hl,screen
 		ld bc,64
 		call barden_fill
-		;ld d,$bf
-		;ld hl,screen+64*11
-		;ld bc,64
-		;call barden_fill
-		ld d,$bf
+		ld d,$83
 		ld hl,screen+64*12
-		ld bc,64
-		call barden_fill
-		ld d,$bf
-		ld hl,screen+64*13
-		ld bc,64
-		call barden_fill
-		ld d,$bf
-		ld hl,screen+64*14
-		ld bc,64
-		call barden_fill
-		ld d,$bf
-		ld hl,screen+64*15
 		ld bc,64
 		call barden_fill
 
@@ -222,6 +206,8 @@ not_in_vblank:	in a,($ff)
 		jr z, not_in_vblank
 		; VBLANK is beginning when we fall through to here.
 
+		; Skipping the first line, copy the video back buffer to
+		; lines 2-12 on the screen.
 		line_to_video buff01,screen+64*1
 		line_to_video buff02,screen+64*2
 		line_to_video buff03,screen+64*3
