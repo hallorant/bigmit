@@ -264,3 +264,22 @@ delta_skew_y_126		defw	6960
 delta_skew_y_127		defw	20863
 delta_skew_y_128		defw	20863
 
+; Looks up the distance a ray has to travel to go from one y-side to
+; the next y-side for a passed angle.
+;
+; Enter: hl  The lookup table address (either delta_dist_y_000 or
+;            delta_skew_y_00).
+;	 c   the byte-angle
+; Exit:  de  The distance a ray has to travel to go from one y-side
+;            to the next y-side
+delta_dist_y:	xor a
+		ld b,a		; Zero out b
+		; If c > 128 (bit 8 is set) subtract 128 from c.
+		ld a,$7f	; To do this we just unset bit 8.
+		or c
+		ld c,a
+		sla c		; Double the offset (2 bytes per table entry)
+		add hl,bc	; Determine lookup table addr 
+		ld e,(hl)
+		inc hl
+		ld d,(hl)
