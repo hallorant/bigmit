@@ -47,7 +47,15 @@ buff09		defs	buff_line_width
 buff10		defs	buff_line_width
 buff11		defs	buff_line_width
 
-; 0 means up, circle divided into 256 divisions.
+; To express the player direction (or angle) in one byte (unsigned) we
+; adopt a circle with 256 divisions: (0,256].
+;          0
+;      -   |  -
+;          |
+; 192 -----+----- 64
+;          |
+;      -   |   -
+;         128
 player_dir	defb	0
 player_x	defw	0
 player_y	defw	0
@@ -71,6 +79,7 @@ hha		defb	5
 hhb		defb	17
 
 ; Our raycasting specific modules.
+import 'cast.asm'
 import 'draw_walls.asm'
 import 'line_to_screen.asm'
 
