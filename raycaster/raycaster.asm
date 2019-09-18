@@ -34,8 +34,8 @@ screen		equ	$3c00
 
 ; Our video back buffer: 11 lines 56 characters wide.
 ; We'll center this on the screen with 4-character margin.
+buff_line_width	equ	56
 buff01		defs	buff_line_width
-buff_line_width	equ	$-buff01
 buff02		defs	buff_line_width
 buff03		defs	buff_line_width
 buff04		defs	buff_line_width
@@ -72,7 +72,7 @@ hhb		defb	17
 
 ; Our raycasting specific modules.
 import 'draw_walls.asm'
-import 'phillips_56byte_move.asm'
+import 'line_to_screen.asm'
 
 line_to_video	macro	src, dst
 		; A line is 56 bytes.
@@ -276,17 +276,17 @@ not_in_vblank:	in a,($ff)
 
 		; Skipping the first line, copy the video back buffer to
 		; lines 2-12 on the screen with a 4 character margin.
-		phillips_56byte_move buff01,screen+64*1+4
-		phillips_56byte_move buff02,screen+64*2+4
-		phillips_56byte_move buff03,screen+64*3+4
-		phillips_56byte_move buff04,screen+64*4+4
-		phillips_56byte_move buff05,screen+64*5+4
-		phillips_56byte_move buff06,screen+64*6+4
-		phillips_56byte_move buff07,screen+64*7+4
-		phillips_56byte_move buff08,screen+64*8+4
-		phillips_56byte_move buff09,screen+64*9+4
-		phillips_56byte_move buff10,screen+64*10+4
-		phillips_56byte_move buff11,screen+64*11+4
+		line_to_screen buff01,screen+64*1+4
+		line_to_screen buff02,screen+64*2+4
+		line_to_screen buff03,screen+64*3+4
+		line_to_screen buff04,screen+64*4+4
+		line_to_screen buff05,screen+64*5+4
+		line_to_screen buff06,screen+64*6+4
+		line_to_screen buff07,screen+64*7+4
+		line_to_screen buff08,screen+64*8+4
+		line_to_screen buff09,screen+64*9+4
+		line_to_screen buff10,screen+64*10+4
+		line_to_screen buff11,screen+64*11+4
 		ld sp,(save_sp)		; Restore SP
 
 		; Output stats to the screen.
