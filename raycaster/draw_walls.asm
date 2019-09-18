@@ -30,7 +30,7 @@
 ;
 ; All of the above calls OR the new bits into position so that any bits set
 ; on the screen are not lost.
-import 'graphics_dots.asm'
+import '../lib/graphics_dots.asm'
 
 ; Draws the center character position of a solid wall. The center
 ; character position, unlike all others, has only a one or two
@@ -171,14 +171,15 @@ outline_wall_seg	macro	side,?hh2,?hh3,?hh4
 			endm
 
 ; Stepping up and down from the address passed the the ray drawing routine
-; by a line (64 bytes) this routine updates the memory locations:
+; by a line ('buff_line_width' bytes) this routine updates the memory
+; locations:
+char_above_addr	defw	0
+char_below_addr	defw	0
 ; Exit:
 ;  ix = addr of the char position above the center.
 ;  iy = addr of the char position below the center.
 ; @private
-char_above_addr	defw	0
-char_below_addr	defw	0
-next_char_pos:	ld de,64
+next_char_pos:	ld de,buff_line_width
 		ld hl,(char_below_addr)
 		add hl,de
 		ld (char_below_addr),hl

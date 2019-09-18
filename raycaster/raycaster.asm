@@ -28,30 +28,40 @@
 import '../lib/barden_move.asm'
 import '../lib/barden_fill.asm'
 import '../lib/barden_hexcv.asm'
-import '../lib/draw_walls.asm'
-import '../lib/phillips_14byte_move.asm'
 
+; Address of the start of video memory.
 screen		equ	$3c00
-; An 11-line video back buffer.
-buff01		defs	64
-buff02		defs	64
-buff03		defs	64
-buff04		defs	64
-buff05		defs	64
-buff06		defs	64
-buff07		defs	64
-buff08		defs	64
-buff09		defs	64
-buff10		defs	64
-buff11		defs	64
+
+; Our video back buffer: 11 lines 56 characters wide.
+; We'll center this on the screen with 4-character margin.
+buff01		defs	buff_line_width
+buff_line_width	equ	$-buff01
+buff02		defs	buff_line_width
+buff03		defs	buff_line_width
+buff04		defs	buff_line_width
+buff05		defs	buff_line_width
+buff06		defs	buff_line_width
+buff07		defs	buff_line_width
+buff08		defs	buff_line_width
+buff09		defs	buff_line_width
+buff10		defs	buff_line_width
+buff11		defs	buff_line_width
 
 ; 0 means up, circle divided into 256 divisions.
 player_dir	defb	0
 player_x	defw	0
 player_y	defw	0
 
-pos_text	defb	'PLAYER'	; 6
-dir_text	defb	'DIRECTION'	; 9
+frames_drawn	defw	0
+
+title_txt	defb	'TRS-80 MODEL 1 RAYCASTING DEMONSTRATION'
+title_txt_len	equ	$-title_txt
+frames_txt	defb	'FRAMES DRAWN'
+frames_txt_len	equ	$-frames_txt
+pos_txt		defb	'PLAYER'
+pos_txt_len	equ	$-pos_txt
+dir_txt		defb	'DIRECTION'
+dir_txt_len	equ	$-dir_txt
 comma		equ	','
 
 save_sp		defw	0
@@ -60,46 +70,85 @@ shot		defb	0
 hha		defb	5
 hhb		defb	17
 
+; Our raycasting specific modules.
+import 'draw_walls.asm'
+import 'phillips_56byte_move.asm'
+
 line_to_video	macro	src, dst
-		; A line is 64 bytes.
+		; A line is 56 bytes.
 		phillips_14byte_move src, dst
 		phillips_14byte_move src+14, dst+14
 		phillips_14byte_move src+28, dst+28
 		phillips_14byte_move src+42, dst+42
 		endm
 
-main:
+main:		; Setup the static portion of the screen.
+
 		; Clear the screen
 		ld d,$80
 		ld hl,screen
 		ld bc,64*16
 		call barden_fill
-		; Draw at lines 1 and 13 to define the raycasting window.
-		ld d,$b0
-		ld hl,screen
-		ld bc,64
+
+		; Frame the raycasting window on the screen.
+		ld d,$b0		; Top horizontal line
+		ld hl,screen+3
+		ld bc,58
 		call barden_fill
-		ld d,$83
-		ld hl,screen+64*12
-		ld bc,64
+		ld d,$83		; Bottom horizontal line
+		ld hl,screen+64*12+3
+		ld bc,58
 		call barden_fill
+		ld a,$bf
+		ld (screen+64*1+3),a	; Left vertical line
+		ld (screen+64*2+3),a
+		ld (screen+64*3+3),a
+		ld (screen+64*4+3),a
+		ld (screen+64*5+3),a
+		ld (screen+64*6+3),a
+		ld (screen+64*7+3),a
+		ld (screen+64*8+3),a
+		ld (screen+64*9+3),a
+		ld (screen+64*10+3),a
+		ld (screen+64*11+3),a
+		ld (screen+64*1+60),a	; Right vertical line
+		ld (screen+64*2+60),a
+		ld (screen+64*3+60),a
+		ld (screen+64*4+60),a
+		ld (screen+64*5+60),a
+		ld (screen+64*6+60),a
+		ld (screen+64*7+60),a
+		ld (screen+64*8+60),a
+		ld (screen+64*9+60),a
+		ld (screen+64*10+60),a
+		ld (screen+64*11+60),a
+		; Show the title on the screen.
+		ld hl,title_txt
+		ld de,screen+64*13
+		ld bc,title_txt_len
+		call barden_move
+		; Show 'FRAMES' on the screen.
+		ld hl,frames_txt
+		ld de,screen+64*14
+		ld bc,frames_txt_len
+		call barden_move
 		; Show 'PLAYER' on the screen.
-		ld hl,pos_text
+		ld hl,pos_txt
 		ld de,screen+64*14-12
-		ld bc,6
+		ld bc,pos_txt_len
 		call barden_move
 		ld a,comma
 		ld (screen+64*14-3),a
 		; Show 'DIRECTION' on the screen.
-		ld hl,dir_text
+		ld hl,dir_txt
 		ld de,screen+64*15-12
-		ld bc,9
+		ld bc,dir_txt_len
 		call barden_move
 
 game_loop:	; Clear the video back buffer.
 		ld d,$80
 		ld hl,buff01
-		ld bc,64*11
+		ld bc,buff_line_width*11
 		call barden_fill
 
 		; Check for input from the user.
@@ -125,6 +174,27 @@ raycast:	; Raycast into the video back buffer.
 
 		; SUPER ROUGH STUFF TO TEST BACK TO SCREEN TIMING
 		; ON THE MODEL 1.
+
+		; Draw a block.
+		ld a,$bf
+		ld (buff04+30),a
+		ld (buff04+31),a
+		ld (buff04+32),a
+		ld (buff04+33),a
+		ld (buff04+34),a
+		ld (buff04+35),a
+		ld (buff05+30),a
+		ld (buff05+31),a
+		ld (buff05+32),a
+		ld (buff05+33),a
+		ld (buff05+34),a
+		ld (buff05+35),a
+		ld (buff06+30),a
+		ld (buff06+31),a
+		ld (buff06+32),a
+		ld (buff06+33),a
+		ld (buff06+34),a
+		ld (buff06+35),a
 
                 ; shoot a block across the screen in a few lines
 		ld a,(shot)
@@ -167,7 +237,7 @@ raycast:	; Raycast into the video back buffer.
 		jr z,zero_action
 		ld (toggle),a
 
-		ld ix,buff06+55
+		ld ix,buff06+50
 		ld iy,hha
 		call draw_outline_wall_lhs
 
@@ -175,31 +245,11 @@ raycast:	; Raycast into the video back buffer.
 		ld a,$33
 		ld (buff03),a
 
-		ld a,$bf
-		ld (buff04+30),a
-		ld (buff04+31),a
-		ld (buff04+32),a
-		ld (buff04+33),a
-		ld (buff04+34),a
-		ld (buff04+35),a
-		ld (buff05+30),a
-		ld (buff05+31),a
-		ld (buff05+32),a
-		ld (buff05+33),a
-		ld (buff05+34),a
-		ld (buff05+35),a
-		ld (buff06+30),a
-		ld (buff06+31),a
-		ld (buff06+32),a
-		ld (buff06+33),a
-		ld (buff06+34),a
-		ld (buff06+35),a
-
-		jr back_to_screen
+		jr copy_to_screen
 
 zero_action:	ld (toggle),a
 
-		ld ix,buff06+54
+		ld ix,buff06+51
 		ld iy,hhb
 		call draw_solid_wall_lhs
 
@@ -210,28 +260,8 @@ zero_action:	ld (toggle),a
 		ld a,$35
 		ld (buff05),a
 
-		ld a,$bf
-		ld (buff04+30),a
-		ld (buff04+31),a
-		ld (buff04+32),a
-		ld (buff04+33),a
-		ld (buff04+34),a
-		ld (buff04+35),a
-		ld (buff05+30),a
-		ld (buff05+31),a
-		ld (buff05+32),a
-		ld (buff05+33),a
-		ld (buff05+34),a
-		ld (buff05+35),a
-		ld (buff06+30),a
-		ld (buff06+31),a
-		ld (buff06+32),a
-		ld (buff06+33),a
-		ld (buff06+34),a
-		ld (buff06+35),a
-
 		; Copy the back buffer to the screen
-back_to_screen:	ld (save_sp),sp		; Save SP
+copy_to_screen:	ld (save_sp),sp		; Save SP
 		ld sp,$3ec0
 		; ** Model 1 with VBLANK mod only **
 		; Wait for the start of VBLANK. We want to see a 0 value to
@@ -245,21 +275,32 @@ not_in_vblank:	in a,($ff)
 		; VBLANK is beginning when we fall through to here.
 
 		; Skipping the first line, copy the video back buffer to
-		; lines 2-12 on the screen.
-		line_to_video buff01,screen+64*1
-		line_to_video buff02,screen+64*2
-		line_to_video buff03,screen+64*3
-		line_to_video buff04,screen+64*4
-		line_to_video buff05,screen+64*5
-		line_to_video buff06,screen+64*6
-		line_to_video buff07,screen+64*7
-		line_to_video buff08,screen+64*8
-		line_to_video buff09,screen+64*9
-		line_to_video buff10,screen+64*10
-		line_to_video buff11,screen+64*11
+		; lines 2-12 on the screen with a 4 character margin.
+		phillips_56byte_move buff01,screen+64*1+4
+		phillips_56byte_move buff02,screen+64*2+4
+		phillips_56byte_move buff03,screen+64*3+4
+		phillips_56byte_move buff04,screen+64*4+4
+		phillips_56byte_move buff05,screen+64*5+4
+		phillips_56byte_move buff06,screen+64*6+4
+		phillips_56byte_move buff07,screen+64*7+4
+		phillips_56byte_move buff08,screen+64*8+4
+		phillips_56byte_move buff09,screen+64*9+4
+		phillips_56byte_move buff10,screen+64*10+4
+		phillips_56byte_move buff11,screen+64*11+4
 		ld sp,(save_sp)		; Restore SP
 
 		; Output stats to the screen.
+		; Show the frame count drawn to the screen.
+		ld hl,(frames_drawn)	; Increment value
+		inc hl
+		ld (frames_drawn),hl
+		ld b,l			; Display on the screen
+		ld a,h
+		call barden_hexcv
+		ld (screen+64*14+frames_txt_len+1),hl
+		ld a,b
+		call barden_hexcv
+		ld (screen+64*14+frames_txt_len+3),hl
 		; Show the player position on the screen.
 		ld a,(player_y)
 		call barden_hexcv
