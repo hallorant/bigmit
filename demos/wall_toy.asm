@@ -1,10 +1,17 @@
 ; Toy program that draws some vertical lines on the screen
 	org $4a00
 import '../lib/barden_fill.asm'
-import '../lib/draw_walls.asm'
+
+buff_line_width	equ	64
+
+import '../raycaster/draw_walls.asm'
+
 blank		equ	$80
+
 screen		equ	$3c00
 screen_mid	equ	screen+64*5
+
+
 hh1		defb	1
 hh2		defb	2
 hh3		defb	3

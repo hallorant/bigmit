@@ -63,13 +63,13 @@ player_y	defw	0
 frames_drawn	defw	0
 
 title_txt	defb	'TRS-80 MODEL 1 RAYCASTING DEMONSTRATION'
-title_txt_len	equ	$-title_txt
+title_len	equ	$-title_txt
 frames_txt	defb	'FRAMES DRAWN'
-frames_txt_len	equ	$-frames_txt
+frames_len	equ	$-frames_txt
 pos_txt		defb	'PLAYER'
-pos_txt_len	equ	$-pos_txt
+pos_len		equ	$-pos_txt
 dir_txt		defb	'DIRECTION'
-dir_txt_len	equ	$-dir_txt
+dir_len		equ	$-dir_txt
 comma		equ	','
 
 save_sp		defw	0
@@ -134,24 +134,24 @@ main:		; Setup the static portion of the screen.
 		; Show the title on the screen.
 		ld hl,title_txt
 		ld de,screen+64*13
-		ld bc,title_txt_len
+		ld bc,title_len
 		call barden_move
 		; Show 'FRAMES' on the screen.
 		ld hl,frames_txt
 		ld de,screen+64*14
-		ld bc,frames_txt_len
+		ld bc,frames_len
 		call barden_move
 		; Show 'PLAYER' on the screen.
 		ld hl,pos_txt
 		ld de,screen+64*14-12
-		ld bc,pos_txt_len
+		ld bc,pos_len
 		call barden_move
 		ld a,comma
 		ld (screen+64*14-3),a
 		; Show 'DIRECTION' on the screen.
 		ld hl,dir_txt
 		ld de,screen+64*15-12
-		ld bc,dir_txt_len
+		ld bc,dir_len
 		call barden_move
 
 game_loop:	; Clear the video back buffer.
@@ -306,10 +306,10 @@ not_in_vblank:	in a,($ff)
 		ld b,l			; Display on the screen
 		ld a,h
 		call barden_hexcv
-		ld (screen+64*14+frames_txt_len+1),hl
+		ld (screen+64*14+frames_len+1),hl
 		ld a,b
 		call barden_hexcv
-		ld (screen+64*14+frames_txt_len+3),hl
+		ld (screen+64*14+frames_len+3),hl
 		; Show the player position on the screen.
 		ld a,(player_y)
 		call barden_hexcv
