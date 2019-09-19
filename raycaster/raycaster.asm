@@ -82,6 +82,7 @@ hhb		defb	17
 import 'cast.asm'
 import 'draw_walls.asm'
 import 'line_to_screen.asm'
+import 'world.asm'
 
 line_to_video	macro	src, dst
 		; A line is 56 bytes.
