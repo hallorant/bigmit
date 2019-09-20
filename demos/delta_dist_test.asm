@@ -2,7 +2,7 @@
 	org $4a00
 import '../lib/barden_fill.asm'
 import '../lib/barden_move.asm'
-import '../raycaster/cast.asm'
+import '../raycaster/delta_dist.asm'
 
 blank		equ	$80
 screen		equ	$3c00
@@ -36,7 +36,7 @@ show_title	macro	name,line,col
 		call barden_move
 		endm
 
-title_txt	defb    'CAST.ASM UNIT TESTS'
+title_txt	defb    'DELTA_DIST.ASM UNIT TESTS'
 title_len	equ     $-title_txt
 
 test_0_txt	defb    ': delta_dist_x(0) lookup'
@@ -105,7 +105,7 @@ main:
 		ld hl,screen 
 		ld bc,64*16
 		call barden_fill
-		show_title title,0,22
+		show_title title,0,19
 
 		; ------------------------
 		; -- DELTA_DIST_X TESTS --

@@ -1,3 +1,37 @@
+; Looks up the distance a ray has to travel to go from one x-side to
+; the next x-side for a passed angle.
+;
+; Enter: hl  The lookup table address (either delta_dist_table or
+;            delta_skew_table).
+;	 c   the byte-angle
+; Exit:  de  The distance a ray has to travel to go from one x-side
+;            to the next x-side
+delta_dist_x:	xor a
+		ld b,a		; Zero out b
+		; If c > 128 (bit 8 is set) subtract 128 from c.
+		ld a,$7f	; To do this we just unset bit 8.
+		and c
+		ld c,a
+		sla c		; Double the offset (2 bytes per table entry)
+		add hl,bc	; Determine lookup table addr 
+		ld e,(hl)	; Low order byte
+		inc hl
+		ld d,(hl)	; High order byte
+		ret
+
+; Looks up the distance a ray has to travel to go from one y-side to
+; the next y-side for a passed angle.
+;
+; Enter: hl  The lookup table address (either delta_dist_table or
+;            delta_skew_table).
+;	 c   the byte-angle
+; Exit:  de  The distance a ray has to travel to go from one y-side
+;            to the next y-side
+delta_dist_y:	ld a,c
+		add a,64
+		ld c,a
+		call delta_dist_x
+		ret
 
 ; Lookup table with values for the distance a ray has to travel to go from
 ; one x-side to the next x-side. For each of our byte-angle values (0,64).
@@ -264,37 +298,3 @@ delta_skew_x_126		defw	6960
 delta_skew_x_127		defw	20863
 delta_skew_x_128		defw	20863
 
-; Looks up the distance a ray has to travel to go from one x-side to
-; the next x-side for a passed angle.
-;
-; Enter: hl  The lookup table address (either delta_dist_table or
-;            delta_skew_table).
-;	 c   the byte-angle
-; Exit:  de  The distance a ray has to travel to go from one x-side
-;            to the next x-side
-delta_dist_x:	xor a
-		ld b,a		; Zero out b
-		; If c > 128 (bit 8 is set) subtract 128 from c.
-		ld a,$7f	; To do this we just unset bit 8.
-		and c
-		ld c,a
-		sla c		; Double the offset (2 bytes per table entry)
-		add hl,bc	; Determine lookup table addr 
-		ld e,(hl)	; Low order byte
-		inc hl
-		ld d,(hl)	; High order byte
-		ret
-
-; Looks up the distance a ray has to travel to go from one y-side to
-; the next y-side for a passed angle.
-;
-; Enter: hl  The lookup table address (either delta_dist_table or
-;            delta_skew_table).
-;	 c   the byte-angle
-; Exit:  de  The distance a ray has to travel to go from one y-side
-;            to the next y-side
-delta_dist_y:	ld a,c
-		add a,64
-		ld c,a
-		call delta_dist_x
-		ret

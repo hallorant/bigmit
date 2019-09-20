@@ -81,7 +81,7 @@ hha		defb	5
 hhb		defb	17
 
 ; Our raycasting specific modules.
-import 'cast.asm'
+import 'delta_dist.asm'
 import 'draw_walls.asm'
 import 'line_to_screen.asm'
 import 'world.asm'
