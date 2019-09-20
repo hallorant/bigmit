@@ -1,10 +1,10 @@
-; Multiplies a 16-bit number by a power of 2.
+; Shift-left of a 16-bit value.
 ;
 ; Used: a, hl, d
 ;
-; Entry: hl  16-bit multiplicand, unsigned
+; Entry: hl  16-bit value
 ;	  a  shift count
-; Exit:  hl  result of de shifted by c bits
+; Exit:  hl  result of hl shifted left by c bits
 sla16:			ld d,a
 			or a
 __sla16_loop:		ret z

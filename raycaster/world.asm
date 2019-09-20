@@ -1,42 +1,47 @@
-
-; Enter: hl  The row in the world (y value).
-;        c   The column in the world (x value).
-; Exit:  a   Wall value (0 or 1).
-is_wall:	ld a,5
-		call sla16	; a << 5 equals row * 32.
-		add hl,c
-		ld b,(hl)	; Table lookup byte is in b.
-		ld a,$07
-		and l
-		ld l,a		; Position 0-7 of bit in b is in l.
-		check_bit b,l
-		check_bit b,l
-		check_bit b,l
-		check_bit b,l
-		check_bit b,l
-		check_bit b,l
-		check_bit b,l
-		check_bit b,l
-
 ; Checks if the bit in byte is the value we should return. Reduces pos by one
 ; and logical shifts byte right one bit to get ready for the next call.
 ; Returns if the correct bit is found.
 ;
 ; byte is the tabel lookup byte.
-; pos  position 0-7 of bit in byte.
-check_bit	macro byte,pos,?
-		ld a,pos
-		or a
+; pos  position 1-8 of bit in byte.
+check_bit	macro byte,pos,?ret0value,?cont
+		dec pos
 		jr nz,?cont
 		bit 0,byte
-		jr z,?ret0
+		jr z,?ret0value
 		ld a,1
 		ret
-?ret0:		ld a,0
+?ret0value:	ld a,0
 		ret
-?cont:		dec pos
-		srl byte
+?cont:		srl byte
 		endm
+
+; Checks if the passed row and column are a wall in the world.
+; Enter: l  The row in the world (y value).
+;        c  The column in the world (x value).
+; Exit:  a  Wall value (0 or 1).
+is_wall:	ld h,0
+		ld b,0
+		ld a,5
+		call sla16	; a << 5 equals row * 32.
+		add hl,bc
+		ld a,$07
+		and l
+		ld c,a		; Position 0-7 of bit is in c.
+		ld a,3
+		call srl16	; a >> 3 to remove position bits.
+		ld de,world	; Start at addr of world table.
+		add hl,de	; Add byte offset calculated above.
+		ld b,(hl)	; Table lookup byte is in b.
+		inc c		; Change to 1-8 (from 0-7).
+		check_bit b,c
+		check_bit b,c
+		check_bit b,c
+		check_bit b,c
+		check_bit b,c
+		check_bit b,c
+		check_bit b,c
+		check_bit b,c
 
 ; The world map 32x32 (2^5x3^5 -- a power of 2).
 world		defb	11111111b,11111111b,11111111b,11111111b
@@ -70,5 +75,4 @@ world_27	defb	10000111b,00000000b,00000011b,00000001b
 world_28	defb	10000111b,00000000b,00000011b,00000001b
 world_29	defb	10000000b,00000011b,00000000b,00000001b
 world_30	defb	10000000b,00000011b,00000000b,00000001b
-world_31	defb	10000000b,00000011b,00000000b,00000001b
-world_32	defb	11111111b,11111111b,11111111b,11111111b
+world_31	defb	11111111b,11111111b,11111111b,11111111b

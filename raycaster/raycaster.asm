@@ -30,6 +30,7 @@ import '../lib/barden_fill.asm'
 import '../lib/barden_mul16.asm'
 import '../lib/barden_hexcv.asm'
 import '../lib/sla16.asm'
+import '../lib/srl16.asm'
 
 ; Address of the start of video memory.
 screen		equ	$3c00
@@ -86,7 +87,7 @@ hhb		defb	17
 import 'delta_dist.asm'
 import 'draw_walls.asm'
 import 'line_to_screen.asm'
-;import 'world.asm'
+import 'world.asm'
 
 line_to_video	macro	src, dst
 		; A line is 56 bytes.

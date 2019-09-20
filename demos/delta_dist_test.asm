@@ -1,4 +1,4 @@
-; Toy program that draws some vertical lines on the screen
+; Unit tests for delta_dist.asm.
 	org $4a00
 import '../lib/barden_fill.asm'
 import '../lib/barden_move.asm'
@@ -10,7 +10,7 @@ screen		equ	$3c00
 ; Compares de to (expected) and reports
 ; o 'P' if equal
 ; o 'F' if not equal
-; on column 1 of 'line' on the screen.
+; on column 'col' of line 'line' on the screen.
 cp_de_int16_to	macro	expected,line,col,?pass_high,?pass_both,?fail,?result
 		ld hl,(expected)
 		ld a,d
