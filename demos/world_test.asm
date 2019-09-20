@@ -69,13 +69,13 @@ test_2_txt	defb    ': is_wall(31,31) = 1'
 test_2_len	equ     $-test_2_txt
 test_3_txt	defb    ': is_wall(30,30) = 0'
 test_3_len	equ     $-test_3_txt
-test_4_txt	defb    ': is_wall(9,30) = 0'
+test_4_txt	defb    ': is_wall(30,31) = 1'
 test_4_len	equ     $-test_4_txt
 test_5_txt	defb    ': is_wall(1,31) = 1'
 test_5_len	equ     $-test_5_txt
-test_6_txt	defb    ': is_wall(18,7) = 1'
+test_6_txt	defb    ': is_wall(20,10) = 1'
 test_6_len	equ     $-test_6_txt
-test_7_txt	defb    ': is_wall(18,8) = 0'
+test_7_txt	defb    ': is_wall(20,9) = 0'
 test_7_len	equ     $-test_7_txt
 
 test_10_txt	defb    ': sla16(1 << 5) = 32'
@@ -134,31 +134,31 @@ main:
 		call is_wall
 		cp_a_byte_to 0,4,0
 
-		; Test 4: is_wall(9,30) = 0
+		; Test 4: is_wall(30,31) = 1
 		show_title test_4,5,2
-		ld l,9
-		ld c,30
+		ld l,30
+		ld c,31
 		call is_wall
-		cp_a_byte_to 0,5,0
+		cp_a_byte_to 1,5,0
 
 		; Test 5: is_wall(1,31) = 1
 		show_title test_5,6,2
 		ld l,1
-		ld c,24
+		ld c,31
 		call is_wall
 		cp_a_byte_to 1,6,0
 
-		; Test 6: is_wall(18,7) = 1
+		; Test 6: is_wall(20,10) = 1
 		show_title test_6,7,2
-		ld l,18
-		ld c,7
+		ld l,20
+		ld c,10
 		call is_wall
 		cp_a_byte_to 1,7,0
 
-		; Test 7: is_wall(18,8) = 0
+		; Test 7: is_wall(20,9) = 0
 		show_title test_7,8,2
-		ld l,18
-		ld c,8
+		ld l,20
+		ld c,9
 		call is_wall
 		cp_a_byte_to 0,8,0
 
@@ -228,16 +228,6 @@ main:
 		ld (tmp16),hl
 		ld de,(tmp16)
                 cp_de_int16_to 2035,8,32
-
-;	ld de,(tmp16)
-;               ld a,d
-;               call barden_hexcv
-;               ld (screen+64*6+55),hl
-;               ld a,e
-;               call barden_hexcv
-;               ld (screen+64*6+57),hl
-
-
 
 hcf:		jr hcf
 		end main
