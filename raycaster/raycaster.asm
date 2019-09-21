@@ -29,6 +29,7 @@ import '../lib/barden_move.asm'
 import '../lib/barden_fill.asm'
 import '../lib/barden_mul16.asm'
 import '../lib/barden_hexcv.asm'
+import '../lib/reverse_bits.asm'
 import '../lib/sla16.asm'
 import '../lib/srl16.asm'
 

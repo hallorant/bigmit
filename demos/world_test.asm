@@ -3,6 +3,7 @@
 import '../lib/barden_fill.asm'
 import '../lib/barden_hexcv.asm'
 import '../lib/barden_move.asm'
+import '../lib/reverse_bits.asm'
 import '../lib/sla16.asm'
 import '../lib/srl16.asm'
 
@@ -101,6 +102,9 @@ main:
 		ld bc,64*16
 		call barden_fill
 		show_title title,0,22
+
+		; This ensures bit order for the map is correct.
+		call prepare_world
 
 		; -------------------
 		; -- IS_WALL TESTS --
