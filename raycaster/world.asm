@@ -1,4 +1,16 @@
-; Requires 'reverse_bits.asm'
+; __          __        _     _ 
+; \ \        / /       | |   | |
+;  \ \  /\  / /__  _ __| | __| |
+;   \ \/  \/ / _ \| '__| |/ _` |
+;    \  /\  / (_) | |  | | (_| |
+;     \/  \/ \___/|_|  |_|\__,_|
+;
+; Author: Tim Halloran
+; From the tutorial at https://lodev.org/cgtutor/raycasting.html
+
+import '../lib/reverse_bits.asm'
+import '../lib/sla16.asm'
+import '../lib/srl16.asm'
 
 ; Checks if the bit in byte is the value we should return. Reduces pos by one
 ; and logical shifts byte right one bit to get ready for the next call.

@@ -1,3 +1,13 @@
+;  _____       _ _          _____  _     _   
+; |  __ \     | | |        |  __ \(_)   | |  
+; | |  | | ___| | |_ __ _  | |  | |_ ___| |_ 
+; | |  | |/ _ \ | __/ _` | | |  | | / __| __|
+; | |__| |  __/ | || (_| | | |__| | \__ \ |_ 
+; |_____/ \___|_|\__\__,_| |_____/|_|___/\__|
+;
+; Author: Tim Halloran
+; From the tutorial at https://lodev.org/cgtutor/raycasting.html
+
 ; Looks up the distance a ray has to travel to go from one x-side to
 ; the next x-side for a passed angle.
 ;

@@ -29,9 +29,6 @@ import '../lib/barden_move.asm'
 import '../lib/barden_fill.asm'
 import '../lib/barden_mul16.asm'
 import '../lib/barden_hexcv.asm'
-import '../lib/reverse_bits.asm'
-import '../lib/sla16.asm'
-import '../lib/srl16.asm'
 
 ; Address of the start of video memory.
 screen		equ	$3c00
@@ -63,8 +60,8 @@ buff11		defs	buff_line_width
 player_dir	defb	0
 
 ; Our world is 24x24 (see world.asm).
-player_x	defw	11
-player_y	defw	11
+player_x	defw	16
+player_y	defw	16
 
 frames_drawn	defw	0
 
@@ -84,8 +81,9 @@ shot		defb	0
 hha		defb	5
 hhb		defb	17
 
-; Our raycasting specific modules.
+; Our raycasting modules.
 import 'delta_dist.asm'
+import 'dist_to_hh.asm'
 import 'draw_walls.asm'
 import 'line_to_screen.asm'
 import 'world.asm'
@@ -98,9 +96,10 @@ line_to_video	macro	src, dst
 		phillips_14byte_move src+42, dst+42
 		endm
 
-main:		; Setup the static portion of the screen.
-
-		; Clear the screen
+		; ---------------------------------------
+		; Setup the static portion of the screen.
+		; ---------------------------------------
+main:		; Clear the screen
 		ld d,$80
 		ld hl,screen
 		ld bc,64*16
@@ -161,32 +160,69 @@ main:		; Setup the static portion of the screen.
 		ld bc,dir_len
 		call barden_move
 
-game_loop:	; Clear the video back buffer.
-		ld d,$80
+		; Ensure the bit bit order for the map is corrent.
+		call prepare_world
+
+		; ----------------------------
+		; Clear the video back buffer.
+		; ----------------------------
+game_loop:	ld d,$80
 		ld hl,buff01
 		ld bc,buff_line_width*11
 		call barden_fill
 
+		; ------------------------------
 		; Check for input from the user.
+		; ------------------------------
 		ld a,($3840)	; A keyboard row
 		ld c,a		; ...goes into c
-		bit 5,c		; Check bit 5: [<-]
-		jr z,tst_rarrow_key
+txt_larrow:	bit 5,c		; Check bit 5: [<-]
+		jr z,tst_rarrow
 		; User is pressing the left-arrow key (<-) so we change the
 		; player's direction one to the left.
 		ld a,(player_dir)
 		dec a
 		ld (player_dir),a
-tst_rarrow_key:	bit 6,c		; Check bit 6: [->]
-		jr z,raycast
+tst_rarrow:	bit 6,c		; Check bit 6: [->]
+		jr z,tst_a
 		; User is pressing the right-arrow key (<-) so we change the
 		; player's direction one to the right.
 		ld a,(player_dir)
 		inc a
 		ld (player_dir),a
+tst_a:		ld a,($3801)	; A keyboard row
+		ld c,a		; ...goes into c
+		bit 1,c		; Check bit 1: [A]
+		jr z,tst_d
+		; Move the player EAST by one block.
+		ld hl,(player_x)
+		dec hl
+		ld (player_x),hl
+tst_d:		bit 4,c		; Check bit 4: [D]
+		jr z,tst_w
+		; Move the player WEST by one block.
+		ld hl,(player_x)
+		inc hl
+		ld (player_x),hl
+tst_w:		ld a,($3804)	; A keyboard row
+		ld c,a		; ...goes into c
+		bit 7,c		; Check bit 7: [W]
+		jr z,tst_s
+		; Move the player NORTH by one block.
+		ld hl,(player_y)
+		inc hl
+		ld (player_y),hl
+tst_s:		bit 3,c		; Check bit 3: [S]
+		jr z,raycast
+		; Move the player SOUTH by one block.
+		ld hl,(player_y)
+		dec hl
+		ld (player_y),hl
 
-raycast:	; Raycast into the video back buffer.
-		; TODO
+		; -----------------------------------
+		; Raycast into the video back buffer.
+		; -----------------------------------
+raycast:	; TODO
 
 		; SUPER ROUGH STUFF TO TEST BACK TO SCREEN TIMING
 		; ON THE MODEL 1.
@@ -276,7 +312,9 @@ zero_action:	ld (toggle),a
 		ld a,$35
 		ld (buff05),a
 
-		; Copy the back buffer to the screen
+		; -----------------------------------
+		; Copy the back buffer to the screen.
+		; -----------------------------------
 copy_to_screen:	ld (save_sp),sp		; Save SP
 		ld sp,$3ec0
 		; ** Model 1 with VBLANK mod only **
@@ -329,7 +367,9 @@ not_in_vblank:	in a,($ff)
 		call barden_hexcv
 		ld (screen+64*15-2),hl
 
+		; ---------------------------------------------------
 		; Now go back to the top of the game loop and repeat.
+		; ---------------------------------------------------
 		jp game_loop
 
 		end main

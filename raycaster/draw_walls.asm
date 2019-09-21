@@ -1,3 +1,13 @@
+;  _____                      __          __   _ _     
+; |  __ \                     \ \        / /  | | |    
+; | |  | |_ __ __ ___      __  \ \  /\  / /_ _| | |___ 
+; | |  | | '__/ _` \ \ /\ / /   \ \/  \/ / _` | | / __|
+; | |__| | | | (_| |\ V  V /     \  /\  / (_| | | \__ \
+; |_____/|_|  \__,_| \_/\_/       \/  \/ \__,_|_|_|___/
+;
+; Author: Tim Halloran
+; From the tutorial at https://lodev.org/cgtutor/raycasting.html
+
 ; Draws vertical lines that act as walls for a 11-line ray caster.
 ; Two types of walls are supported:
 ;         solid: |    outline: ·
