@@ -16,7 +16,7 @@
 import '../lib/phillips_14byte_move.asm'
 
 ; Fast move of 56-byte src to dst  using George Phillip's fast 16 byte move.
-; This is what allows are back buffer to exist: we are using this code to
+; This is what allows our back buffer to exist. We are using this code to
 ; move the back buffer to the screen.
 line_to_screen	macro	src, dst
 		phillips_14byte_move src, dst
