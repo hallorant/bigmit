@@ -36,7 +36,7 @@
 ; Exit:
 ;  c = the remaining half-height of the desired line
 ; @private
-solid_center_wall_seg	macro	?hh1,?hh2
+solid_center_wall_seg	macro	?hh1,?hh2,?hh3
 			ld a,(iy)
 			; We'll hold the remaining half-height in c.
 			ld c,a
@@ -49,7 +49,12 @@ solid_center_wall_seg	macro	?hh1,?hh2
 			ld a,$8c	; r and l mid dots.
 			ld (ix),a
 			ret
-?hh2:			ld a,$bf	; all dots.
+?hh2:			dec c
+			jr nz,?hh3
+			ld a,$bb	; r and l top and bot dots, l mid.
+			ld (ix),a
+			ret
+?hh3:			ld a, $95	; all l dots.
 			ld (ix),a
 			endm
 
@@ -91,11 +96,8 @@ outline_center_wall_seg	macro	?hh1,?hh2,?hh3
 ; Exit:
 ;  c = the remaining half-height of the desired line
 ; @private
-solid_wall_seg		macro	?hh1,?hh2,?hh3
+solid_wall_seg		macro	?hh2,?hh3,?hh4
 			dec c
-			jr nz,?hh1
-			ret
-?hh1:			dec c
 			jr nz,?hh2
 			ld a,$b0	; r and l bottom dots.
 			ld (ix),a
@@ -104,12 +106,19 @@ solid_wall_seg		macro	?hh1,?hh2,?hh3
 			ret
 ?hh2:			dec c
 			jr nz,?hh3
-			ld a,$bc	; r and l bottom 2 dots.
+			ld a,$9c	; r and l mid dots, l bottom.
 			ld (ix),a
-			ld a,$8f	; r and l top 2 dots.
+			ld a,$8d	; r and l mid 2 dots, l top.
 			ld (iy),a
 			ret
-?hh3:			ld a,$bf	; all dots
+?hh3:			dec c
+			jr nz,?hh4
+			ld a,$97	; r and l top dots, l mid & bot.
+			ld (ix),a
+			ld a,$b5	; r and l bottom dots, l mid & top.
+			ld (iy),a
+			ret
+?hh4:			ld a, $95	; all l dots.
 			ld (ix),a
 			ld (iy),a
 			endm

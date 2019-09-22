@@ -58,21 +58,21 @@ dist_to_hh:	ld c,1
 
 ; Table of half-heights mapping to the smallest distance which should
 ; use a particular half-height to draw a wall.
-hh_01		 defw	6400	; map distance 25.0
-hh_02		 defw	6032	; map distance 23.5625
-hh_03		 defw	5664	; map distance 22.125
-hh_04		 defw	5296	; map distance 20.6875
-hh_05		 defw	4928	; map distance 19.25
-hh_06		 defw	4560	; map distance 17.8125
-hh_07		 defw	4192	; map distance 16.375
-hh_08		 defw	3824	; map distance 14.9375
-hh_09		 defw	3456	; map distance 13.5
-hh_10		 defw	3088	; map distance 12.0625
-hh_11		 defw	2720	; map distance 10.625
-hh_12		 defw	2352	; map distance 9.1875
-hh_13		 defw	1984	; map distance 7.75
-hh_14		 defw	1616	; map distance 6.3125
-hh_15		 defw	1248	; map distance 4.875
-hh_16		 defw	880	; map distance 3.4375
-hh_17		 defw	512	; map distance 2.0
+hh_01		 defw	4352	; map distance 17.0
+hh_02		 defw	4096	; map distance 16.0
+hh_03		 defw	3840	; map distance 15.0
+hh_04		 defw	3584	; map distance 14.0
+hh_05		 defw	3328	; map distance 13.0
+hh_06		 defw	3072	; map distance 12.0
+hh_07		 defw	2816	; map distance 11.0
+hh_08		 defw	2560	; map distance 10.0
+hh_09		 defw	2304	; map distance 9.0
+hh_10		 defw	2048	; map distance 8.0
+hh_11		 defw	1792	; map distance 7.0
+hh_12		 defw	1536	; map distance 6.0
+hh_13		 defw	1280	; map distance 5.0
+hh_14		 defw	1024	; map distance 4.0
+hh_15		 defw	768	; map distance 3.0
+hh_16		 defw	512	; map distance 2.0
+hh_17		 defw	256	; map distance 1.0
 

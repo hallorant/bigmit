@@ -104,14 +104,16 @@ do_chk_lsb:	ld a,l
 		jr do_step_y
 
 do_step_x:	ld a,1
-		ld (wall_is_solid),a
+		ld (wall_is_solid),a	; X steps draw solid walls.
 
+		; Add a step (delta_dist_x) our total dist stepping Xs.
 		ld hl,(cast_next_dist_x)
 		ld (cast_dist_x),hl
 		ld de,(cast_delta_dist_x);
 		add hl,de
 		ld (cast_next_dist_x),hl
 
+		; Step the map postion we are at (cast_x,cast_y).
 		ld a,(cast_x)
 		ld c,a
 		ld a,(cast_step_x)
@@ -121,14 +123,16 @@ do_step_x:	ld a,1
 		jr check_if_wall
 
 do_step_y:	ld a,0
-		ld (wall_is_solid),a
+		ld (wall_is_solid),a	; Y steps draw outline walls.
 
+		; Add a step (delta_dist_y) our total dist stepping Ys.
 		ld hl,(cast_next_dist_y)
 		ld (cast_dist_y),hl
 		ld de,(cast_delta_dist_y);
 		add hl,de
 		ld (cast_next_dist_y),hl
 
+		; Step the map postion we are at (cast_x,cast_y).
 		ld a,(cast_y)
 		ld c,a
 		ld a,(cast_step_y)

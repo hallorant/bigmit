@@ -65,6 +65,8 @@ player_y	defw	16
 
 frames_drawn	defw	0
 
+demo_mode	defb	1	; 1 = yes, 0 = no.
+
 title_txt	defb	'TRS-80 MODEL 1 RAYCASTING DEMONSTRATION'
 title_len	equ	$-title_txt
 frames_txt	defb	'FRAMES DRAWN'
@@ -73,6 +75,8 @@ pos_txt		defb	'PLAYER'
 pos_len		equ	$-pos_txt
 dir_txt		defb	'DIRECTION'
 dir_len		equ	$-dir_txt
+demo_mode_txt	defb	'- DEMO MODE -'
+demo_mode_len	equ	$-demo_mode_txt
 comma		equ	','
 
 cast_col	defb	0
@@ -188,12 +192,16 @@ txt_larrow:	bit 5,c		; Check bit 5: [<-]
 		; player's direction one to the left.
 		ld a,(player_dir)
 		dec a
+		dec a
+		dec a
 		ld (player_dir),a
 tst_rarrow:	bit 6,c		; Check bit 6: [->]
 		jr z,tst_a
-		; User is pressing the right-arrow key (<-) so we change the
+		; User is pressing the right-arrow key (->) so we change the
 		; player's direction one to the right.
 		ld a,(player_dir)
+		inc a
+		inc a
 		inc a
 		ld (player_dir),a
 tst_a:		ld a,($3801)	; A keyboard row
@@ -219,11 +227,27 @@ tst_w:		ld a,($3804)	; A keyboard row
 		inc hl
 		ld (player_y),hl
 tst_s:		bit 3,c		; Check bit 3: [S]
-		jr z,raycast
+		jr z,tst_t
 		; Move the player SOUTH by one block.
 		ld hl,(player_y)
 		dec hl
 		ld (player_y),hl
+tst_t:		bit 4,c		; Check bit 4: [T]
+		jr z,demo
+		; Move the player SOUTH by one block.
+		ld a,(demo_mode)
+		xor 1
+		ld (demo_mode),a
+
+demo:		ld a,(demo_mode)
+		or a
+		jr z,raycast
+		; In demo mode we rotate to the right all the time.
+		ld a,(player_dir)
+		inc a
+		inc a
+		inc a
+		ld (player_dir),a
 
 		; -----------------------------------
 		; Raycast into the video back buffer.
@@ -333,10 +357,21 @@ not_in_vblank:	in a,($ff)
 		ld a,(player_dir)
 		call barden_hexcv
 		ld (screen+64*15-2),hl
+		; Show we are in demo mode, if needed.
+		ld a,(demo_mode)
+		or a
+		jr z,clear_demo_txt
+		; Show a '*' on the screen to indicated we are in demo mode.
+		ld a,'*'
+		ld (screen+64*13+title_len+1),a
+		jr game_cont
+clear_demo_txt:	; Clear the demo mode '*' from the screen.
+		ld a,' '
+		ld (screen+64*13+title_len+1),a
 
 		; ---------------------------------------------------
 		; Now go back to the top of the game loop and repeat.
 		; ---------------------------------------------------
-		jp game_loop
+game_cont:	jp game_loop
 
 		end main
