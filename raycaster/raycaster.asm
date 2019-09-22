@@ -66,6 +66,7 @@ player_y	defw	16
 frames_drawn	defw	0
 
 demo_mode	defb	1	; 1 = yes, 0 = no.
+use_vblank	defb	1	; 1 = yes, 0 = no.
 
 title_txt	defb	'TRS-80 MODEL 1 RAYCASTING DEMONSTRATION'
 title_len	equ	$-title_txt
@@ -75,8 +76,6 @@ pos_txt		defb	'PLAYER'
 pos_len		equ	$-pos_txt
 dir_txt		defb	'DIRECTION'
 dir_len		equ	$-dir_txt
-demo_mode_txt	defb	'- DEMO MODE -'
-demo_mode_len	equ	$-demo_mode_txt
 comma		equ	','
 
 cast_col	defb	0
@@ -233,11 +232,17 @@ tst_s:		bit 3,c		; Check bit 3: [S]
 		dec hl
 		ld (player_y),hl
 tst_t:		bit 4,c		; Check bit 4: [T]
-		jr z,demo
-		; Move the player SOUTH by one block.
+		jr z,tst_v
+		; Toggle demo mode.
 		ld a,(demo_mode)
 		xor 1
 		ld (demo_mode),a
+tst_v:		bit 6,c		; Check bit 6: [V]
+		jr z,demo
+		; Toggle use of VBLANK mod hardware.
+		ld a,(use_vblank)
+		xor 1
+		ld (use_vblank),a
 
 demo:		ld a,(demo_mode)
 		or a
@@ -308,6 +313,11 @@ col_next:	; Move to next column and check if we are done drawing.
 		; -----------------------------------
 copy_to_screen:	ld (save_sp),sp		; Save SP
 		ld sp,$3ec0
+		; Check if we are suppose to use the VBLANK hardware.
+		ld a,(use_vblank)
+		or a
+		jr z,update_screen
+
 		; ** Model 1 with VBLANK mod only **
 		; Wait for the start of VBLANK. We want to see a 0 value to
 		; Ensure we aren't jumping in at the end of VBLANK.
@@ -321,7 +331,7 @@ not_in_vblank:	in a,($ff)
 
 		; Skipping the first line, copy the video back buffer to
 		; lines 2-12 on the screen with a 4 character margin.
-		line_to_screen buff01,screen+64*1+4
+update_screen:	line_to_screen buff01,screen+64*1+4
 		line_to_screen buff02,screen+64*2+4
 		line_to_screen buff03,screen+64*3+4
 		line_to_screen buff04,screen+64*4+4
@@ -360,14 +370,25 @@ not_in_vblank:	in a,($ff)
 		; Show we are in demo mode, if needed.
 		ld a,(demo_mode)
 		or a
-		jr z,clear_demo_txt
+		jr z,clear_star
 		; Show a '*' on the screen to indicated we are in demo mode.
 		ld a,'*'
 		ld (screen+64*13+title_len+1),a
-		jr game_cont
-clear_demo_txt:	; Clear the demo mode '*' from the screen.
+		jr vblank
+clear_star:	; Clear the demo mode '*' from the screen.
 		ld a,' '
 		ld (screen+64*13+title_len+1),a
+		; Show we are using VBLANK hardware, if needed.
+vblank:		ld a,(use_vblank)
+		or a
+		jr z,clear_vblank
+		; Show a 'V' on the screen to indicated we are in demo mode.
+		ld a,'V'
+		ld (screen+64*14+title_len+1),a
+		jr game_cont
+clear_vblank:	; Clear the VBLANK hardware use 'V' from the screen.
+		ld a,' '
+		ld (screen+64*14+title_len+1),a
 
 		; ---------------------------------------------------
 		; Now go back to the top of the game loop and repeat.
