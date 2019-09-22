@@ -75,16 +75,20 @@ dir_txt		defb	'DIRECTION'
 dir_len		equ	$-dir_txt
 comma		equ	','
 
+cast_col	defb	0
+buff_addr	defw	0
+cast_dir	defb	0
+wall_hh		defb	0
+wall_is_solid	defb	0
+delta_dist_addr	defw	0
+
 save_sp		defw	0
-toggle		defb	1
-shot		defb	0
-hha		defb	5
-hhb		defb	17
 
 ; Our raycasting modules.
 import 'delta_dist.asm'
 import 'dist_to_hh.asm'
 import 'draw_walls.asm'
+import 'cast.asm'
 import 'line_to_screen.asm'
 import 'world.asm'
 
@@ -222,95 +226,54 @@ tst_s:		bit 3,c		; Check bit 3: [S]
 		; -----------------------------------
 		; Raycast into the video back buffer.
 		; -----------------------------------
-raycast:	; TODO
+raycast:	ld a,buff_line_width
+		ld (cast_col),a		; # of columns to drawn walls for.
 
-		; SUPER ROUGH STUFF TO TEST BACK TO SCREEN TIMING
-		; ON THE MODEL 1.
+		ld hl,buff06
+		ld (buff_addr),hl	; First column addr in the back buffer.
 
-		; Draw a block.
-		ld a,$bf
-		ld (buff04+30),a
-		ld (buff04+31),a
-		ld (buff04+32),a
-		ld (buff04+33),a
-		ld (buff04+34),a
-		ld (buff04+35),a
-		ld (buff05+30),a
-		ld (buff05+31),a
-		ld (buff05+32),a
-		ld (buff05+33),a
-		ld (buff05+34),a
-		ld (buff05+35),a
-		ld (buff06+30),a
-		ld (buff06+31),a
-		ld (buff06+32),a
-		ld (buff06+33),a
-		ld (buff06+34),a
-		ld (buff06+35),a
-
-                ; shoot a block across the screen in a few lines
-		ld a,(shot)
-		inc a
-		and $3f
-		ld (shot),a
-		ld bc,buff03
-		ld hl,0
-		ld l,a
-		add hl,bc
-		ld (hl),$bf
-
-		; And shoot another block offset a bit.
-		inc a
-		and $3f
-		inc a
-		and $3f
-		inc a
-		and $3f
-		inc a
-		and $3f
-		inc a
-		and $3f
-		inc a
-		and $3f
-		ld bc,buff08
-		ld hl,0
-		ld l,a
-		add hl,bc
-		ld (hl),$bf
-
-		; Draw a solid line.
-		ld ix,buff06+20
-		ld iy,hhb
+		ld a,(player_dir)
+		add a,256-(buff_line_width/2)
+		ld (cast_dir),a		; Raycasting angle of the first column.
+		
+col_loop:	; Cast and draw the wall at the left-hand-side of the column.
+		ld hl,delta_dist_table
+		ld (delta_dist_addr),hl
+		call cast
+		ld ix,(buff_addr)
+		ld iy,wall_hh
+		ld a,(wall_is_solid)	; Draw solid or outline wall?
+		or a
+		jr z,lhs_outline
 		call draw_solid_wall_lhs
+		jr col_rhs
+lhs_outline:	call draw_outline_wall_lhs
 
-                ; quick toggle some stuff
-		ld a,(toggle)
-		xor 1
-		jr z,zero_action
-		ld (toggle),a
+		; Cast and draw the wall at the right-hand-side of the column.
+col_rhs:	ld hl,delta_skew_table
+		ld (delta_dist_addr),hl
+		call cast
+		ld ix,(buff_addr)
+		ld iy,wall_hh
+		ld a,(wall_is_solid)	; Draw solid or outline wall?
+		or a
+		jr z,rhs_outline
+		call draw_solid_wall_rhs
+		jr col_next
+rhs_outline:	call draw_outline_wall_rhs
 
-		ld ix,buff06+50
-		ld iy,hha
-		call draw_outline_wall_lhs
-
-		; Show a '3' on line 3 (should flicker)
-		ld a,$33
-		ld (buff03),a
-
-		jr copy_to_screen
-
-zero_action:	ld (toggle),a
-
-		ld ix,buff06+51
-		ld iy,hhb
-		call draw_solid_wall_lhs
-
-		; Show a '4' on line 4 (should flicker)
-		ld a,$34
-		ld (buff04),a
-		; Show a '5' on line 5 (should flicker)
-		ld a,$35
-		ld (buff05),a
+col_next:	; Move to next column and check if we are done drawing.
+		ld a,(cast_col)
+		dec a			; Decrement the # of columns left.
+		jr z, copy_to_screen	; When done, copy buff to the screen.
+		ld (cast_col),a
+		ld a,(cast_dir)
+		inc a			; Increment the raycasting angle.
+		ld (cast_dir),a
+		ld hl,(buff_addr)
+		inc hl			; Increment the back buffer addr.
+		ld (buff_addr),hl
+		jr col_loop
 
 		; -----------------------------------
 		; Copy the back buffer to the screen.
