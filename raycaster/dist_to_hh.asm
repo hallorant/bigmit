@@ -24,8 +24,8 @@ check_hh	macro	addr,?chk_lsb,?next
 		ret		; h > d	 : msb dist > msb table lookup
 ?chk_lsb:	ld a,l
 		cp e
-		jr c,?next	; l < c  : lsb dist < lsb table lookup
-		ret		; l >= c : lsb dist >= lsb table lookup
+		jr c,?next	; l < e  : lsb dist < lsb table lookup
+		ret		; l >= e : lsb dist >= lsb table lookup
 ?next:		inc c
 		endm
 
@@ -58,21 +58,21 @@ dist_to_hh:	ld c,1
 
 ; Table of half-heights mapping to the smallest distance which should
 ; use a particular half-height to draw a wall.
-hh_01		 defw	11520	; map distance 45.0
-hh_02		 defw	10816	; map distance 42.25
-hh_03		 defw	10112	; map distance 39.5
-hh_04		 defw	9408	; map distance 36.75
-hh_05		 defw	8704	; map distance 34.0
-hh_06		 defw	8000	; map distance 31.25
-hh_07		 defw	7296	; map distance 28.5
-hh_08		 defw	6592	; map distance 25.75
-hh_09		 defw	5888	; map distance 23.0
-hh_10		 defw	5184	; map distance 20.25
-hh_11		 defw	4480	; map distance 17.5
-hh_12		 defw	3776	; map distance 14.75
-hh_13		 defw	3072	; map distance 12.0
-hh_14		 defw	2368	; map distance 9.25
-hh_15		 defw	1664	; map distance 6.5
-hh_16		 defw	960	; map distance 3.75
-hh_17		 defw	256	; map distance 1.0
+hh_01		 defw	6400	; map distance 25.0
+hh_02		 defw	6032	; map distance 23.5625
+hh_03		 defw	5664	; map distance 22.125
+hh_04		 defw	5296	; map distance 20.6875
+hh_05		 defw	4928	; map distance 19.25
+hh_06		 defw	4560	; map distance 17.8125
+hh_07		 defw	4192	; map distance 16.375
+hh_08		 defw	3824	; map distance 14.9375
+hh_09		 defw	3456	; map distance 13.5
+hh_10		 defw	3088	; map distance 12.0625
+hh_11		 defw	2720	; map distance 10.625
+hh_12		 defw	2352	; map distance 9.1875
+hh_13		 defw	1984	; map distance 7.75
+hh_14		 defw	1616	; map distance 6.3125
+hh_15		 defw	1248	; map distance 4.875
+hh_16		 defw	880	; map distance 3.4375
+hh_17		 defw	512	; map distance 2.0
 

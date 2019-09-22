@@ -76,11 +76,12 @@ dir_len		equ	$-dir_txt
 comma		equ	','
 
 cast_col	defb	0
+cast_camera_dir	defb	0
+camera_dist_cor	defw	0
 buff_addr	defw	0
 cast_dir	defb	0
 wall_hh		defb	0
 wall_is_solid	defb	0
-delta_dist_addr	defw	0
 
 save_sp		defw	0
 
@@ -88,9 +89,10 @@ save_sp		defw	0
 import 'delta_dist.asm'
 import 'dist_to_hh.asm'
 import 'draw_walls.asm'
-import 'cast.asm'
 import 'line_to_screen.asm'
 import 'world.asm'
+
+import 'cast.asm'	; Depends upon the above includes
 
 line_to_video	macro	src, dst
 		; A line is 56 bytes.
@@ -229,6 +231,10 @@ tst_s:		bit 3,c		; Check bit 3: [S]
 raycast:	ld a,buff_line_width
 		ld (cast_col),a		; # of columns to drawn walls for.
 
+		ld a,64
+		sub a,(buff_line_width/2)
+		ld (cast_camera_dir),a	; Angle for camera correction.
+
 		ld hl,buff06
 		ld (buff_addr),hl	; First column addr in the back buffer.
 
@@ -236,31 +242,26 @@ raycast:	ld a,buff_line_width
 		add a,256-(buff_line_width/2)
 		ld (cast_dir),a		; Raycasting angle of the first column.
 		
-col_loop:	; Cast and draw the wall at the left-hand-side of the column.
-		ld hl,delta_dist_table
-		ld (delta_dist_addr),hl
+col_loop:	; Calculate the camera distance correction for this column
+		; of the screen, unlike the ray distance this is independent
+		; of the player's direction. It uses X delta_dist centered on
+		; angle 64.
+		ld a,(cast_camera_dir)
+		ld c,a
+		call delta_dist_x
+		ld (camera_dist_cor),de
+
+		; Cast and draw the wall at the left-hand-side of the column.
 		call cast
 		ld ix,(buff_addr)
 		ld iy,wall_hh
 		ld a,(wall_is_solid)	; Draw solid or outline wall?
 		or a
 		jr z,lhs_outline
-		call draw_solid_wall_lhs
-		jr col_rhs
-lhs_outline:	call draw_outline_wall_lhs
-
-		; Cast and draw the wall at the right-hand-side of the column.
-col_rhs:	ld hl,delta_skew_table
-		ld (delta_dist_addr),hl
-		call cast
-		ld ix,(buff_addr)
-		ld iy,wall_hh
-		ld a,(wall_is_solid)	; Draw solid or outline wall?
-		or a
-		jr z,rhs_outline
-		call draw_solid_wall_rhs
+		call draw_solid_wall
 		jr col_next
-rhs_outline:	call draw_outline_wall_rhs
+lhs_outline:	call draw_outline_wall
+		jr col_next
 
 col_next:	; Move to next column and check if we are done drawing.
 		ld a,(cast_col)
@@ -273,6 +274,9 @@ col_next:	; Move to next column and check if we are done drawing.
 		ld hl,(buff_addr)
 		inc hl			; Increment the back buffer addr.
 		ld (buff_addr),hl
+		ld a,(cast_camera_dir)
+		inc a			; Increment the camera lookup angle.
+		ld (cast_camera_dir),a
 		jr col_loop
 
 		; -----------------------------------
