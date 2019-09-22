@@ -77,7 +77,7 @@ outline_center_wall_seg	macro	?hh1,?hh2,?hh3
 			ret
 ?hh2:			dec c
 			jr nz,?hh3
-			ld a,$bf	; all dots.
+			ld a,$b3	; r and l top and bot dots.
 			ld (ix),a
 			ret
 ?hh3:			nop
