@@ -148,21 +148,21 @@ found_wall:	ld a,(wall_is_solid)
 		or a
 		jr z,found_wall_y
 found_wall_x:	ld hl,(cast_dist_x)
-		jr calc_hh
+		jr camera_fix
 found_wall_y:	ld hl,(cast_dist_y)
 
-		; Correct for camera.
+camera_fix:	; Correct distance for camera plane.
 		push hl
 		ld hl,(camera_dist_cor)
 		ld d,h
 		ld e,l
 		pop hl
-		or a	; Clear carry
+		or a		; Clear carry
 		sbc hl,de
 
 		; Using the distance to the wall, determine half-height of
 		; the wall we should draw.
-calc_hh:	call dist_to_hh
+		call dist_to_hh
 		ld a,c
 		ld (wall_hh),a
 		ret

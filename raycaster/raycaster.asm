@@ -57,7 +57,7 @@ buff11		defs	buff_line_width
 ;          |
 ;      -   |   -
 ;         128
-player_dir	defb	0
+player_dir	defb	110
 
 ; Our world is 24x24 (see world.asm).
 player_x	defw	16
