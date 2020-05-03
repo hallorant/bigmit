@@ -1,4 +1,4 @@
-; Unit tests for world.asm.
+; Demo for TRS-80 model identification.
   org $4a00
 import '../lib/barden_fill.asm'
 import '../lib/barden_hexcv.asm'
