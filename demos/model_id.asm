@@ -8,7 +8,6 @@ blank		equ	$80
 screen		equ	$3c00
 m4_txt		defb	'MODEL '
 m4_len		equ	$-m4_txt
-model_number	defb	0
 
 ; Identifies the model number of the TRS-80 we are running on.
 ;
@@ -69,6 +68,7 @@ _get_model_number_m3:
   ret
 ; ---------- get_model_number
   
+; A little demo program that just prints the model number to the screen.
 main:
   ; Clear the screen.
   ld d,blank
