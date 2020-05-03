@@ -1,8 +1,8 @@
 ; Demo for TRS-80 model identification.
   org $4a00
 import '../lib/barden_fill.asm'
-import '../lib/barden_hexcv.asm'
 import '../lib/barden_move.asm'
+import '../lib/gp_get_trs80_model.asm'
 
 blank		equ	$80
 screen		equ	$3c00
@@ -78,13 +78,21 @@ main:
 
 print_model:
   ld hl,m4_txt
-  ld de,screen+64*3
+  ld de,screen+64*2
   ld bc,m4_len
   call barden_move
   call get_model_number
-  call barden_hexcv  ; hex is fine (1, 3, or 4).
-  ld a,h
-  ld (screen+64*3+m4_len),a
+  add a,$30
+  ld (screen+64*2+m4_len),a
+
+  ; Now use George Phillip's much better code.
+  ld hl,m4_txt
+  ld de,screen+64*4
+  ld bc,m4_len
+  call barden_move
+  call gp_get_trs80_model
+  add a,$30
+  ld (screen+64*4+m4_len),a
 
 hcf:
   jr hcf
