@@ -16,7 +16,7 @@ model_number	defb	0
 ;
 ; Exit: a  1 = Model 1 (Level 1 or 2)
 ;          3 = Model 3
-;          4 = Model 4 (or 4P)
+;          4 = Model 4 (4ga or 4p)
 get_model_number:
   ; If we can write to $0000 ROM we are on a Model 4.
   ; (Memory map II, III, or I4)
