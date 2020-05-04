@@ -1,3 +1,6 @@
+ifndef INCLUDE_REVERSE_BITS
+INCLUDE_REVERSE_BITS equ 1
+
 ;                                    _     _ _       
 ;                                   | |   (_) |      
 ; _ __ _____   _____ _ __ ___  ___  | |__  _| |_ ___ 
@@ -29,3 +32,4 @@ _cont:
   ret z
   jr _loop
 
+endif ; INCLUDE_REVERSE_BITS

@@ -1,3 +1,6 @@
+ifndef INCLUDE_SLA16
+INCLUDE_SLA16 equ 1
+
 ;     _       __    ____ 
 ;    | |     /  |  / ___|
 ; ___| | __ _`| | / /___ 
@@ -29,3 +32,4 @@ _cont:
   dec d
   jr _loop
 
+endif ; INCLUDE_SLA16

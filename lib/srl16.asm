@@ -1,3 +1,6 @@
+ifndef INCLUDE_SRL16
+INCLUDE_SRL16 equ 1
+
 ;          _  __    ____
 ;         | |/  |  / ___|
 ; ___ _ __| |`| | / /___ 
@@ -29,3 +32,4 @@ _cont:
   dec d
   jr _loop
 
+endif ; INCLUDE_SRL16

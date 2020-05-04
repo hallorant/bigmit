@@ -1,16 +1,18 @@
-ifndef INCLUDE_BARDEN_MOVE
-INCLUDE_BARDEN_MOVE equ 1
+ifndef INCLUDE_FAST_MOVE
+INCLUDE_FAST_MOVE equ 1
 
-; _                   _
-;| |                 | |
-;| |__   __ _ _ __ __| | ___ _ __    _ __ ___   _____   _____ 
-;| '_ \ / _` | '__/ _` |/ _ \ '_ \  | '_ ` _ \ / _ \ \ / / _ \
-;| |_) | (_| | | | (_| |  __/ | | | | | | | | | (_) \ V /  __/
-;|_.__/ \__,_|_|  \__,_|\___|_| |_| |_| |_| |_|\___/ \_/ \___|
-;                               ______
-;                              |______|
+import 'gp_14byte_move'
+
+;  __          _                              
+; / _|        | |                             
+;| |_ __ _ ___| |_   _ __ ___   _____   _____ 
+;|  _/ _` / __| __| | '_ ` _ \ / _ \ \ / / _ \
+;| || (_| \__ \ |_  | | | | | | (_) \ V /  __/
+;|_| \__,_|___/\__| |_| |_| |_|\___/ \_/ \___|
+;               ______                        
+;              |______|
 ;
-; Author: William Barden, Jr.
+; Author: Tim Halloran
 ;         'TRS-80 Assembly-Language Programming', 1979 pg 190.
 ;
 ; Moves one block of memory to another area in memory.
@@ -41,4 +43,4 @@ _backwards_move:
   lddr
   ret
 
-endif ; INCLUDE_BARDEN_MOVE
+endif ; INCLUDE_FAST_MOVE

@@ -1,3 +1,6 @@
+ifndef INCLUDE_GP_GET_TRS80_MODEL
+INCLUDE_GP_GET_TRS80_MODEL equ 1
+
 ;                          _    _             _____ _____
 ;                         | |  | |           |  _  |  _  |
 ;  __ _ _ __     __ _  ___| |_ | |_ _ __ ___  \ V /| |/' |
@@ -46,3 +49,5 @@ gp_get_trs80_model:
 _is_m4:
   ld a,4
   ret
+
+endif ; INCLUDE_GP_GET_TRS80_MODEL

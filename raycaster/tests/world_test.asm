@@ -1,10 +1,10 @@
 ; Unit tests for world.asm.
 	org $4a00
-import '../lib/barden_fill.asm'
-import '../lib/barden_hexcv.asm'
-import '../lib/barden_move.asm'
+import '../../lib/barden_fill.asm'
+import '../../lib/barden_hexcv.asm'
+import '../../lib/barden_move.asm'
 
-import '../raycaster/world.asm'
+import '../world.asm'
 
 blank		equ	$80
 screen		equ	$3c00

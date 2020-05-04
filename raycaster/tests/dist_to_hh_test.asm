@@ -1,9 +1,9 @@
 ; Unit tests for dist_to_hh.asm
 	org $4a00
-import '../lib/barden_fill.asm'
-import '../lib/barden_hexcv.asm'
-import '../lib/barden_move.asm'
-import '../raycaster/dist_to_hh.asm'
+import '../../lib/barden_fill.asm'
+import '../../lib/barden_hexcv.asm'
+import '../../lib/barden_move.asm'
+import '../dist_to_hh.asm'
 
 blank		equ	$80
 screen		equ	$3c00

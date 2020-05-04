@@ -2,6 +2,7 @@
 ;
 ; Expect a horizontal line for half of the first three lines.
   org $4a00
+
 import '../lib/barden_fill.asm'
 import '../lib/barden_move.asm'
 

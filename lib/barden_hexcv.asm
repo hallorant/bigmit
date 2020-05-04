@@ -1,3 +1,6 @@
+ifndef INCLUDE_BARDEN_HEXCV
+INCLUDE_BARDEN_HEXCV equ 1
+
 ; _                   _              _
 ;| |                 | |            | |
 ;| |__   __ _ _ __ __| | ___ _ __   | |__   _____  _______   __
@@ -40,3 +43,4 @@ _cvt:
 _cvt_is_done:
   ret
 
+endif ; INCLUDE_BARDEN_HEXCV

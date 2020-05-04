@@ -1,3 +1,6 @@
+ifndef INCLUDE_BARDEN_FILL
+INCLUDE_BARDEN_FILL equ 1
+
 ; _                   _               __ _ _ _
 ;| |                 | |             / _(_) | |
 ;| |__   __ _ _ __ __| | ___ _ __   | |_ _| | |
@@ -26,3 +29,4 @@ barden_fill:
   jr nz,barden_fill
   ret
 
+endif ; INCLUDE_BARDEN_FILL

@@ -1,3 +1,6 @@
+ifndef INCLUDE_GP_14BYTE_MOVE
+INCLUDE_GP_14BYTE_MOVE equ 1
+
 ;              __    ___ _           _
 ;             /  |  /   | |         | |
 ;  __ _ _ __  `| | / /| | |__  _   _| |_ ___   _ __ ___   _____   _____
@@ -36,3 +39,4 @@ gp_14byte_move	macro src, dst
   push af       ; 11
   endm
 
+endif ; INCLUDE_GP_14BYTE_MOVE

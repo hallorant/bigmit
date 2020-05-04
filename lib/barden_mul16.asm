@@ -1,3 +1,6 @@
+ifndef INCLUDE_BARDEN_MUL16
+INCLUDE_BARDEN_MUL16 equ 1
+
 ; _                   _                              _  __    ____
 ;| |                 | |                            | |/  |  / ___|
 ;| |__   __ _ _ __ __| | ___ _ __    _ __ ___  _   _| |`| | / /___
@@ -30,3 +33,4 @@ _cont:
   ex de,hl     ; Swap back
   jr _loop
 
+endif ; INCLUDE_BARDEN_MUL16
