@@ -15,8 +15,8 @@ INCLUDE_GP_14BYTE_MOVE equ 1
 ; Moves 14 bytes from src to dst at 12.5 cycles/byte. The fastest code known
 ; for copying memory from a specific location to another is this macro.
 ;
-; src = source addr of copy
-; dst = destination addr of copy
+; src = source addr of copy, must be immediate (not a register).
+; dst = destination addr of copy, must be immediate (not a register).
 gp_14byte_move	macro src, dst
                 ; t-states
   ld sp,src     ; 10
