@@ -65,7 +65,7 @@ _first_loop_increment:
 ; Entry: a  The value to output.
 ;        hl  Points to a 14-byte buffer.
 ; Exit:  hl  Will point to end-of-buffer + 1.
-z80unit_reg8_out:
+z80unit_diagnostic_msg8:
   ld c,a ; save the value
   ld (hl),'<'
   inc hl
@@ -246,24 +246,30 @@ z80unit_end macro ?passed_txt,?failed_txt,?skip
 ; actual   - 8-bit register or immediate value.
 ; msg      - to include in the diagnostic output message
 ;            if the assertion fails. (optional)
-assertEquals8 macro expected,actual,msg,?expected,?actual,?m0_txt,?m1_txt,?m2_txt,?failed,?skip,?end
+assertEquals8 macro expected,actual,msg,?saved_exp,?saved_act,?m0_txt,?m1_txt,?m2_txt,?failed,?skip,?end
   jp ?skip ; Could be >127 characters of output below.
-?expected	defb	0
-?actual		defb	0
-?m0_txt		defb	' assertEquals8(`expected`,`actual`) ','e','xpected ',$03 ; ETX
+?saved_exp	defs	1
+?saved_act	defs	1
+?m0_txt		defb	' assertEquals8(expected,actual) ','e','xpected ',$03 ; ETX
 ?m1_txt		defb	' but was ',$03 ; ETX
-?m2_txt		defb	' `msg`',$0d ; <ENTER>
+?m2_txt		defb	' msg',$0d ; <ENTER>
 ?skip:
+  ; Save the values, careful with the a register because it could be
+  ; what was defined for expected and/or actual, e.g., assertEquals a,a.
+  ; We use the stack to restore the "at start" a value after saving
+  ; 'expected' prior to saving 'actual'.
+  push af
   ld a,expected
-  ld (?expected),a
+  ld (?saved_exp),a
+  pop af
   ld a,actual
-  ld (?actual),a
+  ld (?saved_act),a
 
   ; Check the assertion
-  ld a,(?expected)
+  ld a,(?saved_act)
   ld c,a
-  ld a,(?actual)
-  xor c ; expected == actual
+  ld a,(?saved_exp)
+  xor c
   jr nz,?failed
 
   ; The assertion passed.
@@ -278,9 +284,9 @@ assertEquals8 macro expected,actual,msg,?expected,?actual,?m0_txt,?m1_txt,?m2_tx
   ld a,10 ; @DSPLY
   rst 40
 
-  ld a,(?expected)
+  ld a,(?saved_exp)
   ld hl,?m0_txt ; reuse buffer
-  call z80unit_reg8_out
+  call z80unit_diagnostic_msg8
   ld a,$03 ; ETX
   ld (hl),a
   ld hl,?m0_txt
@@ -291,9 +297,9 @@ assertEquals8 macro expected,actual,msg,?expected,?actual,?m0_txt,?m1_txt,?m2_tx
   ld a,10 ; @DSPLY
   rst 40
 
-  ld a,(?actual)
+  ld a,(?saved_act)
   ld hl,?m0_txt ; reuse buffer
-  call z80unit_reg8_out
+  call z80unit_diagnostic_msg8
   ld a,$03 ; ETX
   ld (hl),a
   ld hl,?m0_txt
