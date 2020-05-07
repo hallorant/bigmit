@@ -47,86 +47,82 @@ _report_passed_txt		defb	' passed, ',0
 _report_failed_txt		defb	' failed)',0
 _buffer				defs	16 ; buffer for ASCII conversions
 
+z80unit_push_reg macro
+  push af
+  push bc
+  push de
+  push hl
+  push ix
+  push iy
+  endm
+
+z80unit_pop_reg macro
+  pop iy
+  pop ix
+  pop hl
+  pop de
+  pop bc
+  pop af
+  endm
+
 ; ---------------------------------------------------------------- ;
 ; / / / / / / / / /  OS SPECIFIC PRINT ROUTINES  / / / / / / / / / ;
 ; ---------------------------------------------------------------- ;
 
 ; ------------------------------------------------------------------
 ; TRSDOS 6 / LDOS 6 (Model 4) implementation that prints a zero-terminated
-; string to the screen, optionally with a newline.
-; The output is truncated to 132 characters.
+; string to the screen. Output is truncated to 132 characters and
+; no newline is printed.
 ;
 ; Tested running with 'trs80gp -m4' and 'trs80gp -m4 -ld'.
 ;
 ; Entry: hl  Points to a zero-terminated string.
-;        a   Add newline: 0=no, 1=yes.
 _os_print:
-  jp _skip_os_print
-_os_buffer	defs	133
-_skip_os_print:
-  push af ; save a
-  ld de,_os_buffer
-  ld bc,132
-  jr _check_for_zero_terminator ; handle the empty string
-_find_zero_terminator:
-  ldi
-  ld a,b
-  or c ; is bc == 0?
-  jr nz,_check_for_zero_terminator
-  jr _do_os_print ; truncated to 132 characters
-_check_for_zero_terminator:
-  ld a,(hl)
-  or a
-  jp nz,_find_zero_terminator
-_do_os_print:
-  ld h,d ; hl <- de
-  ld l,e
-  pop af ; restore a
-  or a   ; is a == 0?
-  jr nz,_add_return
-  ld (hl),$03 ; ETX
-  jr _print_line
-_add_return:
-  ld (hl),$0d ; <ENTER>
-_print_line:
-  ld hl,_os_buffer
+  z80unit_push_reg
+  push hl  ; save start of buffer
+
+  ; Change string terminator from zero to ETX.
+  ld bc,132  ; search only 132 characters, truncate if needed
+  ld a,0     ; search for zero
+  cpir
+  jr nz,_change_zero_to_etx
+  dec hl     ; zero that was found is one address back
+
+_change_zero_to_etx:
+  ; We either found zero terminator or will truncate.
+  ld (hl),$03 ; change string terminator to ETX (restored later)
+  pop de      ; restore start of buffer
+  push hl     ; save location to restore the zero terminator.
+
+  ; Print the string with no newline.
+  ex de,hl    ; put buffer address into hl
   ld a,10 ; @DSPLY
   rst 40
-  ret
 
-; ---------------------------------------------------------------- ;
-; / / / / / / / / / / PORTABLE PRINT ROUTINES  / / / / / / / / / / ;
-; ---------------------------------------------------------------- ;
-
-; ------------------------------------------------------------------
-; Prints a zero-terminated string to the screen (no newline).
-;
-; Entry: hl  Points to a zero-terminated string with length < 132.
-_print:
-  push af
-  push bc
-  push de
-  ld a,0 ; no newline
-  call _os_print
-  pop de
-  pop bc
-  pop af
+  pop hl
+  ld (hl),0 ; restore zero terminator
+  z80unit_pop_reg
   ret
 
 ; ------------------------------------------------------------------
-; Prints a zero-terminated string to the screen with a newline.
+; TRSDOS 6 / LDOS 6 (Model 4) implementation that prints a newline to
+; the screen.
 ;
-; Entry: hl  Points to a zero-terminated string with length < 132.
-_println:
-  push af
-  push bc
-  push de
-  ld a,1 ; add newline
-  call _os_print
-  pop de
-  pop bc
-  pop af
+; Tested running with 'trs80gp -m4' and 'trs80gp -m4 -ld'.
+_os_newln:
+  z80unit_push_reg
+  jr _os_print_newln_skip
+_os_newline	defb	$0d ; <ENTER>
+_os_print_newln_skip:
+  ld hl,_os_newline
+  ld a,10 ; @DSPLY
+  rst 40
+  z80unit_pop_reg
   ret
+
+; ---------------------------------------------------------------- ;
+; / / / / / / / / / / / CONVERSION ROUTINES  / / / / / / / / / / / ;
+; ---------------------------------------------------------------- ;
 
 ; ------------------------------------------------------------------
 ; Subroutine to covert 1 byte into a hex value in ASCII. This has been
@@ -273,7 +269,8 @@ z80unit_show_title_and_start_test:
   ld (_title_displayed),a
 
   ld hl,_title_txt
-  call _println
+  call _os_print
+  call _os_newln
 
 _start_test:
   ; Note we are running a test.
@@ -282,14 +279,14 @@ _start_test:
 
   ; Print a title for the test.
   pop hl
-  call _print
+  call _os_print
   ret
 
 ; ------------------------------------------------------------------
 ; Shows progress upon a passed assertion.
 z80unit_passed_progress:
   ld hl,_passed_progress_txt
-  call _print
+  call _os_print
 
   ; Increment the assertion passed counter.
   ld hl,(_passed_count)
@@ -314,11 +311,12 @@ z80unit_failed_progress:
   inc hl
   ld (hl),0
   ld hl,_buffer
-  call _println
+  call _os_print
+  call _os_newln
 
 _last_assertion_failed:
   ld hl,_failed_progress_txt
-  call _print
+  call _os_print
 
   ; Increment the assertion failed counter.
   ld hl,(_failed_count)
@@ -350,20 +348,21 @@ _skip_msg8:
 
   ld hl,_buffer
   ld (hl),' '
-  call _print
+  call _os_print
   push ix
   pop hl
-  call _print
+  call _os_print
 
   ld hl,_diagnostic_expected_txt
-  call _print
+  call _os_print
 
   ld a,(_saved_exp)
   ld hl,_buffer ; reuse buffer
   call z80unit_diagnostic_msg8
   ld (hl),0
   ld hl,_buffer
-  call _println
+  call _os_print
+  call _os_newln
 
 ;  ld hl,?m1_txt
 ;  ld a,10 ; @DSPLY
@@ -395,7 +394,8 @@ z80unit_end_test:
 
   ; Complete the progress bar for this test.
   ld hl,_complete_progress_bar_txt
-  call _println
+  call _os_print
+  call _os_newln
 
   ; Note we are no longer running a test.
   ld a,0
@@ -416,7 +416,7 @@ z80unit_report:
 _report_problems:
   ld hl,_report_problems_txt
 _print_result:
-  call _print
+  call _os_print
 
   ; Print test passed count.
   ld hl,(_passed_count)
@@ -425,9 +425,9 @@ _print_result:
   ld (ix),0 ; zero-terminate the string
   ld hl,_buffer
   call _skip_ascii_zeros
-  call _print
+  call _os_print
   ld hl,_report_passed_txt
-  call _print
+  call _os_print
 
   ; Print test failed count.
   ld hl,(_failed_count)
@@ -436,9 +436,10 @@ _print_result:
   ld (ix),0 ; zero-terminate the string
   ld hl,_buffer
   call _skip_ascii_zeros
-  call _print
+  call _os_print
   ld hl,_report_failed_txt
-  call _println
+  call _os_print
+  call _os_newln
   ret
 
 ; ---------------------------------------------------------------- ;
@@ -453,18 +454,22 @@ z80unit_test macro name,?test_title_txt,?skip
   jp ?skip ; Could be >127 characters of output below.
 ?test_title_txt	defb	' name [',0
 ?skip:
+  z80unit_push_reg
   call z80unit_end_test ; if one is running
 
   ld hl,?test_title_txt
   call z80unit_show_title_and_start_test
+  z80unit_pop_reg
   endm
 
 ; ------------------------------------------------------------------
 ; Ends the unit test. Should be called after the last test to report
 ; passed/failed counts for the unit test.
 z80unit_end macro ?passed_txt,?failed_txt,?skip
+  z80unit_push_reg
   call z80unit_end_test
   call z80unit_report
+  z80unit_pop_reg
   endm
 
 ; ------------------------------------------------------------------
@@ -487,12 +492,7 @@ assertEquals8 macro expected,actual,msg,?sexp,?sact,?txt,?dtxt,?skip,?fail,?end
 ?txt	defb	'assertEquals8(expected,actual)',0
 ?dtxt	defb	'msg',0
 ?skip:
-  push af
-  push bc
-  push de
-  push hl
-  push ix
-  push iy
+  z80unit_push_reg
 
   ; Save the comparison values: 'expected' and 'actual'.
   ; We have to be careful with the a register because it could be what
@@ -529,12 +529,7 @@ assertEquals8 macro expected,actual,msg,?sexp,?sact,?txt,?dtxt,?skip,?fail,?end
   call z80unit_output_diagnostic_msg8
 
 ?end:
-  pop iy
-  pop ix
-  pop hl
-  pop de
-  pop bc
-  pop af
+  z80unit_pop_reg
   endm
 
 endif ; INCLUDE_Z80UNIT
