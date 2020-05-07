@@ -36,6 +36,7 @@ _running_test			defb	0 ; 0=no, 1=yes
 _last_passed			defb	1 ; 0=no, 1=yes
 
 _title_txt			defb	'z80unit (Bigmit Software 2020)',0
+_space				defb	' ',0
 _passed_progress_txt		defb	'P',0
 _failed_progress_txt		defb	'F',0
 _diagnostic_expected_txt	defb	' expected ',0
@@ -45,7 +46,7 @@ _report_success_txt		defb	'ALL TESTS PASSED (',0
 _report_problems_txt		defb	'*** TESTS FAILED *** (',0
 _report_passed_txt		defb	' passed, ',0
 _report_failed_txt		defb	' failed)',0
-_buffer				defs	16 ; buffer for ASCII conversions
+_buffer				defs	32 ; buffer for ASCII conversions
 
 z80unit_push_reg macro
   push af
@@ -69,15 +70,20 @@ z80unit_pop_reg macro
 ; / / / / / / / / /  OS SPECIFIC PRINT ROUTINES  / / / / / / / / / ;
 ; ---------------------------------------------------------------- ;
 
-; ------------------------------------------------------------------
-; TRSDOS 6 / LDOS 6 (Model 4) implementation that prints a zero-terminated
-; string to the screen. Output is truncated to 132 characters and
-; no newline is printed.
+; We define a simple interface to the console for test diagnostic output.
 ;
-; Tested running with 'trs80gp -m4' and 'trs80gp -m4 -ld'.
+;  z80unit_print prints a zero-terminated string pointed to by hl to the
+;                console. The output is truncated to 132 characters if
+;                longer or the string is not terminated properly.
 ;
-; Entry: hl  Points to a zero-terminated string.
-_os_print:
+;  z80unit_newln prints a newline to the console.
+;
+; Each supported OS needs these two console output interfaces.
+
+; -------------------------------------------------- ;
+; TRSDOS 6 / LDOS 6 (Model 4) console implementation ;
+; -------------------------------------------------- ;
+z80unit_print:
   z80unit_push_reg
   push hl  ; save start of buffer
 
@@ -104,25 +110,41 @@ _change_zero_to_etx:
   z80unit_pop_reg
   ret
 
-; ------------------------------------------------------------------
-; TRSDOS 6 / LDOS 6 (Model 4) implementation that prints a newline to
-; the screen.
-;
-; Tested running with 'trs80gp -m4' and 'trs80gp -m4 -ld'.
-_os_newln:
+z80unit_newln:
   z80unit_push_reg
-  jr _os_print_newln_skip
-_os_newline	defb	$0d ; <ENTER>
-_os_print_newln_skip:
-  ld hl,_os_newline
+  jr _newln_skip
+_enter  defb  $0d ; <ENTER>
+_newln_skip:
+  ld hl,_enter
   ld a,10 ; @DSPLY
   rst 40
   z80unit_pop_reg
   ret
 
 ; ---------------------------------------------------------------- ;
-; / / / / / / / / / / / CONVERSION ROUTINES  / / / / / / / / / / / ;
+; / / / / / / / / / / / / SUPPORT ROUTINES / / / / / / / / / / / / ;
 ; ---------------------------------------------------------------- ;
+
+; We want this include file to be self-contained. So many support
+; routines dealing with format conversions, string manipulation are
+; included below.
+
+; ------------------------------------------------------------------
+; Copies zero-termianted data to a buffer. The copy includes the terminator.
+;
+; Start: ix  Points to zero-terminated source buffer.
+;        iy  Points to destination buffer.
+; Exit:  ix  Points to the source buffer's terminating zero.
+;        iy  Points to the destination buffer's terminating zero.
+_strcpy:
+  ld a,(ix)
+  ld (iy),a
+  or a ; is a == 0;
+  ret z
+  inc ix
+  inc iy
+  jr _strcpy
+
 
 ; ------------------------------------------------------------------
 ; Subroutine to covert 1 byte into a hex value in ASCII. This has been
@@ -160,14 +182,15 @@ _cvt_is_done:
   ret
 
 ; ------------------------------------------------------------------
-; 16-bit binary to ASCII decimal conversion.
+; 16-bit binary to ASCII decimal conversion into a fixed 5-byte buffer.
+; Smaller results will have leading zeros, e.g., 00046.
 ;
 ; Author: William Barden, Jr.
 ;         'More TRS-80 Assembly-Language Programming', 1982 pg 156.
 ;
-; Entry: hl  16-bit binary value
-;        ix  Pointer to the start of the character buffer
-; Exit:  buffer filled with five ASCII characters, leading zeros.
+; Entry: hl  16-bit binary value.
+;        ix  Pointer to the start of the character buffer.
+; Exit:  buffer filled with five ASCII characters, possibly with leading zeros.
 ;        ix  buffer+5
 _barden_bindec:
   jr _skip_bindec
@@ -201,13 +224,13 @@ _bin030:
   ret
 
 ; ------------------------------------------------------------------
-; Skip past leading zeros in an zero-terminated ASCII string.
-;
-; Uses:  hl,a
+; Skip past leading ASCII '0's in an zero-terminated string and return
+; a pointer to the first non-'0'. The result will be the last '0' if the
+; string is entirly composed of '0's.
 ;
 ; Entry: hl   Point to start of the buffer.
-; Exit:  hl   Points not first non '0' ASCII character in the
-;             string or just the string '0'.
+; Exit:  hl   Points not first non-'0' ASCII character in the
+;             string or the last '0' if composed of all '0's.
 _skip_ascii_zeros:
   ld a,(hl)
   xor '0' ; a == '0'
@@ -223,37 +246,36 @@ _check_for_zero_value:
   ret
 
 ; ------------------------------------------------------------------
-; Write a 8-bit value as a number as hex and decimal into a buffer as ASCII.
-; For example, for 55 the output is "<0x37/   55>"
-; Uses:  a,c,hl,de
+; 16-bit binary to ASCII decimal conversion. The result will be from
+; one to five ASCII characters.
 ;
-; Entry: a  The value to output.
-;        hl  Points to a 14-byte buffer.
-; Exit:  hl  Will point to end-of-buffer + 1.
-z80unit_diagnostic_msg8:
-  ld c,a ; save the value
-  ld (hl),'<'
-  inc hl
-  ld (hl),'0'
-  inc hl
-  ld (hl),'x'
-  inc hl
-  ld a,c
-  call _barden_hexcv
-  ld (hl),'='
-  inc hl
-  ; Add decimal value.
+; Entry: de  A 16-bit binary value.
+;        hl  Pointer to the start of destination buffer.
+; 
+; Exit:  buffer filled with up to five ASCII characters.
+;        hl  Points to the last character + 1.
+_bindec16:
+  push hl ; save start of result buffer
+  jr _bindec16_skip
+_bindec16_buffer	defs	5
+			defb	0
+_bindec16_skip:
+  ld ix,_bindec16_buffer
+  ex de,hl ; get the value into hl
+  call _barden_bindec 
+  ld hl,_bindec16_buffer
+  call _skip_ascii_zeros
   push hl
-  pop ix
-  ld a,c ; the value
-  ld l,a
-  ld h,0 ; hl = the value (but 16 bits)
-  call _barden_bindec
-  push ix
+  pop ix ; points to start of result in the scratch buffer
+  pop iy ; points to the result buffer
+  call _strcpy
+  push iy
   pop hl
-  ld (hl),'>'
-  inc hl
   ret
+
+; ---------------------------------------------------------------- ;
+; / / / / / / / / / / / / X80UNIT ROUTINES / / / / / / / / / / / / ;
+; ---------------------------------------------------------------- ;
 
 ; ------------------------------------------------------------------
 ; Shows the title and starts a unit test.
@@ -269,24 +291,24 @@ z80unit_show_title_and_start_test:
   ld (_title_displayed),a
 
   ld hl,_title_txt
-  call _os_print
-  call _os_newln
+  call z80unit_print
+  call z80unit_newln
 
 _start_test:
   ; Note we are running a test.
   ld a,1
   ld (_running_test),a
 
-  ; Print a title for the test.
+  ; Print the name of the test.
   pop hl
-  call _os_print
+  call z80unit_print
   ret
 
 ; ------------------------------------------------------------------
-; Shows progress upon a passed assertion.
+; Show progress upon a passed assertion and update flags & counters.
 z80unit_passed_progress:
   ld hl,_passed_progress_txt
-  call _os_print
+  call z80unit_print
 
   ; Increment the assertion passed counter.
   ld hl,(_passed_count)
@@ -299,7 +321,7 @@ z80unit_passed_progress:
   ret
 
 ; ------------------------------------------------------------------
-; Shows progress upon a passed assertion.
+; Show progress upon a failed assertion and update flags & counters.
 z80unit_failed_progress:
   ld a,(_last_passed)
   or a ; set z flag
@@ -307,16 +329,11 @@ z80unit_failed_progress:
 
   ; Previous assertion passed so we output a newline to separate
   ; the failure message from the progress bar.
-  ld hl,_buffer
-  inc hl
-  ld (hl),0
-  ld hl,_buffer
-  call _os_print
-  call _os_newln
+  call z80unit_newln
 
 _last_assertion_failed:
   ld hl,_failed_progress_txt
-  call _os_print
+  call z80unit_print
 
   ; Increment the assertion failed counter.
   ld hl,(_failed_count)
@@ -329,61 +346,81 @@ _last_assertion_failed:
   ret
 
 ; ------------------------------------------------------------------
-; Entry: ix  points to the zero-terminated assertion text, e.g.,
-;            'assertEquals8(a,0)' created by the macro.
-;        iy  points to an optional zero-terminated diagnostic message.
-;            (iy) will be 0 (empty but propertly zero-terminated) if no
-;            diagnostic message was provided to the assertion.
-;        b   expected value
-;        c   actual value
-z80unit_output_diagnostic_msg8:
-  jr _skip_msg8
-_saved_exp	defs	1
-_saved_act	defs	1
-_skip_msg8:
-  ld a,b
-  ld (_saved_exp),a
-  ld a,c
-  ld (_saved_act),a
+; Write a 8-bit value as a number as hex and decimal into a buffer as ASCII.
+; For example, for 55 the output is "<0x37=55>". The output is zero terminated.
+;
+; Entry: a   An 8-bit value.
+;        hl  Points to the destination buffer.
+; Exit:  hl  unchanged
+z80unit_diagnostic_value8:
+  push hl ; save the buffer start
 
-  ld hl,_buffer
-  ld (hl),' '
-  call _os_print
-  push ix
-  pop hl
-  call _os_print
+  push af
+  push af ; save the value for two uses below
 
-  ld hl,_diagnostic_expected_txt
-  call _os_print
+  ld (hl),'<'
+  inc hl
+  ld (hl),'0'
+  inc hl
+  ld (hl),'x'
+  inc hl
 
-  ld a,(_saved_exp)
-  ld hl,_buffer ; reuse buffer
-  call z80unit_diagnostic_msg8
-  ld (hl),0
-  ld hl,_buffer
-  call _os_print
-  call _os_newln
+  pop af ; restore the value
+  call _barden_hexcv
 
-;  ld hl,?m1_txt
-;  ld a,10 ; @DSPLY
-;  rst 40
+  ld (hl),'='
+  inc hl
 
-;  ld a,(?saved_act)
-;  ld hl,?m0_txt ; reuse buffer
-;  call z80unit_diagnostic_msg8
-;  ld a,$03 ; ETX
-;  ld (hl),a
-;  ld hl,?m0_txt
-;  ld a,10 ; @DSPLY
-;  rst 40
+  pop af ; restore the value
+  ld e,a
+  ld d,0 ; de = the value (but 16 bits)
+  call _bindec16
+  ld (hl),'>'
+  inc hl
+  ld (hl),0 ; terminate the string
 
-;  ld hl,?m2_txt
-;  ld a,10 ; @DSPLY
-;  rst 40
-;?end:
-;  nop
+  pop hl ; restore the buffer start
   ret
 
+; ------------------------------------------------------------------
+; Write a 6-bit value as a number as hex and decimal into a buffer as ASCII.
+; For example, for 55 the output is "<0x0037=55>"
+;
+; Entry: bc  A 16-bit value.
+;        hl  Points to the output buffer.
+; Exit:  hl  Points to the last character + 1.
+z80unit_diagnostic_value16:
+  push hl ; save the buffer start
+
+  push bc
+  push bc
+  push bc ; save the value for three uses below
+
+  ld (hl),'<'
+  inc hl
+  ld (hl),'0'
+  inc hl
+  ld (hl),'x'
+  inc hl
+
+  pop bc ; restore the value
+  ld a,b
+  call _barden_hexcv
+  pop bc ; restore the value
+  ld a,c
+  call _barden_hexcv
+
+  ld (hl),'='
+  inc hl
+
+  pop de ; restore the value
+  call _bindec16
+  ld (hl),'>'
+  inc hl
+  ld (hl),0
+
+  pop hl ; restore the buffer start
+  ret
 
 ; ------------------------------------------------------------------
 ; Ends the current test, if necessary.
@@ -394,8 +431,8 @@ z80unit_end_test:
 
   ; Complete the progress bar for this test.
   ld hl,_complete_progress_bar_txt
-  call _os_print
-  call _os_newln
+  call z80unit_print
+  call z80unit_newln
 
   ; Note we are no longer running a test.
   ld a,0
@@ -416,7 +453,7 @@ z80unit_report:
 _report_problems:
   ld hl,_report_problems_txt
 _print_result:
-  call _os_print
+  call z80unit_print
 
   ; Print test passed count.
   ld hl,(_passed_count)
@@ -425,9 +462,9 @@ _print_result:
   ld (ix),0 ; zero-terminate the string
   ld hl,_buffer
   call _skip_ascii_zeros
-  call _os_print
+  call z80unit_print
   ld hl,_report_passed_txt
-  call _os_print
+  call z80unit_print
 
   ; Print test failed count.
   ld hl,(_failed_count)
@@ -436,10 +473,10 @@ _print_result:
   ld (ix),0 ; zero-terminate the string
   ld hl,_buffer
   call _skip_ascii_zeros
-  call _os_print
+  call z80unit_print
   ld hl,_report_failed_txt
-  call _os_print
-  call _os_newln
+  call z80unit_print
+  call z80unit_newln
   ret
 
 ; ---------------------------------------------------------------- ;
@@ -473,28 +510,82 @@ z80unit_end macro ?passed_txt,?failed_txt,?skip
   endm
 
 ; ------------------------------------------------------------------
-; Asserts that the two 8-bit registers or immediate values are equal.
+; Asserts that an 8-bit value is zero.
+; Any exp valid within "ld a,<exp>" may be used for the argument.
+; The registers are saved and restored.
+;
+; Example use:
+;   assertZero8 a
+;   assertZero8 0
+;   assertZero8 ($3a00)
+;
+; actual   - An 8-bit value.
+; msg      - Added to the diagnostic output if the assertion fails (optional).
+assertZero8 macro actual,msg,?sact,?buf,?txt0,?txt1,?skip,?fail,?end
+  jp ?skip ; could be >127 characters of output below
+?sact	defs	1
+?buf	defs	15
+?txt0	defb	' assertZero8 actual : expected 0 but was ',0
+?txt1	defb	' msg',0
+?skip:
+  z80unit_push_reg
+
+  ld a,actual
+  ld (?sact),a
+
+  ; Check the assertion.
+  ld a,(?sact)
+  or a
+  jr nz,?fail
+
+  ; The assertion passed.
+  call z80unit_passed_progress
+  jp ?end
+
+?fail:
+  ; The assertion failed.
+  call z80unit_failed_progress
+
+  ld hl,?txt0
+  call z80unit_print
+
+  ld a,(?sact)
+  ld hl,?buf
+  call z80unit_diagnostic_value8
+  call z80unit_print
+
+  ld hl,?txt1
+  call z80unit_print
+  call z80unit_newln
+
+?end:
+  z80unit_pop_reg
+  endm
+
+; ------------------------------------------------------------------
+; Asserts that the two 8-bit values are equal.
 ; Any exp valid within "ld a,<exp>" may be used for the two arguments.
 ; The registers are saved and restored.
 ;
 ; Example use:
 ;   assertEquals8 a,$03
 ;   assertEquals8 a,c
-;   assertEquals8 05,$05
+;   assertEquals8 05,(ix)
 ;
-; expected - an 8-bit value
-; actual   - an 8-bit value
-; msg      - added to the diagnostic output if the assertion fails (optional)
-assertEquals8 macro expected,actual,msg,?sexp,?sact,?txt,?dtxt,?skip,?fail,?end
-  jp ?skip ; Could be >127 characters of output below.
+; expected - An 8-bit value.
+; actual   - An 8-bit value.
+; msg      - Added to the diagnostic output if the assertion fails (optional).
+assertEquals8 macro expected,actual,msg,?sexp,?sact,?buf,?txt0,?txt1,?txt2,?skip,?fail,?end
+  jp ?skip ; could be >127 characters of output below
 ?sexp	defs	1
 ?sact	defs	1
-?txt	defb	'assertEquals8(expected,actual)',0
-?dtxt	defb	'msg',0
+?buf	defs	15
+?txt0	defb	' assertEquals8(expected,actual) ex`pected ',0
+?txt1	defb	' but was ',0
+?txt2	defb	' msg',0
 ?skip:
   z80unit_push_reg
 
-  ; Save the comparison values: 'expected' and 'actual'.
   ; We have to be careful with the a register because it could be what
   ; was defined for 'expected' and/or 'actual', e.g., assertEquals a,a
   ; We use the stack to restore the "at start" a register value after
@@ -506,7 +597,7 @@ assertEquals8 macro expected,actual,msg,?sexp,?sact,?txt,?dtxt,?skip,?fail,?end
   ld a,actual
   ld (?sact),a
 
-  ; Check the assertion
+  ; Check the assertion.
   ld a,(?sact)
   ld c,a
   ld a,(?sexp)
@@ -520,13 +611,91 @@ assertEquals8 macro expected,actual,msg,?sexp,?sact,?txt,?dtxt,?skip,?fail,?end
 ?fail:
   ; The assertion failed.
   call z80unit_failed_progress
-  ld ix,?txt
-  ld iy,?dtxt
+
+  ld hl,?txt0
+  call z80unit_print
+
   ld a,(?sexp)
-  ld b,a
+  ld hl,?buf
+  call z80unit_diagnostic_value8
+  call z80unit_print
+
+  ld hl,?txt1
+  call z80unit_print
+
+  ld a,(?sact)
+  ld hl,?buf
+  call z80unit_diagnostic_value8
+  call z80unit_print
+
+  ld hl,?txt2
+  call z80unit_print
+  call z80unit_newln
+
+?end:
+  z80unit_pop_reg
+  endm
+
+; ------------------------------------------------------------------
+; Asserts that the two 8-bit values are not equal.
+; Any exp valid within "ld a,<exp>" may be used for the two arguments.
+; The registers are saved and restored.
+;
+; Example use:
+;   assertNotEquals8 a,$03
+;   assertNotEquals8 a,c
+;   assertNotEquals8 05,(ix)
+;
+; expected - An 8-bit value.
+; actual   - An 8-bit value.
+; msg      - Added to the diagnostic output if the assertion fails (optional).
+assertNotEquals8 macro expected,actual,msg,?sexp,?sact,?buf,?txt0,?txt1,?skip,?fail,?end
+  jp ?skip ; could be >127 characters of output below
+?sexp	defs	1
+?sact	defs	1
+?buf	defs	15
+?txt0	defb	' assertNotEquals8(expected,actual) both were ',0
+?txt1	defb	' msg',0
+?skip:
+  z80unit_push_reg
+
+  ; We have to be careful with the a register because it could be what
+  ; was defined for 'expected' and/or 'actual', e.g., assertEquals a,a
+  ; We use the stack to restore the "at start" a register value after
+  ; saving 'expected' prior to saving 'actual'.
+  push af
+  ld a,expected
+  ld (?sexp),a
+  pop af
+  ld a,actual
+  ld (?sact),a
+
+  ; Check the assertion.
   ld a,(?sact)
   ld c,a
-  call z80unit_output_diagnostic_msg8
+  ld a,(?sexp)
+  xor c ; exp == act
+  jr z,?fail
+
+  ; The assertion passed.
+  call z80unit_passed_progress
+  jp ?end
+
+?fail:
+  ; The assertion failed.
+  call z80unit_failed_progress
+
+  ld hl,?txt0
+  call z80unit_print
+
+  ld a,(?sexp)
+  ld hl,?buf
+  call z80unit_diagnostic_value8
+  call z80unit_print
+
+  ld hl,?txt1
+  call z80unit_print
+  call z80unit_newln
 
 ?end:
   z80unit_pop_reg
