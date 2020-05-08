@@ -8,22 +8,30 @@ INCLUDE_BZ80UNIT equ 1
 ; / /| |_| \ |_/ / |_| | | | | | |_ 
 ;/___\_____/\___/ \__,_|_| |_|_|\__|
 ;                                   
-; A unit testing library for the TRS-80
+; A programmer-friendly unit testing library for TRS-80 assembly.
 ; Author: Tim Halloran
 ;
-; assertZero8
-; assertEquals8
-; assertNotEquals8
-; assertGreaterThan8
-; assertLessThan8
-; assertZero16
-; assertEquals16
-; assertNotEquals16
-; assertGreaterThan16
-; assertLessThan16
-; assertContains mem*, value
-; assertFilledWith8 mem*, reg/imm8, cnt
-; assertFilledWith16 mem*, reg/imm16, cnt
+; 8-bit assertions, where e, an expected value, and a, an actual
+; value, are any <exp> valid in "ld a,<exp>".
+;   assertZero8 a
+;   assertEquals8 e,a
+;   assertNotEquals8 e,a
+;   assertGreaterThan8 e,a          ; e >  a
+;   assertGreaterThanOrEquals8 e,a  ; e >= a
+;   assertLessThan8 e,a;            ; e <  a
+;   assertLessThanOrEquals8 e,a     ; e <= a
+;
+; 16-bit assertions, where e, an expected value, and a, an actual
+; value, are either a 16-bit register or any <exp> valid in "ld hl,<exp>".
+;   assertZero16 a
+;   assertEquals16 e,a
+;   assertNotEquals16 e,a
+; A notable limitation of the 16-bit assertions is that any indirect
+; register value, such as (hl) or (ix), is not supported.
+;
+; Memory block assertions
+;   assertContains mem*, value
+;   assertContains exp*, act*, count
                                    
 ; ---------------------------------------------------------------- ;
 ; / / / / / / / / / /  IMPLEMENTATION DETAILS  / / / / / / / / / / ;
@@ -43,7 +51,7 @@ _report_success_txt		defb	'ALL TESTS PASSED (',0
 _report_problems_txt		defb	'*** TESTS FAILED *** (',0
 _report_passed_txt		defb	' passed, ',0
 _report_failed_txt		defb	' failed)',0
-_buffer				defs	32 ; buffer for ASCII conversions
+_buffer				defs	32 ; a small scratch buffer
 
 z80unit_push_reg macro
   push af
@@ -61,6 +69,52 @@ z80unit_pop_reg macro
   pop de
   pop bc
   pop af
+  endm
+
+; Checks if 'value' is the name of a 16-bit register.
+;
+; Big thanks to George Phillips for suggesting this approach.
+;
+; value - the text
+; match - this symbol is updated to indicate if value was a
+;         16-bit register name: zero is no, non-zero is yes.
+z80unit_is_reg16 macro value,?fp
+?fp	defl	0
+  irpc letter,value
+    ?fp *= 256 ; ?fp is zero for the first letter
+    ?fp += '&letter'
+  endm
+z80unit_reg16	defl	0
+; af
+z80unit_reg16 |= ?fp == 256 * 'a' + 'f'
+z80unit_reg16 |= ?fp == 256 * 'A' + 'F'
+z80unit_reg16 |= ?fp == 256 * 'a' + 'F'
+z80unit_reg16 |= ?fp == 256 * 'A' + 'f'
+; bc
+z80unit_reg16 |= ?fp == 256 * 'b' + 'c'
+z80unit_reg16 |= ?fp == 256 * 'B' + 'C'
+z80unit_reg16 |= ?fp == 256 * 'b' + 'C'
+z80unit_reg16 |= ?fp == 256 * 'B' + 'c'
+; de
+z80unit_reg16 |= ?fp == 256 * 'd' + 'e'
+z80unit_reg16 |= ?fp == 256 * 'D' + 'E'
+z80unit_reg16 |= ?fp == 256 * 'd' + 'E'
+z80unit_reg16 |= ?fp == 256 * 'D' + 'e'
+; hl
+z80unit_reg16 |= ?fp == 256 * 'h' + 'l'
+z80unit_reg16 |= ?fp == 256 * 'H' + 'L'
+z80unit_reg16 |= ?fp == 256 * 'h' + 'L'
+z80unit_reg16 |= ?fp == 256 * 'H' + 'l'
+; ix
+z80unit_reg16 |= ?fp == 256 * 'i' + 'x'
+z80unit_reg16 |= ?fp == 256 * 'I' + 'X'
+z80unit_reg16 |= ?fp == 256 * 'i' + 'X'
+z80unit_reg16 |= ?fp == 256 * 'I' + 'x'
+; iy
+z80unit_reg16 |= ?fp == 256 * 'i' + 'y'
+z80unit_reg16 |= ?fp == 256 * 'I' + 'Y'
+z80unit_reg16 |= ?fp == 256 * 'i' + 'Y'
+z80unit_reg16 |= ?fp == 256 * 'I' + 'y'
   endm
 
 ; ---------------------------------------------------------------- ;
@@ -564,9 +618,13 @@ z80unit_end_and_exit macro ?passed_txt,?failed_txt,?skip
   call z80unit_exit
   endm
 
+; ---------------------------------------------------------------- ;
+; / / / / / / / / / / / / 8-BIT ASSERTIONS / / / / / / / / / / / / ;
+; ---------------------------------------------------------------- ;
+
 ; ------------------------------------------------------------------
 ; Asserts that an 8-bit value is zero.
-; Any exp valid within "ld a,<exp>" may be used for the argument.
+; Any <exp> valid within "ld a,<exp>" may be used for the two arguments.
 ; The registers are saved and restored.
 ;
 ; Example use:
@@ -585,6 +643,7 @@ assertZero8 macro actual,msg,?sact,?buf,?txt0,?txt1,?skip,?fail,?nl,?end
 ?skip:
   z80unit_push_reg
 
+  ; Save the passed value.
   ld a,actual
   ld (?sact),a
 
@@ -621,67 +680,8 @@ assertZero8 macro actual,msg,?sact,?buf,?txt0,?txt1,?skip,?fail,?nl,?end
   endm
 
 ; ------------------------------------------------------------------
-; Asserts that a 16-bit value is zero.
-; Any exp valid within "ld hl,<exp>" may be used for the argument.
-; The registers are saved and restored.
-;
-; Example use:
-;   assertZero16 bc
-;   assertZero16 $34a4
-;   assertZero16 ($3a00)
-;
-; actual   - A 16-bit value.
-; msg      - Added to the diagnostic output if the assertion fails (optional).
-assertZero16 macro actual,msg,?sact,?buf,?txt0,?txt1,?skip,?fail,?nl,?end
-  jp ?skip ; could be >127 characters of output below
-?sact	defs	2
-?buf	defs	15
-?txt0	defb	' assertZero16 actual : value was ',0
-?txt1	defb	' : msg',0
-?skip:
-  z80unit_push_reg
-
-  ld hl,actual
-  ld (?sact),hl
-
-  ; Check the assertion.
-  ld hl,(?sact)
-  ld a,h
-  or l
-  jr nz,?fail
-
-  ; The assertion passed.
-  call z80unit_passed_progress
-  jp ?end
-
-?fail:
-  ; The assertion failed.
-  call z80unit_failed_progress
-
-  ld hl,?txt0
-  call z80unit_print
-
-  ld hl,(?sact)
-  ld b,h
-  ld c,l
-  ld hl,?buf
-  call z80unit_diagnostic_value16
-  call z80unit_print
-
-  ld a,(?txt1+3)
-  or a
-  jr z,?nl ; no msg to display
-  ld hl,?txt1
-  call z80unit_print
-?nl:
-  call z80unit_newln
-?end:
-  z80unit_pop_reg
-  endm
-
-; ------------------------------------------------------------------
 ; Asserts that the two 8-bit values are equal.
-; Any exp valid within "ld a,<exp>" may be used for the two arguments.
+; Any <exp> valid within "ld a,<exp>" may be used for the two arguments.
 ; The registers are saved and restored.
 ;
 ; Example use:
@@ -703,10 +703,7 @@ assertEquals8 macro expected,actual,msg,?sexp,?sact,?buf,?txt0,?txt1,?txt2,?skip
 ?skip:
   z80unit_push_reg
 
-  ; We have to be careful with the a register because it could be what
-  ; was defined for 'expected' and/or 'actual', e.g., assertEquals a,a
-  ; We use the stack to restore the "at start" a register value after
-  ; saving 'expected' prior to saving 'actual'.
+  ; Save the passed values.
   push af
   ld a,expected
   ld (?sexp),a
@@ -758,7 +755,7 @@ assertEquals8 macro expected,actual,msg,?sexp,?sact,?buf,?txt0,?txt1,?txt2,?skip
 
 ; ------------------------------------------------------------------
 ; Asserts that the two 8-bit values are not equal.
-; Any exp valid within "ld a,<exp>" may be used for the two arguments.
+; Any <exp> valid within "ld a,<exp>" may be used for the two arguments.
 ; The registers are saved and restored.
 ;
 ; Example use:
@@ -779,10 +776,7 @@ assertNotEquals8 macro expected,actual,msg,?sexp,?sact,?buf,?txt0,?txt1,?skip,?f
 ?skip:
   z80unit_push_reg
 
-  ; We have to be careful with the a register because it could be what
-  ; was defined for 'expected' and/or 'actual', e.g., assertEquals a,a
-  ; We use the stack to restore the "at start" a register value after
-  ; saving 'expected' prior to saving 'actual'.
+  ; Save the passed values.
   push af
   ld a,expected
   ld (?sexp),a
@@ -826,7 +820,7 @@ assertNotEquals8 macro expected,actual,msg,?sexp,?sact,?buf,?txt0,?txt1,?skip,?f
 
 ; ------------------------------------------------------------------
 ; Asserts that a first 8-bit value is greater than a second 8-bit value.
-; Any exp valid within "ld a,<exp>" may be used for the two arguments.
+; Any <exp> valid within "ld a,<exp>" may be used for the two arguments.
 ; The registers are saved and restored.
 ;
 ; Example use:
@@ -848,10 +842,7 @@ assertGreaterThan8 macro val1,val2,msg,?s1,?s2,?buf,?txt0,?txt1,?txt2,?skip,?fai
 ?skip:
   z80unit_push_reg
 
-  ; We have to be careful with the a register because it could be what
-  ; was defined for 'expected' and/or 'actual', e.g., assertEquals a,a
-  ; We use the stack to restore the "at start" a register value after
-  ; saving 'expected' prior to saving 'actual'.
+  ; Save the passed values.
   push af
   ld a,val1
   ld (?s1),a
@@ -903,8 +894,83 @@ assertGreaterThan8 macro val1,val2,msg,?s1,?s2,?buf,?txt0,?txt1,?txt2,?skip,?fai
   endm
 
 ; ------------------------------------------------------------------
+; Asserts that a first 8-bit value is greater than or equal to a
+; second 8-bit value.
+; Any <exp> valid within "ld a,<exp>" may be used for the two arguments.
+; The registers are saved and restored.
+;
+; Example use:
+;   assertGreaterThanOrEquals8 a,$03
+;   assertGreaterThanOrEquals8 a,c
+;   assertGreaterThanOrEquals8 05,(ix)
+;
+; expected - An 8-bit value.
+; actual   - An 8-bit value.
+; msg      - Added to the diagnostic output if the assertion fails (optional).
+assertGreaterThanOrEquals8 macro val1,val2,msg,?s1,?s2,?buf,?txt0,?txt1,?txt2,?skip,?fail,?nl,?end
+  jp ?skip ; could be >127 characters of output below
+?s1	defs	1
+?s2	defs	1
+?buf	defs	15
+?txt0	defb	' assertGreaterThanEquals8 val1,val2 : ',0
+?txt1	defb	' < ',0
+?txt2	defb	' : msg',0
+?skip:
+  z80unit_push_reg
+
+  ; Save the passed values.
+  push af
+  ld a,val1
+  ld (?s1),a
+  pop af
+  ld a,val2
+  ld (?s2),a
+
+  ; Check the assertion.
+  ld a,(?s2)
+  ld c,a
+  ld a,(?s1)
+  cp c
+  jr c,?fail  ; s1 < s2
+
+  ; The assertion passed.
+  call z80unit_passed_progress
+  jp ?end
+
+?fail:
+  ; The assertion failed.
+  call z80unit_failed_progress
+
+  ld hl,?txt0
+  call z80unit_print
+
+  ld a,(?s1)
+  ld hl,?buf
+  call z80unit_diagnostic_value8
+  call z80unit_print
+
+  ld hl,?txt1
+  call z80unit_print
+
+  ld a,(?s2)
+  ld hl,?buf
+  call z80unit_diagnostic_value8
+  call z80unit_print
+
+  ld a,(?txt2+3)
+  or a
+  jr z,?nl ; no msg to display
+  ld hl,?txt2
+  call z80unit_print
+?nl:
+  call z80unit_newln
+?end:
+  z80unit_pop_reg
+  endm
+
+; ------------------------------------------------------------------
 ; Asserts that a first 8-bit value is less than a second 8-bit value.
-; Any exp valid within "ld a,<exp>" may be used for the two arguments.
+; Any <exp> valid within "ld a,<exp>" may be used for the two arguments.
 ; The registers are saved and restored.
 ;
 ; Example use:
@@ -926,10 +992,7 @@ assertLessThan8 macro val1,val2,msg,?s1,?s2,?buf,?txt0,?txt1,?txt2,?skip,?pass,?
 ?skip:
   z80unit_push_reg
 
-  ; We have to be careful with the a register because it could be what
-  ; was defined for 'expected' and/or 'actual', e.g., assertEquals a,a
-  ; We use the stack to restore the "at start" a register value after
-  ; saving 'expected' prior to saving 'actual'.
+  ; Save the passed values.
   push af
   ld a,val1
   ld (?s1),a
@@ -974,6 +1037,340 @@ assertLessThan8 macro val1,val2,msg,?s1,?s2,?buf,?txt0,?txt1,?txt2,?skip,?pass,?
   or a
   jr z,?nl ; no msg to display
   ld hl,?txt2
+  call z80unit_print
+?nl:
+  call z80unit_newln
+?end:
+  z80unit_pop_reg
+  endm
+
+; ------------------------------------------------------------------
+; Asserts that a first 8-bit value is less than or equal to a
+; second 8-bit value.
+; Any <exp> valid within "ld a,<exp>" may be used for the two arguments.
+; The registers are saved and restored.
+;
+; Example use:
+;   assertLessThanOrEquals8 a,$03
+;   assertLessThanOrEquals8 a,c
+;   assertLessThanOrEquals8 05,(ix)
+;
+; expected - An 8-bit value.
+; actual   - An 8-bit value.
+; msg      - Added to the diagnostic output if the assertion fails (optional).
+assertLessThanOrEquals8 macro val1,val2,msg,?s1,?s2,?buf,?txt0,?txt1,?txt2,?skip,?pass,?fail,?nl,?end
+  jp ?skip ; could be >127 characters of output below
+?s1	defs	1
+?s2	defs	1
+?buf	defs	15
+?txt0	defb	' assertLessThanOrEquals8 val1,val2 : ',0
+?txt1	defb	' > ',0
+?txt2	defb	' : msg',0
+?skip:
+  z80unit_push_reg
+
+  ; Save the passed values.
+  push af
+  ld a,val1
+  ld (?s1),a
+  pop af
+  ld a,val2
+  ld (?s2),a
+
+  ; Check the assertion.
+  ld a,(?s2)
+  ld c,a
+  ld a,(?s1)
+  cp c
+  jr c,?pass  ; s1 < s2
+  jr z,?pass  ; s1 == s2
+  jr ?fail
+
+?pass:
+  ; The assertion passed.
+  call z80unit_passed_progress
+  jp ?end
+
+?fail:
+  ; The assertion failed.
+  call z80unit_failed_progress
+
+  ld hl,?txt0
+  call z80unit_print
+
+  ld a,(?s1)
+  ld hl,?buf
+  call z80unit_diagnostic_value8
+  call z80unit_print
+
+  ld hl,?txt1
+  call z80unit_print
+
+  ld a,(?s2)
+  ld hl,?buf
+  call z80unit_diagnostic_value8
+  call z80unit_print
+
+  ld a,(?txt2+3)
+  or a
+  jr z,?nl ; no msg to display
+  ld hl,?txt2
+  call z80unit_print
+?nl:
+  call z80unit_newln
+?end:
+  z80unit_pop_reg
+  endm
+
+; ---------------------------------------------------------------- ;
+; / / / / / / / / / / /  16-BIT ASSERTIONS   / / / / / / / / / / / ;
+; ---------------------------------------------------------------- ;
+
+; ------------------------------------------------------------------
+; Asserts that a 16-bit value is zero.
+; Any 16-bit register or any <exp> valid within "ld hl,<exp>" may be
+; used for the argument.
+; The registers are saved and restored.
+;
+; Example use:
+;   assertZero16 bc
+;   assertZero16 $34a4
+;   assertZero16 ($3a00)
+;
+; Note: Any indirect register value, such as (hl) or (ix), is not supported.
+;
+; actual   - A 16-bit value.
+; msg      - Added to the diagnostic output if the assertion fails (optional).
+assertZero16 macro actual,msg,?sact,?buf,?txt0,?txt1,?skip,?fail,?nl,?end
+  jp ?skip ; could be >127 characters of output below
+?sact	defs	2
+?buf	defs	15
+?txt0	defb	' assertZero16 actual : value was ',0
+?txt1	defb	' : msg',0
+?skip:
+  z80unit_push_reg
+
+  ; Save the passed value.
+  z80unit_is_reg16 actual
+  if z80unit_reg16
+    push actual
+    pop hl
+  else
+    ld hl,actual
+  endif
+  ld (?sact),hl
+
+  ; Check the assertion.
+  ld hl,(?sact)
+  ld a,h
+  or l
+  jr nz,?fail
+
+  ; The assertion passed.
+  call z80unit_passed_progress
+  jp ?end
+
+?fail:
+  ; The assertion failed.
+  call z80unit_failed_progress
+
+  ld hl,?txt0
+  call z80unit_print
+
+  ld hl,(?sact)
+  ld b,h
+  ld c,l
+  ld hl,?buf
+  call z80unit_diagnostic_value16
+  call z80unit_print
+
+  ld a,(?txt1+3)
+  or a
+  jr z,?nl ; no msg to display
+  ld hl,?txt1
+  call z80unit_print
+?nl:
+  call z80unit_newln
+?end:
+  z80unit_pop_reg
+  endm
+
+; ------------------------------------------------------------------
+; Asserts that the two 16-bit values are equal.
+; Any 16-bit register or any <exp> valid within "ld hl,<exp>" may be
+; used for the two arguments.
+; The registers are saved and restored.
+;
+; Example use:
+;   assertEquals16 hl,$03
+;   assertEquals16 de,ix
+;   assertEquals16 5,($3a00)
+;
+; Note: Any indirect register value, such as (hl) or (ix), is not supported.
+;
+; expected - An 16-bit value.
+; actual   - An 16-bit value.
+; msg      - Added to the diagnostic output if the assertion fails (optional).
+assertEquals16 macro expected,actual,msg,?sexp,?sact,?buf,?txt0,?txt1,?txt2,?skip,?fail,?nl,?end
+  jp ?skip ; could be >127 characters of output below
+?sexp	defs	2
+?sact	defs	2
+?buf	defs	15
+?txt0	defb	' assertEquals16 expected,actual : ex`pected ',0
+?txt1	defb	' but was ',0
+?txt2	defb	' : msg',0
+?skip:
+  z80unit_push_reg
+
+  ; Save the passed values.
+  push hl
+  z80unit_is_reg16 expected
+  if z80unit_reg16
+    push expected
+    pop hl
+  else
+    ld hl,expected
+  endif
+  ld (?sexp),hl
+  pop hl
+  z80unit_is_reg16 actual
+  if z80unit_reg16
+    push actual
+    pop hl
+  else
+    ld hl,actual
+  endif
+  ld (?sact),hl
+
+  ; Check the assertion.
+  ld hl,(?sact)
+  ld de,(?sexp)
+  ld a,h
+  xor d ; hl msb == de msb
+  jr nz,?fail
+  ld a,l
+  xor e ; hl lsb == de lsb
+  jr nz,?fail
+
+  ; The assertion passed.
+  call z80unit_passed_progress
+  jp ?end
+
+?fail:
+  ; The assertion failed.
+  call z80unit_failed_progress
+
+  ld hl,?txt0
+  call z80unit_print
+
+  ld hl,(?sexp)
+  ld b,h
+  ld c,l
+  ld hl,?buf
+  call z80unit_diagnostic_value16
+  call z80unit_print
+
+  ld hl,?txt1
+  call z80unit_print
+
+  ld hl,(?sact)
+  ld b,h
+  ld c,l
+  ld hl,?buf
+  call z80unit_diagnostic_value16
+  call z80unit_print
+
+  ld a,(?txt2+3)
+  or a
+  jr z,?nl ; no msg to display
+  ld hl,?txt2
+  call z80unit_print
+?nl:
+  call z80unit_newln
+?end:
+  z80unit_pop_reg
+  endm
+
+; ------------------------------------------------------------------
+; Asserts that the two 16-bit values are not equal.
+; Any 16-bit register or any <exp> valid within "ld hl,<exp>" may be
+; used for the two arguments.
+; The registers are saved and restored.
+;
+; Example use:
+;   assertNotEquals16 hl,$03
+;   assertNotEquals16 de,ix
+;   assertNotEquals16 5,($3a00)
+;
+; Note: Any indirect register value, such as (hl) or (ix), is not supported.
+;
+; expected - An 16-bit value.
+; actual   - An 16-bit value.
+; msg      - Added to the diagnostic output if the assertion fails (optional).
+assertNotEquals16 macro expected,actual,msg,?sexp,?sact,?buf,?txt0,?txt1,?skip,?pass,?fail,?nl,?end
+  jp ?skip ; could be >127 characters of output below
+?sexp	defs	2
+?sact	defs	2
+?buf	defs	15
+?txt0	defb	' assertNotEquals16 expected,actual : both were ',0
+?txt1	defb	' : msg',0
+?skip:
+  z80unit_push_reg
+
+  ; Save the passed values.
+  push hl
+  z80unit_is_reg16 expected
+  if z80unit_reg16
+    push expected
+    pop hl
+  else
+    ld hl,expected
+  endif
+  ld (?sexp),hl
+  pop hl
+  z80unit_is_reg16 actual
+  if z80unit_reg16
+    push actual
+    pop hl
+  else
+    ld hl,actual
+  endif
+  ld (?sact),hl
+
+  ; Check the assertion.
+  ld hl,(?sact)
+  ld de,(?sexp)
+  ld a,h
+  xor d ; hl msb == de msb
+  jr nz,?pass
+  ld a,l
+  xor e ; hl lsb == de lsb
+  jr nz,?pass
+  jr ?fail
+
+?pass:
+  ; The assertion passed.
+  call z80unit_passed_progress
+  jp ?end
+
+?fail:
+  ; The assertion failed.
+  call z80unit_failed_progress
+
+  ld hl,?txt0
+  call z80unit_print
+
+  ld hl,(?sexp)
+  ld b,h
+  ld c,l
+  ld hl,?buf
+  call z80unit_diagnostic_value16
+  call z80unit_print
+
+  ld a,(?txt1+3)
+  or a
+  jr z,?nl ; no msg to display
+  ld hl,?txt1
   call z80unit_print
 ?nl:
   call z80unit_newln

@@ -59,6 +59,22 @@ main:
   assertGreaterThan8 a,(ix),'expected'
   assertGreaterThan8 a,(ix)
 
+  z80unit_test 'Passing assertGreaterThanOrEquals8'
+  assertGreaterThanOrEquals8 $45,6
+  assertGreaterThanOrEquals8 $45,$45
+  ld a,11
+  ld ix,_ten
+  assertGreaterThanOrEquals8 a,(ix)
+  ld a,10
+  assertGreaterThanOrEquals8 a,(ix)
+
+  z80unit_test 'Failing assertGreaterThanOrEquals8'
+  ld a,1
+  ld ix,_ten
+  assertGreaterThanOrEquals8 a,(ix),'expected'
+  ld a,1
+  assertGreaterThanOrEquals8 a,(ix)
+
   z80unit_test 'Passing assertLessThan8'
   assertLessThan8 6,$45
   ld a,8
@@ -70,6 +86,20 @@ main:
   ld ix,_ten
   assertLessThan8 a,(ix),'expected'
   assertLessThan8 a,(ix)
+
+  z80unit_test 'Passing assertLessThanOrEquals8'
+  assertLessThanOrEquals8 6,$45
+  ld a,8
+  ld ix,_ten
+  assertLessThanOrEquals8 a,(ix)
+  ld a,10
+  assertLessThanOrEquals8 a,(ix)
+
+  z80unit_test 'Failing assertLessThanOrEquals8'
+  ld a,100
+  ld ix,_ten
+  assertLessThanOrEquals8 a,(ix),'expected'
+  assertLessThanOrEquals8 a,(ix)
 
   z80unit_end_and_exit
   end main
