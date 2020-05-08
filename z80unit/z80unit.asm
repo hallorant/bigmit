@@ -528,7 +528,7 @@ assertZero8 macro actual,msg,?sact,?buf,?txt0,?txt1,?skip,?fail,?end
   jp ?skip ; could be >127 characters of output below
 ?sact	defs	1
 ?buf	defs	15
-?txt0	defb	' assertZero8 actual : expected 0 but was ',0
+?txt0	defb	' assertZero8 actual : value was ',0
 ?txt1	defb	' msg',0
 ?skip:
   z80unit_push_reg
@@ -580,7 +580,7 @@ assertZero16 macro actual,msg,?sact,?buf,?txt0,?txt1,?skip,?fail,?end
   jp ?skip ; could be >127 characters of output below
 ?sact	defs	2
 ?buf	defs	15
-?txt0	defb	' assertZero15 actual : expected 0 but was ',0
+?txt0	defb	' assertZero16 actual : value was ',0
 ?txt1	defb	' msg',0
 ?skip:
   z80unit_push_reg
@@ -637,7 +637,7 @@ assertEquals8 macro expected,actual,msg,?sexp,?sact,?buf,?txt0,?txt1,?txt2,?skip
 ?sexp	defs	1
 ?sact	defs	1
 ?buf	defs	15
-?txt0	defb	' assertEquals8(expected,actual) ex`pected ',0
+?txt0	defb	' assertEquals8 expected,actual : ex`pected ',0
 ?txt1	defb	' but was ',0
 ?txt2	defb	' msg',0
 ?skip:
@@ -710,7 +710,7 @@ assertNotEquals8 macro expected,actual,msg,?sexp,?sact,?buf,?txt0,?txt1,?skip,?f
 ?sexp	defs	1
 ?sact	defs	1
 ?buf	defs	15
-?txt0	defb	' assertNotEquals8(expected,actual) both were ',0
+?txt0	defb	' assertNotEquals8 expected,actual : both were ',0
 ?txt1	defb	' msg',0
 ?skip:
   z80unit_push_reg
