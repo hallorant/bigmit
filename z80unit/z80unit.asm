@@ -355,7 +355,7 @@ z80unit_diagnostic_value8:
   push af
   push af ; save the value for two uses below
 
-  ld (hl),'<'
+  ld (hl),'{'
   inc hl
   ld (hl),'0'
   inc hl
@@ -372,7 +372,7 @@ z80unit_diagnostic_value8:
   ld e,a
   ld d,0 ; de = the value (but 16 bits)
   call _bindec16
-  ld (hl),'>'
+  ld (hl),'}'
   inc hl
   ld (hl),0 ; terminate the string
 
@@ -393,7 +393,7 @@ z80unit_diagnostic_value16:
   push bc
   push bc ; save the value for three uses below
 
-  ld (hl),'<'
+  ld (hl),'{'
   inc hl
   ld (hl),'0'
   inc hl
@@ -412,7 +412,7 @@ z80unit_diagnostic_value16:
 
   pop de ; restore the value
   call _bindec16
-  ld (hl),'>'
+  ld (hl),'}'
   inc hl
   ld (hl),0
 
@@ -524,12 +524,12 @@ z80unit_end macro ?passed_txt,?failed_txt,?skip
 ;
 ; actual   - An 8-bit value.
 ; msg      - Added to the diagnostic output if the assertion fails (optional).
-assertZero8 macro actual,msg,?sact,?buf,?txt0,?txt1,?skip,?fail,?end
+assertZero8 macro actual,msg,?sact,?buf,?txt0,?txt1,?skip,?fail,?nl,?end
   jp ?skip ; could be >127 characters of output below
 ?sact	defs	1
 ?buf	defs	15
 ?txt0	defb	' assertZero8 actual : value was ',0
-?txt1	defb	' msg',0
+?txt1	defb	' : msg',0
 ?skip:
   z80unit_push_reg
 
@@ -557,8 +557,12 @@ assertZero8 macro actual,msg,?sact,?buf,?txt0,?txt1,?skip,?fail,?end
   call z80unit_diagnostic_value8
   call z80unit_print
 
+  ld a,(?txt1+3)
+  or a
+  jr z,?nl ; no msg to display
   ld hl,?txt1
   call z80unit_print
+?nl:
   call z80unit_newln
 ?end:
   z80unit_pop_reg
@@ -576,12 +580,12 @@ assertZero8 macro actual,msg,?sact,?buf,?txt0,?txt1,?skip,?fail,?end
 ;
 ; actual   - A 16-bit value.
 ; msg      - Added to the diagnostic output if the assertion fails (optional).
-assertZero16 macro actual,msg,?sact,?buf,?txt0,?txt1,?skip,?fail,?end
+assertZero16 macro actual,msg,?sact,?buf,?txt0,?txt1,?skip,?fail,?nl,?end
   jp ?skip ; could be >127 characters of output below
 ?sact	defs	2
 ?buf	defs	15
 ?txt0	defb	' assertZero16 actual : value was ',0
-?txt1	defb	' msg',0
+?txt1	defb	' : msg',0
 ?skip:
   z80unit_push_reg
 
@@ -612,8 +616,12 @@ assertZero16 macro actual,msg,?sact,?buf,?txt0,?txt1,?skip,?fail,?end
   call z80unit_diagnostic_value16
   call z80unit_print
 
+  ld a,(?txt1+3)
+  or a
+  jr z,?nl ; no msg to display
   ld hl,?txt1
   call z80unit_print
+?nl:
   call z80unit_newln
 ?end:
   z80unit_pop_reg
@@ -632,14 +640,14 @@ assertZero16 macro actual,msg,?sact,?buf,?txt0,?txt1,?skip,?fail,?end
 ; expected - An 8-bit value.
 ; actual   - An 8-bit value.
 ; msg      - Added to the diagnostic output if the assertion fails (optional).
-assertEquals8 macro expected,actual,msg,?sexp,?sact,?buf,?txt0,?txt1,?txt2,?skip,?fail,?end
+assertEquals8 macro expected,actual,msg,?sexp,?sact,?buf,?txt0,?txt1,?txt2,?skip,?fail,?nl,?end
   jp ?skip ; could be >127 characters of output below
 ?sexp	defs	1
 ?sact	defs	1
 ?buf	defs	15
 ?txt0	defb	' assertEquals8 expected,actual : ex`pected ',0
 ?txt1	defb	' but was ',0
-?txt2	defb	' msg',0
+?txt2	defb	' : msg',0
 ?skip:
   z80unit_push_reg
 
@@ -685,8 +693,12 @@ assertEquals8 macro expected,actual,msg,?sexp,?sact,?buf,?txt0,?txt1,?txt2,?skip
   call z80unit_diagnostic_value8
   call z80unit_print
 
+  ld a,(?txt2+3)
+  or a
+  jr z,?nl ; no msg to display
   ld hl,?txt2
   call z80unit_print
+?nl:
   call z80unit_newln
 ?end:
   z80unit_pop_reg
@@ -705,13 +717,13 @@ assertEquals8 macro expected,actual,msg,?sexp,?sact,?buf,?txt0,?txt1,?txt2,?skip
 ; expected - An 8-bit value.
 ; actual   - An 8-bit value.
 ; msg      - Added to the diagnostic output if the assertion fails (optional).
-assertNotEquals8 macro expected,actual,msg,?sexp,?sact,?buf,?txt0,?txt1,?skip,?fail,?end
+assertNotEquals8 macro expected,actual,msg,?sexp,?sact,?buf,?txt0,?txt1,?skip,?fail,?nl,?end
   jp ?skip ; could be >127 characters of output below
 ?sexp	defs	1
 ?sact	defs	1
 ?buf	defs	15
 ?txt0	defb	' assertNotEquals8 expected,actual : both were ',0
-?txt1	defb	' msg',0
+?txt1	defb	' : msg',0
 ?skip:
   z80unit_push_reg
 
@@ -749,8 +761,90 @@ assertNotEquals8 macro expected,actual,msg,?sexp,?sact,?buf,?txt0,?txt1,?skip,?f
   call z80unit_diagnostic_value8
   call z80unit_print
 
+  ld a,(?txt1+3)
+  or a
+  jr z,?nl ; no msg to display
   ld hl,?txt1
   call z80unit_print
+?nl:
+  call z80unit_newln
+?end:
+  z80unit_pop_reg
+  endm
+
+; ------------------------------------------------------------------
+; Asserts that a first 8-bit value is greater than a second 8-bit value.
+; Any exp valid within "ld a,<exp>" may be used for the two arguments.
+; The registers are saved and restored.
+;
+; Example use:
+;   assertGreaterThan8 a,$03
+;   assertGreaterThan8 a,c
+;   assertGreaterThan8 05,(ix)
+;
+; expected - An 8-bit value.
+; actual   - An 8-bit value.
+; msg      - Added to the diagnostic output if the assertion fails (optional).
+assertGreaterThan8 macro val1,val2,msg,?s1,?s2,?buf,?txt0,?txt1,?txt2,?skip,?fail,?nl,?end
+  jp ?skip ; could be >127 characters of output below
+?s1	defs	1
+?s2	defs	1
+?buf	defs	15
+?txt0	defb	' assertGreaterThan8 val1,val2 : ',0
+?txt1	defb	' <= ',0
+?txt2	defb	' : msg',0
+?skip:
+  z80unit_push_reg
+
+  ; We have to be careful with the a register because it could be what
+  ; was defined for 'expected' and/or 'actual', e.g., assertEquals a,a
+  ; We use the stack to restore the "at start" a register value after
+  ; saving 'expected' prior to saving 'actual'.
+  push af
+  ld a,val1
+  ld (?s1),a
+  pop af
+  ld a,val2
+  ld (?s2),a
+
+  ; Check the assertion.
+  ld a,(?s2)
+  ld c,a
+  ld a,(?s1)
+  cp c
+  jr c,?fail  ; s1 < s2
+  jr z,?fail  ; s1 == s2
+
+  ; The assertion passed.
+  call z80unit_passed_progress
+  jp ?end
+
+?fail:
+  ; The assertion failed.
+  call z80unit_failed_progress
+
+  ld hl,?txt0
+  call z80unit_print
+
+  ld a,(?s1)
+  ld hl,?buf
+  call z80unit_diagnostic_value8
+  call z80unit_print
+
+  ld hl,?txt1
+  call z80unit_print
+
+  ld a,(?s2)
+  ld hl,?buf
+  call z80unit_diagnostic_value8
+  call z80unit_print
+
+  ld a,(?txt2+3)
+  or a
+  jr z,?nl ; no msg to display
+  ld hl,?txt2
+  call z80unit_print
+?nl:
   call z80unit_newln
 ?end:
   z80unit_pop_reg
