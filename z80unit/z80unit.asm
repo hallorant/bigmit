@@ -39,9 +39,7 @@ _title_txt			defb	'z80unit (Bigmit Software 2020)',0
 _space				defb	' ',0
 _passed_progress_txt		defb	'P',0
 _failed_progress_txt		defb	'F',0
-_diagnostic_expected_txt	defb	' expected ',0
-_diagnostic_actual_txt		defb	' but was ',0
-_complete_progress_bar_txt	defb	']',0
+_complete_progress_bar_txt	defb	')',0
 _report_success_txt		defb	'ALL TESTS PASSED (',0
 _report_problems_txt		defb	'*** TESTS FAILED *** (',0
 _report_passed_txt		defb	' passed, ',0
@@ -78,11 +76,55 @@ z80unit_pop_reg macro
 ;
 ;  z80unit_newln prints a newline to the console.
 ;
+;  z80unit_exit  exits the program.
+;
 ; Each supported OS needs these two console output interfaces.
 
-; -------------------------------------------------- ;
-; TRSDOS 6 / LDOS 6 (Model 4) console implementation ;
-; -------------------------------------------------- ;
+; ------------------------------------------------------------------
+if @@0 == 1 || @@0 == 3 ; LDOS 5 (Model 1 & 3) console implementation
+z80unit_print:
+  z80unit_push_reg
+  push hl  ; save start of buffer
+
+  ; Change string terminator from zero to ETX.
+  ld bc,132  ; search only 132 characters, truncate if needed
+  ld a,0     ; search for zero
+  cpir
+  jr nz,_change_zero_to_etx
+  dec hl     ; zero that was found is one address back
+
+_change_zero_to_etx:
+  ; We either found zero terminator or will truncate.
+  ld (hl),$03 ; change string terminator to ETX (restored later)
+  pop de      ; restore start of buffer
+  push hl     ; save location to restore the zero terminator
+
+  ; Print the string with no newline.
+  ex de,hl ; put buffer address into hl
+  call $4467 ; @DSPLY
+
+  pop hl
+  ld (hl),0 ; restore zero terminator
+  z80unit_pop_reg
+  ret
+
+z80unit_newln:
+  z80unit_push_reg
+  jr _newln_skip
+_enter  defb  $0d ; <ENTER>
+_newln_skip:
+  ld hl,_enter
+  call $4467 ; @DSPLY
+  z80unit_pop_reg
+  ret
+
+z80unit_exit:
+  call $402d ; @EXIT
+
+endif
+
+; ------------------------------------------------------------------
+if @@0 == 4 ; TRSDOS 6 / LDOS 6 (Model 4) console implementation
 z80unit_print:
   z80unit_push_reg
   push hl  ; save start of buffer
@@ -120,6 +162,13 @@ _newln_skip:
   rst 40
   z80unit_pop_reg
   ret
+
+z80unit_exit:
+  ld hl,0  ; Normal termination
+  ld a,22  ; @EXIT
+  rst 40
+
+endif ; TRSDOS 6 / LDOS 6 (Model 4) console implementation
 
 ; ---------------------------------------------------------------- ;
 ; / / / / / / / / / / / / SUPPORT ROUTINES / / / / / / / / / / / / ;
@@ -355,8 +404,6 @@ z80unit_diagnostic_value8:
   push af
   push af ; save the value for two uses below
 
-  ld (hl),'{'
-  inc hl
   ld (hl),'0'
   inc hl
   ld (hl),'x'
@@ -372,8 +419,6 @@ z80unit_diagnostic_value8:
   ld e,a
   ld d,0 ; de = the value (but 16 bits)
   call _bindec16
-  ld (hl),'}'
-  inc hl
   ld (hl),0 ; terminate the string
 
   pop hl ; restore the buffer start
@@ -393,8 +438,6 @@ z80unit_diagnostic_value16:
   push bc
   push bc ; save the value for three uses below
 
-  ld (hl),'{'
-  inc hl
   ld (hl),'0'
   inc hl
   ld (hl),'x'
@@ -412,8 +455,6 @@ z80unit_diagnostic_value16:
 
   pop de ; restore the value
   call _bindec16
-  ld (hl),'}'
-  inc hl
   ld (hl),0
 
   pop hl ; restore the buffer start
@@ -489,7 +530,7 @@ _print_result:
 ; name - the name of the test
 z80unit_test macro name,?test_title_txt,?skip
   jp ?skip ; Could be >127 characters of output below.
-?test_title_txt	defb	' name [',0
+?test_title_txt	defb	' name (',0
 ?skip:
   z80unit_push_reg
   call z80unit_end_test ; if one is running
@@ -502,6 +543,7 @@ z80unit_test macro name,?test_title_txt,?skip
 ; ------------------------------------------------------------------
 ; Ends the unit test. Should be called after the last test to report
 ; passed/failed counts for the unit test.
+; See also z80unit_end_and_exit if you want to exit the program.
 ;
 ; Example use:
 ;   z80unit_end
@@ -510,6 +552,17 @@ z80unit_end macro ?passed_txt,?failed_txt,?skip
   call z80unit_end_test
   call z80unit_report
   z80unit_pop_reg
+  endm
+
+; ------------------------------------------------------------------
+; Ends the unit test and exits to the OS. Should be called after the
+; last test to report passed/failed counts for the unit test.
+;
+; Example use:
+;   z80unit_end_and_exit
+z80unit_end_and_exit macro ?passed_txt,?failed_txt,?skip
+  z80unit_end
+  call z80unit_exit
   endm
 
 ; ------------------------------------------------------------------
