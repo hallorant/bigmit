@@ -557,7 +557,61 @@ assertZero8 macro actual,msg,?sact,?buf,?txt0,?txt1,?skip,?fail,?end
   ld hl,?txt1
   call z80unit_print
   call z80unit_newln
+?end:
+  z80unit_pop_reg
+  endm
 
+; ------------------------------------------------------------------
+; Asserts that a 16-bit value is zero.
+; Any exp valid within "ld hl,<exp>" may be used for the argument.
+; The registers are saved and restored.
+;
+; Example use:
+;   assertZero16 bc
+;   assertZero8 0
+;   assertZero8 ($3a00)
+;
+; actual   - A 16-bit value.
+; msg      - Added to the diagnostic output if the assertion fails (optional).
+assertZero16 macro actual,msg,?sact,?buf,?txt0,?txt1,?skip,?fail,?end
+  jp ?skip ; could be >127 characters of output below
+?sact	defs	2
+?buf	defs	15
+?txt0	defb	' assertZero15 actual : expected 0 but was ',0
+?txt1	defb	' msg',0
+?skip:
+  z80unit_push_reg
+
+  ld hl,actual
+  ld (?sact),hl
+
+  ; Check the assertion.
+  ld hl,(?sact)
+  ld a,h
+  or l
+  jr nz,?fail
+
+  ; The assertion passed.
+  call z80unit_passed_progress
+  jp ?end
+
+?fail:
+  ; The assertion failed.
+  call z80unit_failed_progress
+
+  ld hl,?txt0
+  call z80unit_print
+
+  ld hl,(?sact)
+  ld b,h
+  ld c,l
+  ld hl,?buf
+  call z80unit_diagnostic_value16
+  call z80unit_print
+
+  ld hl,?txt1
+  call z80unit_print
+  call z80unit_newln
 ?end:
   z80unit_pop_reg
   endm
@@ -631,7 +685,6 @@ assertEquals8 macro expected,actual,msg,?sexp,?sact,?buf,?txt0,?txt1,?txt2,?skip
   ld hl,?txt2
   call z80unit_print
   call z80unit_newln
-
 ?end:
   z80unit_pop_reg
   endm
@@ -696,7 +749,6 @@ assertNotEquals8 macro expected,actual,msg,?sexp,?sact,?buf,?txt0,?txt1,?skip,?f
   ld hl,?txt1
   call z80unit_print
   call z80unit_newln
-
 ?end:
   z80unit_pop_reg
   endm
