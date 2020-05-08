@@ -98,11 +98,11 @@ _change_zero_to_etx:
   ; We either found zero terminator or will truncate.
   ld (hl),$03 ; change string terminator to ETX (restored later)
   pop de      ; restore start of buffer
-  push hl     ; save location to restore the zero terminator.
+  push hl     ; save location to restore the zero terminator
 
   ; Print the string with no newline.
-  ex de,hl    ; put buffer address into hl
-  ld a,10 ; @DSPLY
+  ex de,hl ; put buffer address into hl
+  ld a,10  ; @DSPLY
   rst 40
 
   pop hl
@@ -126,8 +126,8 @@ _newln_skip:
 ; ---------------------------------------------------------------- ;
 
 ; We want this include file to be self-contained. So many support
-; routines dealing with format conversions, string manipulation are
-; included below.
+; routines dealing with format conversions and string manipulation
+; are included below.
 
 ; ------------------------------------------------------------------
 ; Copies zero-termianted data to a buffer. The copy includes the terminator.
@@ -139,12 +139,11 @@ _newln_skip:
 _strcpy:
   ld a,(ix)
   ld (iy),a
-  or a ; is a == 0;
+  or a ; is a == 0?
   ret z
   inc ix
   inc iy
   jr _strcpy
-
 
 ; ------------------------------------------------------------------
 ; Subroutine to covert 1 byte into a hex value in ASCII. This has been
@@ -152,8 +151,6 @@ _strcpy:
 ;
 ; Author: William Barden, Jr.
 ;         'TRS-80 Assembly-Language Programming', 1979 pg 198.
-;
-; Uses:  a,c,hl
 ;
 ; Entry: a   Byte to be converted.
 ;        hl  Pointer to the start of a two-byte buffer.
@@ -183,7 +180,7 @@ _cvt_is_done:
 
 ; ------------------------------------------------------------------
 ; 16-bit binary to ASCII decimal conversion into a fixed 5-byte buffer.
-; Smaller results will have leading zeros, e.g., 00046.
+; Results below 5 digits will have leading zeros, e.g., 00046.
 ;
 ; Author: William Barden, Jr.
 ;         'More TRS-80 Assembly-Language Programming', 1982 pg 156.
@@ -233,7 +230,7 @@ _bin030:
 ;             string or the last '0' if composed of all '0's.
 _skip_ascii_zeros:
   ld a,(hl)
-  xor '0' ; a == '0'
+  xor '0' ; is a == (ASCII) '0'?
   jr nz,_check_for_zero_value
   inc hl
   jr _skip_ascii_zeros
@@ -285,7 +282,7 @@ z80unit_show_title_and_start_test:
   push hl ; save the title of the test to print later
 
   ld a,(_title_displayed)
-  or a ; set z flag
+  or a ; is a == 0?
   jr nz,_start_test
   ld a,1
   ld (_title_displayed),a
@@ -486,6 +483,9 @@ _print_result:
 ; ------------------------------------------------------------------
 ; Starts a new test.
 ;
+; Example use:
+;   z80unit_test 'barden_fill'
+;
 ; name - the name of the test
 z80unit_test macro name,?test_title_txt,?skip
   jp ?skip ; Could be >127 characters of output below.
@@ -502,6 +502,9 @@ z80unit_test macro name,?test_title_txt,?skip
 ; ------------------------------------------------------------------
 ; Ends the unit test. Should be called after the last test to report
 ; passed/failed counts for the unit test.
+;
+; Example use:
+;   z80unit_end
 z80unit_end macro ?passed_txt,?failed_txt,?skip
   z80unit_push_reg
   call z80unit_end_test
