@@ -59,6 +59,19 @@ main:
   assertGreaterThan8 a,(ix),'expected'
   assertGreaterThan8 a,(ix)
 
+  z80unit_test 'Passing assertLessThan8'
+  assertLessThan8 6,$45
+  ld a,8
+  ld ix,_ten
+  assertLessThan8 a,(ix)
+
+  z80unit_test 'Failing assertLessThan8'
+  ld a,100
+  ld ix,_ten
+  assertLessThan8 a,(ix),'expected'
+  assertLessThan8 a,(ix)
+
+
   z80unit_end
 
   ; Return to TRSDOS prompt.

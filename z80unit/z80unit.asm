@@ -575,8 +575,8 @@ assertZero8 macro actual,msg,?sact,?buf,?txt0,?txt1,?skip,?fail,?nl,?end
 ;
 ; Example use:
 ;   assertZero16 bc
-;   assertZero8 0
-;   assertZero8 ($3a00)
+;   assertZero16 $34a4
+;   assertZero16 ($3a00)
 ;
 ; actual   - A 16-bit value.
 ; msg      - Added to the diagnostic output if the assertion fails (optional).
@@ -815,6 +815,85 @@ assertGreaterThan8 macro val1,val2,msg,?s1,?s2,?buf,?txt0,?txt1,?txt2,?skip,?fai
   jr c,?fail  ; s1 < s2
   jr z,?fail  ; s1 == s2
 
+  ; The assertion passed.
+  call z80unit_passed_progress
+  jp ?end
+
+?fail:
+  ; The assertion failed.
+  call z80unit_failed_progress
+
+  ld hl,?txt0
+  call z80unit_print
+
+  ld a,(?s1)
+  ld hl,?buf
+  call z80unit_diagnostic_value8
+  call z80unit_print
+
+  ld hl,?txt1
+  call z80unit_print
+
+  ld a,(?s2)
+  ld hl,?buf
+  call z80unit_diagnostic_value8
+  call z80unit_print
+
+  ld a,(?txt2+3)
+  or a
+  jr z,?nl ; no msg to display
+  ld hl,?txt2
+  call z80unit_print
+?nl:
+  call z80unit_newln
+?end:
+  z80unit_pop_reg
+  endm
+
+; ------------------------------------------------------------------
+; Asserts that a first 8-bit value is less than a second 8-bit value.
+; Any exp valid within "ld a,<exp>" may be used for the two arguments.
+; The registers are saved and restored.
+;
+; Example use:
+;   assertLessThan8 a,$03
+;   assertLessThan8 a,c
+;   assertLessThan8 05,(ix)
+;
+; expected - An 8-bit value.
+; actual   - An 8-bit value.
+; msg      - Added to the diagnostic output if the assertion fails (optional).
+assertLessThan8 macro val1,val2,msg,?s1,?s2,?buf,?txt0,?txt1,?txt2,?skip,?pass,?fail,?nl,?end
+  jp ?skip ; could be >127 characters of output below
+?s1	defs	1
+?s2	defs	1
+?buf	defs	15
+?txt0	defb	' assertLessThan8 val1,val2 : ',0
+?txt1	defb	' >= ',0
+?txt2	defb	' : msg',0
+?skip:
+  z80unit_push_reg
+
+  ; We have to be careful with the a register because it could be what
+  ; was defined for 'expected' and/or 'actual', e.g., assertEquals a,a
+  ; We use the stack to restore the "at start" a register value after
+  ; saving 'expected' prior to saving 'actual'.
+  push af
+  ld a,val1
+  ld (?s1),a
+  pop af
+  ld a,val2
+  ld (?s2),a
+
+  ; Check the assertion.
+  ld a,(?s2)
+  ld c,a
+  ld a,(?s1)
+  cp c
+  jr c,?pass  ; s1 < s2
+  jr ?fail
+
+?pass:
   ; The assertion passed.
   call z80unit_passed_progress
   jp ?end
