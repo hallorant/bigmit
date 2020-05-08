@@ -35,8 +35,7 @@ _title_displayed		defb	0 ; 0=no, 1=yes
 _running_test			defb	0 ; 0=no, 1=yes
 _last_passed			defb	1 ; 0=no, 1=yes
 
-_title_txt			defb	'z80unit (Bigmit Software 2020)',0
-_space				defb	' ',0
+_title_txt			defb	'z80unit : programmer-friendly unit testing for TRS-80 assembly',0
 _passed_progress_txt		defb	'P',0
 _failed_progress_txt		defb	'F',0
 _complete_progress_bar_txt	defb	')',0

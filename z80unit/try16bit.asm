@@ -6,13 +6,12 @@ _ten	defw	10
 
 ; Trys out 16-bit z80unit assertions.
 main:
-  z80unit_test 'Passing assertZero16'
+  z80unit_test 'assertZero16'
   assertZero16 0
   assertZero16 (_zero)
 
-  z80unit_test 'Failing assertZero16'
+  z80unit_test 'assertZero16'
   assertZero16 $ffff,'expected'
-  assertZero16 $ffff
 
   z80unit_end_and_exit
   end main
