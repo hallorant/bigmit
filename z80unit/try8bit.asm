@@ -4,7 +4,7 @@ import 'z80unit.asm'
 _zero	defb	0
 _ten	defb	10
 
-; Trys out 8-bit z80unit assertions.
+; Trys out z80unit 8-bit assertions.
 main:
   z80unit_test 'Passing assertZero8'
   assertZero8 0

@@ -29,9 +29,12 @@ INCLUDE_BZ80UNIT equ 1
 ; A notable limitation of the 16-bit assertions is that any indirect
 ; register value, such as (hl) or (ix), is not supported.
 ;
-; Memory block assertions
-;   assertContains mem*, value
-;   assertContains exp*, act*, count
+; Memory block assertions check memory against an expected vector of bytes.
+;   assertMemString ptr,string
+;   > Checks if the memory pointed to by 'ptr' contains 'string'.
+;   assertMemEquals ptr1,ptr2,length
+;   > Checks the memory pointed to by 'ptr1' and 'ptr2' are the
+;     same for 'length' bytes.
                                    
 ; ---------------------------------------------------------------- ;
 ; / / / / / / / / / /  IMPLEMENTATION DETAILS  / / / / / / / / / / ;
@@ -376,6 +379,17 @@ _bindec16_skip:
 ; / / / / / / / / / / / / X80UNIT ROUTINES / / / / / / / / / / / / ;
 ; ---------------------------------------------------------------- ;
 
+; Prints the ASCII decimal value of a 16-bit counter to the console.
+;
+; Entry: de  A 16-bit binary value.
+z80unit_print_counter:
+  ld hl,_buffer
+  call _bindec16
+  ld (hl),0
+  ld hl,_buffer
+  call z80unit_print
+  ret
+
 ; ------------------------------------------------------------------
 ; Shows the title and starts a unit test.
 ;
@@ -445,18 +459,18 @@ _last_assertion_failed:
   ret
 
 ; ------------------------------------------------------------------
-; Write a 8-bit value as a number as hex and decimal into a buffer as ASCII.
-; For example, for 55 the output is "<0x37=55>". The output is zero terminated.
+; Prints a 8-bit value as hex and decimal ASCII to the console.
+; For example, for 55 the output is "<0x37=55>".
 ;
 ; Entry: a   An 8-bit value.
-;        hl  Points to the destination buffer.
-; Exit:  hl  unchanged
-z80unit_diagnostic_value8:
-  push hl ; save the buffer start
+z80unit_print_value8:
+  ld hl,_buffer
 
   push af
-  push af ; save the value for two uses below
+  push af
+  push af ; save the value for uses below
 
+  ; Output as hex ASCII.
   ld (hl),'0'
   inc hl
   ld (hl),'x'
@@ -468,24 +482,41 @@ z80unit_diagnostic_value8:
   ld (hl),'='
   inc hl
 
+  ; Output as decimal ASCII.
   pop af ; restore the value
   ld e,a
   ld d,0 ; de = the value (but 16 bits)
   call _bindec16
+
+  ; Output as ASCII (ensure printable).
+  pop af ; restore the value
+  cp ' '
+  jr c,_value8_skip_char
+  ld (hl),'='
+  inc hl
+  ld (hl),$27
+  inc hl
+  ld (hl),a
+  inc hl
+  ld (hl),$27
+  inc hl
+_value8_skip_char
+
   ld (hl),0 ; terminate the string
 
-  pop hl ; restore the buffer start
+  ld hl,_buffer
+  call z80unit_print
   ret
 
 ; ------------------------------------------------------------------
-; Write a 6-bit value as a number as hex and decimal into a buffer as ASCII.
+; Prints a 16-bit value as hex and decimal ASCII to the console.
 ; For example, for 55 the output is "<0x0037=55>"
 ;
-; Entry: bc  A 16-bit value.
-;        hl  Points to the output buffer.
-; Exit:  hl  Points to the last character + 1.
-z80unit_diagnostic_value16:
-  push hl ; save the buffer start
+; Entry: hl  A 16-bit value.
+z80unit_print_value16:
+  ld b,h
+  ld c,l ; bc <- hl
+  ld hl,_buffer
 
   push bc
   push bc
@@ -510,7 +541,8 @@ z80unit_diagnostic_value16:
   call _bindec16
   ld (hl),0
 
-  pop hl ; restore the buffer start
+  ld hl,_buffer
+  call z80unit_print
   ret
 
 ; ------------------------------------------------------------------
@@ -547,23 +579,21 @@ _print_result:
   call z80unit_print
 
   ; Print test passed count.
-  ld hl,(_passed_count)
-  ld ix,_buffer
-  call _barden_bindec
-  ld (ix),0 ; zero-terminate the string
   ld hl,_buffer
-  call _skip_ascii_zeros
+  ld de,(_passed_count)
+  call _bindec16
+  ld (hl),0
+  ld hl,_buffer
   call z80unit_print
   ld hl,_report_passed_txt
   call z80unit_print
 
   ; Print test failed count.
-  ld hl,(_failed_count)
-  ld ix,_buffer
-  call _barden_bindec
-  ld (ix),0 ; zero-terminate the string
   ld hl,_buffer
-  call _skip_ascii_zeros
+  ld de,(_failed_count)
+  call _bindec16
+  ld (hl),0
+  ld hl,_buffer
   call z80unit_print
   ld hl,_report_failed_txt
   call z80unit_print
@@ -634,10 +664,9 @@ z80unit_end_and_exit macro ?passed_txt,?failed_txt,?skip
 ;
 ; actual   - An 8-bit value.
 ; msg      - Added to the diagnostic output if the assertion fails (optional).
-assertZero8 macro actual,msg,?sact,?buf,?txt0,?txt1,?skip,?fail,?nl,?end
+assertZero8 macro actual,msg,?sact,?txt0,?txt1,?skip,?fail,?nl,?end
   jp ?skip ; could be >127 characters of output below
 ?sact	defs	1
-?buf	defs	15
 ?txt0	defb	' assertZero8 actual : value was ',0
 ?txt1	defb	' : msg',0
 ?skip:
@@ -664,9 +693,7 @@ assertZero8 macro actual,msg,?sact,?buf,?txt0,?txt1,?skip,?fail,?nl,?end
   call z80unit_print
 
   ld a,(?sact)
-  ld hl,?buf
-  call z80unit_diagnostic_value8
-  call z80unit_print
+  call z80unit_print_value8
 
   ld a,(?txt1+3)
   or a
@@ -692,11 +719,10 @@ assertZero8 macro actual,msg,?sact,?buf,?txt0,?txt1,?skip,?fail,?nl,?end
 ; expected - An 8-bit value.
 ; actual   - An 8-bit value.
 ; msg      - Added to the diagnostic output if the assertion fails (optional).
-assertEquals8 macro expected,actual,msg,?sexp,?sact,?buf,?txt0,?txt1,?txt2,?skip,?fail,?nl,?end
+assertEquals8 macro expected,actual,msg,?sexp,?sact,?txt0,?txt1,?txt2,?skip,?fail,?nl,?end
   jp ?skip ; could be >127 characters of output below
 ?sexp	defs	1
 ?sact	defs	1
-?buf	defs	15
 ?txt0	defb	' assertEquals8 expected,actual : ex`pected ',0
 ?txt1	defb	' but was ',0
 ?txt2	defb	' : msg',0
@@ -730,17 +756,13 @@ assertEquals8 macro expected,actual,msg,?sexp,?sact,?buf,?txt0,?txt1,?txt2,?skip
   call z80unit_print
 
   ld a,(?sexp)
-  ld hl,?buf
-  call z80unit_diagnostic_value8
-  call z80unit_print
+  call z80unit_print_value8
 
   ld hl,?txt1
   call z80unit_print
 
   ld a,(?sact)
-  ld hl,?buf
-  call z80unit_diagnostic_value8
-  call z80unit_print
+  call z80unit_print_value8
 
   ld a,(?txt2+3)
   or a
@@ -766,11 +788,10 @@ assertEquals8 macro expected,actual,msg,?sexp,?sact,?buf,?txt0,?txt1,?txt2,?skip
 ; expected - An 8-bit value.
 ; actual   - An 8-bit value.
 ; msg      - Added to the diagnostic output if the assertion fails (optional).
-assertNotEquals8 macro expected,actual,msg,?sexp,?sact,?buf,?txt0,?txt1,?skip,?fail,?nl,?end
+assertNotEquals8 macro expected,actual,msg,?sexp,?sact,?txt0,?txt1,?skip,?fail,?nl,?end
   jp ?skip ; could be >127 characters of output below
 ?sexp	defs	1
 ?sact	defs	1
-?buf	defs	15
 ?txt0	defb	' assertNotEquals8 expected,actual : both were ',0
 ?txt1	defb	' : msg',0
 ?skip:
@@ -803,9 +824,7 @@ assertNotEquals8 macro expected,actual,msg,?sexp,?sact,?buf,?txt0,?txt1,?skip,?f
   call z80unit_print
 
   ld a,(?sexp)
-  ld hl,?buf
-  call z80unit_diagnostic_value8
-  call z80unit_print
+  call z80unit_print_value8
 
   ld a,(?txt1+3)
   or a
@@ -831,11 +850,10 @@ assertNotEquals8 macro expected,actual,msg,?sexp,?sact,?buf,?txt0,?txt1,?skip,?f
 ; expected - An 8-bit value.
 ; actual   - An 8-bit value.
 ; msg      - Added to the diagnostic output if the assertion fails (optional).
-assertGreaterThan8 macro val1,val2,msg,?s1,?s2,?buf,?txt0,?txt1,?txt2,?skip,?fail,?nl,?end
+assertGreaterThan8 macro val1,val2,msg,?s1,?s2,?txt0,?txt1,?txt2,?skip,?fail,?nl,?end
   jp ?skip ; could be >127 characters of output below
 ?s1	defs	1
 ?s2	defs	1
-?buf	defs	15
 ?txt0	defb	' assertGreaterThan8 val1,val2 : ',0
 ?txt1	defb	' <= ',0
 ?txt2	defb	' : msg',0
@@ -870,17 +888,13 @@ assertGreaterThan8 macro val1,val2,msg,?s1,?s2,?buf,?txt0,?txt1,?txt2,?skip,?fai
   call z80unit_print
 
   ld a,(?s1)
-  ld hl,?buf
-  call z80unit_diagnostic_value8
-  call z80unit_print
+  call z80unit_print_value8
 
   ld hl,?txt1
   call z80unit_print
 
   ld a,(?s2)
-  ld hl,?buf
-  call z80unit_diagnostic_value8
-  call z80unit_print
+  call z80unit_print_value8
 
   ld a,(?txt2+3)
   or a
@@ -907,11 +921,10 @@ assertGreaterThan8 macro val1,val2,msg,?s1,?s2,?buf,?txt0,?txt1,?txt2,?skip,?fai
 ; expected - An 8-bit value.
 ; actual   - An 8-bit value.
 ; msg      - Added to the diagnostic output if the assertion fails (optional).
-assertGreaterThanOrEquals8 macro val1,val2,msg,?s1,?s2,?buf,?txt0,?txt1,?txt2,?skip,?fail,?nl,?end
+assertGreaterThanOrEquals8 macro val1,val2,msg,?s1,?s2,?txt0,?txt1,?txt2,?skip,?fail,?nl,?end
   jp ?skip ; could be >127 characters of output below
 ?s1	defs	1
 ?s2	defs	1
-?buf	defs	15
 ?txt0	defb	' assertGreaterThanEquals8 val1,val2 : ',0
 ?txt1	defb	' < ',0
 ?txt2	defb	' : msg',0
@@ -945,17 +958,13 @@ assertGreaterThanOrEquals8 macro val1,val2,msg,?s1,?s2,?buf,?txt0,?txt1,?txt2,?s
   call z80unit_print
 
   ld a,(?s1)
-  ld hl,?buf
-  call z80unit_diagnostic_value8
-  call z80unit_print
+  call z80unit_print_value8
 
   ld hl,?txt1
   call z80unit_print
 
   ld a,(?s2)
-  ld hl,?buf
-  call z80unit_diagnostic_value8
-  call z80unit_print
+  call z80unit_print_value8
 
   ld a,(?txt2+3)
   or a
@@ -981,11 +990,10 @@ assertGreaterThanOrEquals8 macro val1,val2,msg,?s1,?s2,?buf,?txt0,?txt1,?txt2,?s
 ; expected - An 8-bit value.
 ; actual   - An 8-bit value.
 ; msg      - Added to the diagnostic output if the assertion fails (optional).
-assertLessThan8 macro val1,val2,msg,?s1,?s2,?buf,?txt0,?txt1,?txt2,?skip,?pass,?fail,?nl,?end
+assertLessThan8 macro val1,val2,msg,?s1,?s2,?txt0,?txt1,?txt2,?skip,?pass,?fail,?nl,?end
   jp ?skip ; could be >127 characters of output below
 ?s1	defs	1
 ?s2	defs	1
-?buf	defs	15
 ?txt0	defb	' assertLessThan8 val1,val2 : ',0
 ?txt1	defb	' >= ',0
 ?txt2	defb	' : msg',0
@@ -1021,17 +1029,13 @@ assertLessThan8 macro val1,val2,msg,?s1,?s2,?buf,?txt0,?txt1,?txt2,?skip,?pass,?
   call z80unit_print
 
   ld a,(?s1)
-  ld hl,?buf
-  call z80unit_diagnostic_value8
-  call z80unit_print
+  call z80unit_print_value8
 
   ld hl,?txt1
   call z80unit_print
 
   ld a,(?s2)
-  ld hl,?buf
-  call z80unit_diagnostic_value8
-  call z80unit_print
+  call z80unit_print_value8
 
   ld a,(?txt2+3)
   or a
@@ -1058,11 +1062,10 @@ assertLessThan8 macro val1,val2,msg,?s1,?s2,?buf,?txt0,?txt1,?txt2,?skip,?pass,?
 ; expected - An 8-bit value.
 ; actual   - An 8-bit value.
 ; msg      - Added to the diagnostic output if the assertion fails (optional).
-assertLessThanOrEquals8 macro val1,val2,msg,?s1,?s2,?buf,?txt0,?txt1,?txt2,?skip,?pass,?fail,?nl,?end
+assertLessThanOrEquals8 macro val1,val2,msg,?s1,?s2,?txt0,?txt1,?txt2,?skip,?pass,?fail,?nl,?end
   jp ?skip ; could be >127 characters of output below
 ?s1	defs	1
 ?s2	defs	1
-?buf	defs	15
 ?txt0	defb	' assertLessThanOrEquals8 val1,val2 : ',0
 ?txt1	defb	' > ',0
 ?txt2	defb	' : msg',0
@@ -1099,17 +1102,13 @@ assertLessThanOrEquals8 macro val1,val2,msg,?s1,?s2,?buf,?txt0,?txt1,?txt2,?skip
   call z80unit_print
 
   ld a,(?s1)
-  ld hl,?buf
-  call z80unit_diagnostic_value8
-  call z80unit_print
+  call z80unit_print_value8
 
   ld hl,?txt1
   call z80unit_print
 
   ld a,(?s2)
-  ld hl,?buf
-  call z80unit_diagnostic_value8
-  call z80unit_print
+  call z80unit_print_value8
 
   ld a,(?txt2+3)
   or a
@@ -1141,10 +1140,9 @@ assertLessThanOrEquals8 macro val1,val2,msg,?s1,?s2,?buf,?txt0,?txt1,?txt2,?skip
 ;
 ; actual   - A 16-bit value.
 ; msg      - Added to the diagnostic output if the assertion fails (optional).
-assertZero16 macro actual,msg,?sact,?buf,?txt0,?txt1,?skip,?fail,?nl,?end
+assertZero16 macro actual,msg,?sact,?txt0,?txt1,?skip,?fail,?nl,?end
   jp ?skip ; could be >127 characters of output below
 ?sact	defs	2
-?buf	defs	15
 ?txt0	defb	' assertZero16 actual : value was ',0
 ?txt1	defb	' : msg',0
 ?skip:
@@ -1180,9 +1178,7 @@ assertZero16 macro actual,msg,?sact,?buf,?txt0,?txt1,?skip,?fail,?nl,?end
   ld hl,(?sact)
   ld b,h
   ld c,l
-  ld hl,?buf
-  call z80unit_diagnostic_value16
-  call z80unit_print
+  call z80unit_print_value16
 
   ld a,(?txt1+3)
   or a
@@ -1211,11 +1207,10 @@ assertZero16 macro actual,msg,?sact,?buf,?txt0,?txt1,?skip,?fail,?nl,?end
 ; expected - An 16-bit value.
 ; actual   - An 16-bit value.
 ; msg      - Added to the diagnostic output if the assertion fails (optional).
-assertEquals16 macro expected,actual,msg,?sexp,?sact,?buf,?txt0,?txt1,?txt2,?skip,?fail,?nl,?end
+assertEquals16 macro expected,actual,msg,?sexp,?sact,?txt0,?txt1,?txt2,?skip,?fail,?nl,?end
   jp ?skip ; could be >127 characters of output below
 ?sexp	defs	2
 ?sact	defs	2
-?buf	defs	15
 ?txt0	defb	' assertEquals16 expected,actual : ex`pected ',0
 ?txt1	defb	' but was ',0
 ?txt2	defb	' : msg',0
@@ -1266,9 +1261,7 @@ assertEquals16 macro expected,actual,msg,?sexp,?sact,?buf,?txt0,?txt1,?txt2,?ski
   ld hl,(?sexp)
   ld b,h
   ld c,l
-  ld hl,?buf
-  call z80unit_diagnostic_value16
-  call z80unit_print
+  call z80unit_print_value16
 
   ld hl,?txt1
   call z80unit_print
@@ -1276,9 +1269,7 @@ assertEquals16 macro expected,actual,msg,?sexp,?sact,?buf,?txt0,?txt1,?txt2,?ski
   ld hl,(?sact)
   ld b,h
   ld c,l
-  ld hl,?buf
-  call z80unit_diagnostic_value16
-  call z80unit_print
+  call z80unit_print_value16
 
   ld a,(?txt2+3)
   or a
@@ -1307,11 +1298,10 @@ assertEquals16 macro expected,actual,msg,?sexp,?sact,?buf,?txt0,?txt1,?txt2,?ski
 ; expected - An 16-bit value.
 ; actual   - An 16-bit value.
 ; msg      - Added to the diagnostic output if the assertion fails (optional).
-assertNotEquals16 macro expected,actual,msg,?sexp,?sact,?buf,?txt0,?txt1,?skip,?pass,?fail,?nl,?end
+assertNotEquals16 macro expected,actual,msg,?sexp,?sact,?txt0,?txt1,?skip,?pass,?fail,?nl,?end
   jp ?skip ; could be >127 characters of output below
 ?sexp	defs	2
 ?sact	defs	2
-?buf	defs	15
 ?txt0	defb	' assertNotEquals16 expected,actual : both were ',0
 ?txt1	defb	' : msg',0
 ?skip:
@@ -1363,14 +1353,249 @@ assertNotEquals16 macro expected,actual,msg,?sexp,?sact,?buf,?txt0,?txt1,?skip,?
   ld hl,(?sexp)
   ld b,h
   ld c,l
-  ld hl,?buf
-  call z80unit_diagnostic_value16
-  call z80unit_print
+  call z80unit_print_value16
 
   ld a,(?txt1+3)
   or a
   jr z,?nl ; no msg to display
   ld hl,?txt1
+  call z80unit_print
+?nl:
+  call z80unit_newln
+?end:
+  z80unit_pop_reg
+  endm
+
+; ---------------------------------------------------------------- ;
+; / / / / / / / / / /  MEMORY BLOCK ASSERTIONS / / / / / / / / / / ;
+; ---------------------------------------------------------------- ;
+
+; ------------------------------------------------------------------
+; Asserts that the memory pointed by ptr contains the passed string.
+; Any 16-bit register or any <exp> valid within "ld hl,<exp>" may be
+; used for the first argument.
+; The registers are saved and restored.
+;
+; Example use:
+;   assertMemString $3a00,'video'
+;   assertMemString hl,'abc'
+; s1  defb 'test'
+;   assertMemString s1,'test'
+;   assertMemString s1+2,'t'
+;
+; ptr      - A pointer to memory.
+; string   - A immediate string of bytes.
+; msg      - Added to the diagnostic output if the assertion fails (optional).
+assertMemString macro ptr,string,msg,?sptr,?sstr,?slen,?txt0,?txt1,?txt2,?txt3,?skip,?loop,?loop_entry,?fail,?nl,?end
+  jp ?skip ; could be >127 characters of output below
+?sptr	defs	2
+?sstr	defb	'string'
+?slen	equ	$-?sstr
+?txt0	defb	' assertMemString ptr,',$27,'string',$27,' : at +',0
+?txt1	defb	' expected ',0
+?txt2	defb	' but was ',0
+?txt3	defb	' : msg',0
+?skip:
+  z80unit_push_reg
+
+  ; Save the passed pointer to memory.
+  z80unit_is_reg16 ptr
+  if z80unit_reg16
+    push ptr
+    pop hl
+  else
+    ld hl,ptr
+  endif
+  ld (?sptr),hl
+
+  ; Check the assertion.
+  ld ix,(?sptr) ; actual
+  ld iy,?sstr   ; expected
+  ld hl,?slen   ; number of bytes to compare
+  ld bc,0       ; index in the string
+  jr ?loop_entry
+?loop
+  inc ix
+  inc iy
+  inc bc
+?loop_entry
+  ld d,(ix)
+  ld a,(iy)
+  xor d ; (ix) == (iy)
+  jr nz,?fail
+
+  dec hl
+  ld d,h
+  ld a,l
+  or d ; hl == 0
+  jr nz,?loop
+  
+  ; The assertion passed.
+  call z80unit_passed_progress
+  jp ?end
+
+?fail:
+  ; The assertion failed.
+  push ix ; actual byte
+  push iy ; expected byte
+  push bc ; index in the string
+
+  call z80unit_failed_progress
+
+  ld hl,?txt0
+  call z80unit_print
+
+  ; print the index of problem.
+  pop de
+  call z80unit_print_counter
+
+  ld hl,?txt1
+  call z80unit_print
+
+  ; print the actual byte.
+  pop iy
+  ld a,(iy)
+  call z80unit_print_value8
+
+  ld hl,?txt2
+  call z80unit_print
+
+  ; print the expected byte.
+  pop ix
+  ld a,(ix)
+  call z80unit_print_value8
+
+  ld a,(?txt3+3)
+  or a
+  jr z,?nl ; no msg to display
+  ld hl,?txt3
+  call z80unit_print
+?nl:
+  call z80unit_newln
+?end:
+  z80unit_pop_reg
+  endm
+
+; ------------------------------------------------------------------
+; Asserts that the memory pointed to by 'ptr1' and 'ptr2' are the same
+;  for 'length' bytes.
+; Any 16-bit register or any <exp> valid within "ld hl,<exp>" may be
+; used for the two arguments.
+; The registers are saved and restored.
+;
+; Example use:
+; s1  defb 'test'
+; s2  defb 'test'
+; s2l equ  $-s2
+;   assertMemEquals s1,s2,s2l
+;   ld a,4
+;   assertMemEquals s1,s2,a
+;
+; ptr1     - A pointer to memory.
+; ptr2     - Another pointer to memory.
+; count    - Count of bytes to examine, must be < 65535 (fit in 16-bits).
+; msg      - Added to the diagnostic output if the assertion fails (optional).
+assertMemEquals macro pexpected,pactual,count,msg,?sexp,?sact,?scnt,?txt0,?txt1,?txt2,?txt3,?skip,?loop,?loop_entry,?fail,?nl,?end
+  jp ?skip ; could be >127 characters of output below
+?sexp	defs	2
+?sact	defs	2
+?scnt	defs	2
+?txt0	defb	' assertMemEquals pexpected,pactual,count : at +',0
+?txt1	defb	' expected ',0
+?txt2	defb	' but was ',0
+?txt3	defb	' : msg',0
+?skip:
+  z80unit_push_reg
+
+  push hl ; save hl, ptrs might use it
+  ; Save the count.
+  ld hl,count
+  ld (?scnt),hl
+  pop hl
+
+  ; Save the first pointer.
+  push hl ; save hl, other ptr might use it
+  z80unit_is_reg16 pexpected
+  if z80unit_reg16
+    push pexpected
+    pop hl
+  else
+    ld hl,pexpected
+  endif
+  ld (?sexp),hl
+  pop hl
+
+  ; Save the second pointer.
+  z80unit_is_reg16 pactual
+  if z80unit_reg16
+    push pactual
+    pop hl
+  else
+    ld hl,pactual
+  endif
+  ld (?sact),hl
+
+  ; Check the assertion.
+  ld ix,(?sact) ; actual
+  ld iy,(?sexp) ; expected
+  ld hl,(?scnt) ; number of bytes to compare
+  ld bc,0     ; index in the string
+  jr ?loop_entry
+?loop
+  inc ix
+  inc iy
+  inc bc
+?loop_entry
+  ld d,(ix)
+  ld a,(iy)
+  xor d ; (ix) == (iy)
+  jr nz,?fail
+
+  dec hl
+  ld d,h
+  ld a,l
+  or d ; hl == 0
+  jr nz,?loop
+  
+  ; The assertion passed.
+  call z80unit_passed_progress
+  jp ?end
+
+?fail:
+  ; The assertion failed.
+  push ix ; actual byte
+  push iy ; expected byte
+  push bc ; index in the string
+
+  call z80unit_failed_progress
+
+  ld hl,?txt0
+  call z80unit_print
+
+  ; print the index of problem.
+  pop de
+  call z80unit_print_counter
+
+  ld hl,?txt1
+  call z80unit_print
+
+  ; print the actual byte.
+  pop iy
+  ld a,(iy)
+  call z80unit_print_value8
+
+  ld hl,?txt2
+  call z80unit_print
+
+  ; print the expected byte.
+  pop ix
+  ld a,(ix)
+  call z80unit_print_value8
+
+  ld a,(?txt3+3)
+  or a
+  jr z,?nl ; no msg to display
+  ld hl,?txt3
   call z80unit_print
 ?nl:
   call z80unit_newln

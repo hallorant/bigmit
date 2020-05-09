@@ -4,7 +4,7 @@ import 'z80unit.asm'
 _zero	defw	0
 _ten	defw	10
 
-; Trys out 16-bit z80unit assertions.
+; Trys out z80unit 16-bit assertions.
 main:
   z80unit_test 'Passing assertZero16'
   assertZero16 0
