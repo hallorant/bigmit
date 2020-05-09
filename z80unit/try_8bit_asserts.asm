@@ -19,6 +19,10 @@ main:
   assertZero8 (ix),'expected'
   assertZero8 (ix)
 
+ifdef stop
+  z80unit_end_and_exit
+endif
+
   z80unit_test 'Passing assertEquals8'
   assertEquals8 5,$5
   ld a,$ff
