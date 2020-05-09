@@ -12,7 +12,8 @@ INCLUDE_BZ80UNIT equ 1
 ; Author: Tim Halloran
 ;
 ; 8-bit assertions, where e, an expected value, and a, an actual
-; value, are any <exp> valid in "ld a,<exp>".
+; value, are any <exp> valid in "ld a,<exp>". All magnitude comparisons
+; are unsigned.
 ;   assertZero8 a
 ;   assertEquals8 e,a
 ;   assertNotEquals8 e,a
@@ -654,6 +655,7 @@ z80unit_end_and_exit macro ?passed_txt,?failed_txt,?skip
 
 ; ------------------------------------------------------------------
 ; Asserts that an 8-bit value is zero.
+;
 ; Any <exp> valid within "ld a,<exp>" may be used for the two arguments.
 ; The registers are saved and restored.
 ;
@@ -708,6 +710,7 @@ assertZero8 macro actual,msg,?sact,?txt0,?txt1,?skip,?fail,?nl,?end
 
 ; ------------------------------------------------------------------
 ; Asserts that the two 8-bit values are equal.
+;
 ; Any <exp> valid within "ld a,<exp>" may be used for the two arguments.
 ; The registers are saved and restored.
 ;
@@ -777,6 +780,7 @@ assertEquals8 macro expected,actual,msg,?sexp,?sact,?txt0,?txt1,?txt2,?skip,?fai
 
 ; ------------------------------------------------------------------
 ; Asserts that the two 8-bit values are not equal.
+;
 ; Any <exp> valid within "ld a,<exp>" may be used for the two arguments.
 ; The registers are saved and restored.
 ;
@@ -840,6 +844,7 @@ assertNotEquals8 macro expected,actual,msg,?sexp,?sact,?txt0,?txt1,?skip,?fail,?
 ; ------------------------------------------------------------------
 ; Asserts that a first 8-bit value is greater than a second 8-bit value.
 ; Any <exp> valid within "ld a,<exp>" may be used for the two arguments.
+;
 ; The registers are saved and restored.
 ;
 ; Example use:
@@ -910,6 +915,7 @@ assertGreaterThan8 macro val1,val2,msg,?s1,?s2,?txt0,?txt1,?txt2,?skip,?fail,?nl
 ; ------------------------------------------------------------------
 ; Asserts that a first 8-bit value is greater than or equal to a
 ; second 8-bit value.
+;
 ; Any <exp> valid within "ld a,<exp>" may be used for the two arguments.
 ; The registers are saved and restored.
 ;
@@ -979,6 +985,7 @@ assertGreaterThanOrEquals8 macro val1,val2,msg,?s1,?s2,?txt0,?txt1,?txt2,?skip,?
 
 ; ------------------------------------------------------------------
 ; Asserts that a first 8-bit value is less than a second 8-bit value.
+;
 ; Any <exp> valid within "ld a,<exp>" may be used for the two arguments.
 ; The registers are saved and restored.
 ;
@@ -1051,6 +1058,7 @@ assertLessThan8 macro val1,val2,msg,?s1,?s2,?txt0,?txt1,?txt2,?skip,?pass,?fail,
 ; ------------------------------------------------------------------
 ; Asserts that a first 8-bit value is less than or equal to a
 ; second 8-bit value.
+;
 ; Any <exp> valid within "ld a,<exp>" may be used for the two arguments.
 ; The registers are saved and restored.
 ;
@@ -1127,6 +1135,7 @@ assertLessThanOrEquals8 macro val1,val2,msg,?s1,?s2,?txt0,?txt1,?txt2,?skip,?pas
 
 ; ------------------------------------------------------------------
 ; Asserts that a 16-bit value is zero.
+;
 ; Any 16-bit register or any <exp> valid within "ld hl,<exp>" may be
 ; used for the argument.
 ; The registers are saved and restored.
@@ -1193,6 +1202,7 @@ assertZero16 macro actual,msg,?sact,?txt0,?txt1,?skip,?fail,?nl,?end
 
 ; ------------------------------------------------------------------
 ; Asserts that the two 16-bit values are equal.
+;
 ; Any 16-bit register or any <exp> valid within "ld hl,<exp>" may be
 ; used for the two arguments.
 ; The registers are saved and restored.
@@ -1284,6 +1294,7 @@ assertEquals16 macro expected,actual,msg,?sexp,?sact,?txt0,?txt1,?txt2,?skip,?fa
 
 ; ------------------------------------------------------------------
 ; Asserts that the two 16-bit values are not equal.
+;
 ; Any 16-bit register or any <exp> valid within "ld hl,<exp>" may be
 ; used for the two arguments.
 ; The registers are saved and restored.
@@ -1372,6 +1383,7 @@ assertNotEquals16 macro expected,actual,msg,?sexp,?sact,?txt0,?txt1,?skip,?pass,
 
 ; ------------------------------------------------------------------
 ; Asserts that the memory pointed by ptr contains the passed string.
+;
 ; Any 16-bit register or any <exp> valid within "ld hl,<exp>" may be
 ; used for the first argument.
 ; The registers are saved and restored.
@@ -1479,8 +1491,10 @@ assertMemString macro ptr,string,msg,?sptr,?sstr,?slen,?txt0,?txt1,?txt2,?txt3,?
 ; ------------------------------------------------------------------
 ; Asserts that the memory pointed to by 'ptr1' and 'ptr2' are the same
 ;  for 'length' bytes.
+;
 ; Any 16-bit register or any <exp> valid within "ld hl,<exp>" may be
-; used for the two arguments.
+; used for the first two arguments. The third must be an  <exp> valid
+; within "ld hl,<exp>".
 ; The registers are saved and restored.
 ;
 ; Example use:
