@@ -1,5 +1,5 @@
   org $7000
-import 'z80unit.asm'
+import '../z80unit.asm'
 
 _zero	defb	0
 _ten	defb	10
