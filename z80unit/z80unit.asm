@@ -1404,8 +1404,8 @@ assertMemString macro ptr,string,msg,?sptr,?sstr,?slen,?txt0,?txt1,?txt2,?txt3,?
 ?sstr	defb	'string'
 ?slen	equ	$-?sstr
 ?txt0	defb	' assertMemString ptr,',$27,'string',$27,' : at +',0
-?txt1	defb	' expected ',0
-?txt2	defb	' but was ',0
+?txt1	defb	' ',0
+?txt2	defb	' was not ',0
 ?txt3	defb	' : msg',0
 ?skip:
   z80unit_push_reg
@@ -1421,8 +1421,8 @@ assertMemString macro ptr,string,msg,?sptr,?sstr,?slen,?txt0,?txt1,?txt2,?txt3,?
   ld (?sptr),hl
 
   ; Check the assertion.
-  ld ix,(?sptr) ; actual
-  ld iy,?sstr   ; expected
+  ld ix,(?sptr)
+  ld iy,?sstr
   ld hl,?slen   ; number of bytes to compare
   ld bc,0       ; index in the string
   jr ?loop_entry
@@ -1448,8 +1448,8 @@ assertMemString macro ptr,string,msg,?sptr,?sstr,?slen,?txt0,?txt1,?txt2,?txt3,?
 
 ?fail:
   ; The assertion failed.
-  push ix ; actual byte
-  push iy ; expected byte
+  push iy
+  push ix
   push bc ; index in the string
 
   call z80unit_failed_progress
@@ -1506,17 +1506,17 @@ assertMemString macro ptr,string,msg,?sptr,?sstr,?slen,?txt0,?txt1,?txt2,?txt3,?
 ;   assertMemEquals s1,s2,a
 ;
 ; ptr1     - A pointer to memory.
-; ptr2     - Another pointer to memory.
+; ptr2     - A pointer to memory.
 ; count    - Count of bytes to examine, must be < 65535 (fit in 16-bits).
 ; msg      - Added to the diagnostic output if the assertion fails (optional).
-assertMemEquals macro pexpected,pactual,count,msg,?sexp,?sact,?scnt,?txt0,?txt1,?txt2,?txt3,?skip,?loop,?loop_entry,?fail,?nl,?end
+assertMemEquals macro ptr1,ptr2,count,msg,?sp1,?sp2,?sct,?txt0,?txt1,?txt2,?txt3,?skip,?loop,?loop_entry,?fail,?nl,?end
   jp ?skip ; could be >127 characters of output below
-?sexp	defs	2
-?sact	defs	2
-?scnt	defs	2
-?txt0	defb	' assertMemEquals pexpected,pactual,count : at +',0
-?txt1	defb	' expected ',0
-?txt2	defb	' but was ',0
+?sp1	defs	2
+?sp2	defs	2
+?sct	defs	2
+?txt0	defb	' assertMemEquals ptr1,ptr2,count : at +',0
+?txt1	defb	' ',0
+?txt2	defb	' was not ',0
 ?txt3	defb	' : msg',0
 ?skip:
   z80unit_push_reg
@@ -1524,35 +1524,35 @@ assertMemEquals macro pexpected,pactual,count,msg,?sexp,?sact,?scnt,?txt0,?txt1,
   push hl ; save hl, ptrs might use it
   ; Save the count.
   ld hl,count
-  ld (?scnt),hl
+  ld (?sct),hl
   pop hl
 
   ; Save the first pointer.
   push hl ; save hl, other ptr might use it
-  z80unit_is_reg16 pexpected
+  z80unit_is_reg16 ptr1
   if z80unit_reg16
-    push pexpected
+    push ptr1
     pop hl
   else
-    ld hl,pexpected
+    ld hl,ptr1
   endif
-  ld (?sexp),hl
+  ld (?sp1),hl
   pop hl
 
   ; Save the second pointer.
-  z80unit_is_reg16 pactual
+  z80unit_is_reg16 ptr2
   if z80unit_reg16
-    push pactual
+    push ptr2
     pop hl
   else
-    ld hl,pactual
+    ld hl,ptr2
   endif
-  ld (?sact),hl
+  ld (?sp2),hl
 
   ; Check the assertion.
-  ld ix,(?sact) ; actual
-  ld iy,(?sexp) ; expected
-  ld hl,(?scnt) ; number of bytes to compare
+  ld ix,(?sp1)
+  ld iy,(?sp2)
+  ld hl,(?sct) ; number of bytes to compare
   ld bc,0     ; index in the string
   jr ?loop_entry
 ?loop
@@ -1577,8 +1577,8 @@ assertMemEquals macro pexpected,pactual,count,msg,?sexp,?sact,?scnt,?txt0,?txt1,
 
 ?fail:
   ; The assertion failed.
-  push ix ; actual byte
-  push iy ; expected byte
+  push iy
+  push ix
   push bc ; index in the string
 
   call z80unit_failed_progress
