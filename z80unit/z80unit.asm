@@ -1490,7 +1490,7 @@ assertMemString macro ptr,string,msg,?sptr,?sstr,?slen,?txt0,?txt1,?txt2,?txt3,?
 
 ; ------------------------------------------------------------------
 ; Asserts that the memory pointed to by 'ptr1' and 'ptr2' are the same
-;  for 'length' bytes.
+; for 'length' bytes.
 ;
 ; Any 16-bit register or any <exp> valid within "ld hl,<exp>" may be
 ; used for the first two arguments. The third must be an  <exp> valid
