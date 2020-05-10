@@ -10,33 +10,34 @@ INCLUDE_BZ80UNIT equ 1
 ;                                   
 ; A programmer-friendly unit testing library for TRS-80 assembly.
 ; Author: Tim Halloran
+;         (with mentoring by George Phillips, e.g., z80unit_is_reg16)
 ;
 ; 8-bit assertions, where e, an expected value, and a, an actual
 ; value, are any <exp> valid in "ld a,<exp>". All magnitude comparisons
 ; are unsigned.
-;   assertZero8 a
-;   assertEquals8 e,a
-;   assertNotEquals8 e,a
-;   assertGreaterThan8 e,a          ; e >  a
-;   assertGreaterThanOrEquals8 e,a  ; e >= a
-;   assertLessThan8 e,a;            ; e <  a
-;   assertLessThanOrEquals8 e,a     ; e <= a
+;   assertZero8 a                     ; a == 0
+;   assertEquals8 e,a                 ; e == a
+;   assertNotEquals8 e,a              ; e != a
+;   assertGreaterThan8 e,a            ; e >  a (unsigned)
+;   assertGreaterThanOrEquals8 e,a    ; e >= a (unsigned)
+;   assertLessThan8 e,a;              ; e <  a (unsigned)
+;   assertLessThanOrEquals8 e,a       ; e <= a (unsigned)
 ;
 ; 16-bit assertions, where e, an expected value, and a, an actual
 ; value, are either a 16-bit register or any <exp> valid in "ld hl,<exp>".
-;   assertZero16 a
-;   assertEquals16 e,a
-;   assertNotEquals16 e,a
+;   assertZero16 a                    ; a == 0
+;   assertEquals16 e,a                ; e == a
+;   assertNotEquals16 e,a             ; e != a
 ; A notable limitation of the 16-bit assertions is that any indirect
-; register value, such as (hl) or (ix), is not supported.
+; register value, such as (hl) or (ix), is not supported. Of course,
+; you can use hl or ix -- but not as pointers to memory.
 ;
 ; Memory block assertions check memory against an expected vector of bytes.
-;   assertMemString ptr,string
-;   > Checks if the memory pointed to by 'ptr' contains 'string'.
-;   assertMemEquals ptr1,ptr2,length
-;   > Checks the memory pointed to by 'ptr1' and 'ptr2' are the
-;     same for 'length' bytes.
-                                   
+; 'ptr' values are either a 16-bit register or any <exp> valid in "ld hl,<exp>".
+;   assertMemString ptr,string        ; memory at 'ptr' contains 'string'
+;   assertMemEquals8 ptr1,ptr2,count  ; 'ptr1' and 'ptr2' equal for 'count':8-bits bytes.
+;   assertMemEquals16 ptr1,ptr2,count ; 'ptr1' and 'ptr2' equal for 'count':16-bits bytes.
+
 ; ---------------------------------------------------------------- ;
 ; / / / / / / / / / /  IMPLEMENTATION DETAILS  / / / / / / / / / / ;
 ; ---------------------------------------------------------------- ;
@@ -48,6 +49,7 @@ _running_test			defb	0 ; 0=no, 1=yes
 _last_passed			defb	1 ; 0=no, 1=yes
 
 _title_txt			defb	'z80unit : programmer-friendly unit testing for TRS-80 assembly',0
+_pause_txt			defb	'Examine the diagnostics above & press <ENTER> to continue...',0
 _passed_progress_txt		defb	'P',0
 _failed_progress_txt		defb	'F',0
 _complete_progress_bar_txt	defb	')',0
@@ -133,55 +135,99 @@ z80unit_reg16 |= ?fp == 256 * 'I' + 'y'
 ;
 ;  z80unit_newln prints a newline to the console.
 ;
+;  z80unit_pause pauses testing, prompts user, and waits for ENTER.
+;
 ;  z80unit_exit  exits the program.
 ;
 ; Each supported OS needs these two console output interfaces.
 
 ; ------------------------------------------------------------------
-if @@0 == 1 || @@0 == 3 ; LDOS 5 (Model 1 & 3) console implementation
-z80unit_print:
-  z80unit_push_reg
-  push hl  ; save start of buffer
+; Tested: trs80gp -m1 mytest.cas
+;         trs80gp -m3 mytest.cas
+;         trs80gp -m4 mytest.cas
+z80unit_m1_m3_m4_CASSETTE = 0
 
-  ; Change string terminator from zero to ETX.
-  ld bc,132  ; search only 132 characters, truncate if needed
-  ld a,0     ; search for zero
-  cpir
-  jr nz,_change_zero_to_etx
-  dec hl     ; zero that was found is one address back
-
-_change_zero_to_etx:
-  ; We either found zero terminator or will truncate.
-  ld (hl),$03 ; change string terminator to ETX (restored later)
-  pop de      ; restore start of buffer
-  push hl     ; save location to restore the zero terminator
-
-  ; Print the string with no newline.
-  ex de,hl ; put buffer address into hl
-  call $4467 ; @DSPLY
-
-  pop hl
-  ld (hl),0 ; restore zero terminator
-  z80unit_pop_reg
-  ret
-
-z80unit_newln:
-  z80unit_push_reg
-  jr _newln_skip
-_enter  defb  $0d ; <ENTER>
-_newln_skip:
-  ld hl,_enter
-  call $4467 ; @DSPLY
-  z80unit_pop_reg
-  ret
-
-z80unit_exit:
-  call $402d ; @EXIT
-
-endif
+; Tested: trs80gp -m2 mytest.cmd
+;     See "TRS-80 Model II Disk Operating System Reference Manual"
+z80unit_m2_TRSDOS2.0a = 0
+; Tested: trs80gp -m1 mytest.cmd
+;         trs80gp -m1 -ld mytest.cmd
+;         trs80gp -m3 -ld mytest.cmd
+;     See "LDOS Version 5.1: The TRS-80 Operating System Model I and III"
+z80unit_m1_TRSDOS2.3_and_m3_LDOS5.3.1 = 0
+; Tested: trs80gp -m3 mytest.cmd
+;     See "TRS-80 MODEL III Operation and BASIC Language Reference Manual"
+z80unit_m3_TRSDOS1.3 = 0
+; Tested: trs80gp -m4 mytest.cmd
+;         trs80gp -m4 -ld mytest.cmd
+;     See "The Programmer's Guide to TRSDOS Version 6" / LDOS Version 6 too!
+z80unit_m4_TRSDOS06.02.01_LDOS06.03.01 = 1
 
 ; ------------------------------------------------------------------
-if @@0 == 4 ; TRSDOS 6 / LDOS 6 (Model 4) console implementation
+; TRS80 Model II - TRSDOS version 2.0a
+if z80unit_m2_TRSDOS2.0a
+
+; Gets the size of a zero-terminated string and puts it in b (8-bits).
+;
+; Entry: hl  Points to a zero-terminated string.
+; Exit:  b   Length of the string.
+;        hl  Is unchanged.
+_strln:
+  push af
+  push hl  ; save start of buffer
+  ld b,0
+_strln_loop:
+  ld a,(hl)
+  or 0
+  jr z,_strln_restore
+  inc b
+  inc hl
+  jr _strln_loop
+_strln_restore:
+  pop hl   ; restore start of buffer
+  pop af
+  ret
+
+z80unit_print:
+  z80unit_push_reg
+  call _strln ; into b
+  ld c,$03    ; end of line character: ETX
+  ld a,9      ; VDLINE (pg 236)
+  rst 8
+  z80unit_pop_reg
+  ret
+
+z80unit_newln:
+  z80unit_push_reg
+  ld hl,0
+  ld b,0   ; length
+  ld c,$0d ; end of line character: <ENTER>
+  ld a,9   ; VDLINE (pg 236)
+  rst 8
+  z80unit_pop_reg
+  ret
+
+z80unit_pause:
+  z80unit_push_reg
+  ld hl,_pause_txt
+  call z80unit_print
+  ld b,1
+  ld hl,_buffer
+  ld a,5   ; KBLINE (pg 230)
+  rst 8
+  z80unit_pop_reg
+  ret
+
+z80unit_exit:
+  rst 0
+endif ; z80unit_m2_TRSDOS2.0a
+
+; ------------------------------------------------------------------
+; TRS80 Model 1 - TRSDOS version 2.3 & LDOS version 5.3.1
+; TRS80 Model 3 - TRSDOS version 1.3 & LDOS version 5.3.1
+; TRS80 Model 4 - TRSDOS version 06.0201 & LDOS version 06.03.01
+if z80unit_m1_TRSDOS2.3_and_m3_LDOS5.3.1 || z80unit_m3_TRSDOS1.3 || z80unit_m4_TRSDOS06.02.01_LDOS06.03.01
+
 z80unit_print:
   z80unit_push_reg
   push hl  ; save start of buffer
@@ -201,8 +247,16 @@ _change_zero_to_etx:
 
   ; Print the string with no newline.
   ex de,hl ; put buffer address into hl
-  ld a,10  ; @DSPLY
+  if z80unit_m1_TRSDOS2.3_and_m3_LDOS5.3.1
+  call $4467 ; @DSPLY
+  endif
+  if z80unit_m3_TRSDOS1.3
+  call $021b ; $VDLINE
+  endif
+  if z80unit_m4_TRSDOS06.02.01_LDOS06.03.01
+  ld a,10    ; @DSPLY (pg 7-19)
   rst 40
+  endif
 
   pop hl
   ld (hl),0 ; restore zero terminator
@@ -215,17 +269,49 @@ z80unit_newln:
 _enter  defb  $0d ; <ENTER>
 _newln_skip:
   ld hl,_enter
-  ld a,10 ; @DSPLY
+  if z80unit_m1_TRSDOS2.3_and_m3_LDOS5.3.1
+  call $4467 ; @DSPLY
+  endif
+  if z80unit_m3_TRSDOS1.3
+  call $021b ; $VDLINE
+  endif
+  if z80unit_m4_TRSDOS06.02.01_LDOS06.03.01
+  ld a,10    ; @DSPLY (pg 7-19)
   rst 40
+  endif
+  z80unit_pop_reg
+  ret
+
+z80unit_pause:
+  z80unit_push_reg
+  ld hl,_pause_txt
+  call z80unit_print
+  ld b,1
+  ld hl,_buffer
+  if z80unit_m3_TRSDOS1.3 || z80unit_m1_TRSDOS2.3_and_m3_LDOS5.3.1
+  call $0040 ; $KBLINE / @KEYIN (pg 6-55)
+  endif
+  if z80unit_m4_TRSDOS06.02.01_LDOS06.03.01
+  ld c,0    ; should contain zero
+  ld a,9    ; @DSPLY (pg 7-19)
+  rst 40
+  endif
   z80unit_pop_reg
   ret
 
 z80unit_exit:
+  if z80unit_m1_TRSDOS2.3_and_m3_LDOS5.3.1 || z80unit_m3_TRSDOS1.3
+  ; This works for TRSDOS 1.3 but page 12/15 of the "TRS-80 MODEL III
+  ; Operation and BASIC Language Reference Manual" says to use $READY:
+  ; which is a jp to $1a19. This doesn't work.
+  call $402d ; @EXIT (pg 6-51)
+  endif
+  if z80unit_m4_TRSDOS06.02.01_LDOS06.03.01
   ld hl,0  ; Normal termination
-  ld a,22  ; @EXIT
-  rst 40
+  ld a,22  ; @EXIT (pg 7-19)
+  endif
 
-endif ; TRSDOS 6 / LDOS 6 (Model 4) console implementation
+endif ; z80unit_m1_TRSDOS2.3_and_m3_TRSDOS1.3_LDOS5.3.1 || z80unit_m4_TRSDOS06.02.01_LDOS06.03.01
 
 ; ---------------------------------------------------------------- ;
 ; / / / / / / / / / / / / SUPPORT ROUTINES / / / / / / / / / / / / ;
@@ -404,6 +490,7 @@ z80unit_show_title_and_start_test:
   ld a,1
   ld (_title_displayed),a
 
+  call z80unit_newln ; skip by "...." line if TRSDOS on trs80gp.
   ld hl,_title_txt
   call z80unit_print
   call z80unit_newln
@@ -608,7 +695,7 @@ _print_result:
 ; ------------------------------------------------------------------
 ; Starts a new test.
 ;
-; Example use:
+; Examples:
 ;   z80unit_test 'barden_fill'
 ;
 ; name - the name of the test
@@ -629,7 +716,7 @@ z80unit_test macro name,?test_title_txt,?skip
 ; passed/failed counts for the unit test.
 ; See also z80unit_end_and_exit if you want to exit the program.
 ;
-; Example use:
+; Examples:
 ;   z80unit_end
 z80unit_end macro ?passed_txt,?failed_txt,?skip
   z80unit_push_reg
@@ -642,7 +729,7 @@ z80unit_end macro ?passed_txt,?failed_txt,?skip
 ; Ends the unit test and exits to the OS. Should be called after the
 ; last test to report passed/failed counts for the unit test.
 ;
-; Example use:
+; Examples:
 ;   z80unit_end_and_exit
 z80unit_end_and_exit macro ?passed_txt,?failed_txt,?skip
   z80unit_end
@@ -659,7 +746,7 @@ z80unit_end_and_exit macro ?passed_txt,?failed_txt,?skip
 ; Any <exp> valid within "ld a,<exp>" may be used for the two arguments.
 ; The registers are saved and restored.
 ;
-; Example use:
+; Examples:
 ;   assertZero8 a
 ;   assertZero8 0
 ;   assertZero8 ($3a00)
@@ -704,6 +791,7 @@ assertZero8 macro actual,msg,?sact,?txt0,?txt1,?skip,?fail,?nl,?end
   call z80unit_print
 ?nl:
   call z80unit_newln
+  call z80unit_pause
 ?end:
   z80unit_pop_reg
   endm
@@ -714,7 +802,7 @@ assertZero8 macro actual,msg,?sact,?txt0,?txt1,?skip,?fail,?nl,?end
 ; Any <exp> valid within "ld a,<exp>" may be used for the two arguments.
 ; The registers are saved and restored.
 ;
-; Example use:
+; Examples:
 ;   assertEquals8 a,$03
 ;   assertEquals8 a,c
 ;   assertEquals8 05,(ix)
@@ -774,6 +862,7 @@ assertEquals8 macro expected,actual,msg,?sexp,?sact,?txt0,?txt1,?txt2,?skip,?fai
   call z80unit_print
 ?nl:
   call z80unit_newln
+  call z80unit_pause
 ?end:
   z80unit_pop_reg
   endm
@@ -784,7 +873,7 @@ assertEquals8 macro expected,actual,msg,?sexp,?sact,?txt0,?txt1,?txt2,?skip,?fai
 ; Any <exp> valid within "ld a,<exp>" may be used for the two arguments.
 ; The registers are saved and restored.
 ;
-; Example use:
+; Examples:
 ;   assertNotEquals8 a,$03
 ;   assertNotEquals8 a,c
 ;   assertNotEquals8 05,(ix)
@@ -837,6 +926,7 @@ assertNotEquals8 macro expected,actual,msg,?sexp,?sact,?txt0,?txt1,?skip,?fail,?
   call z80unit_print
 ?nl:
   call z80unit_newln
+  call z80unit_pause
 ?end:
   z80unit_pop_reg
   endm
@@ -847,7 +937,7 @@ assertNotEquals8 macro expected,actual,msg,?sexp,?sact,?txt0,?txt1,?skip,?fail,?
 ;
 ; The registers are saved and restored.
 ;
-; Example use:
+; Examples:
 ;   assertGreaterThan8 a,$03
 ;   assertGreaterThan8 a,c
 ;   assertGreaterThan8 05,(ix)
@@ -908,6 +998,7 @@ assertGreaterThan8 macro val1,val2,msg,?s1,?s2,?txt0,?txt1,?txt2,?skip,?fail,?nl
   call z80unit_print
 ?nl:
   call z80unit_newln
+  call z80unit_pause
 ?end:
   z80unit_pop_reg
   endm
@@ -919,7 +1010,7 @@ assertGreaterThan8 macro val1,val2,msg,?s1,?s2,?txt0,?txt1,?txt2,?skip,?fail,?nl
 ; Any <exp> valid within "ld a,<exp>" may be used for the two arguments.
 ; The registers are saved and restored.
 ;
-; Example use:
+; Examples:
 ;   assertGreaterThanOrEquals8 a,$03
 ;   assertGreaterThanOrEquals8 a,c
 ;   assertGreaterThanOrEquals8 05,(ix)
@@ -979,6 +1070,7 @@ assertGreaterThanOrEquals8 macro val1,val2,msg,?s1,?s2,?txt0,?txt1,?txt2,?skip,?
   call z80unit_print
 ?nl:
   call z80unit_newln
+  call z80unit_pause
 ?end:
   z80unit_pop_reg
   endm
@@ -989,7 +1081,7 @@ assertGreaterThanOrEquals8 macro val1,val2,msg,?s1,?s2,?txt0,?txt1,?txt2,?skip,?
 ; Any <exp> valid within "ld a,<exp>" may be used for the two arguments.
 ; The registers are saved and restored.
 ;
-; Example use:
+; Examples:
 ;   assertLessThan8 a,$03
 ;   assertLessThan8 a,c
 ;   assertLessThan8 05,(ix)
@@ -1051,6 +1143,7 @@ assertLessThan8 macro val1,val2,msg,?s1,?s2,?txt0,?txt1,?txt2,?skip,?pass,?fail,
   call z80unit_print
 ?nl:
   call z80unit_newln
+  call z80unit_pause
 ?end:
   z80unit_pop_reg
   endm
@@ -1062,7 +1155,7 @@ assertLessThan8 macro val1,val2,msg,?s1,?s2,?txt0,?txt1,?txt2,?skip,?pass,?fail,
 ; Any <exp> valid within "ld a,<exp>" may be used for the two arguments.
 ; The registers are saved and restored.
 ;
-; Example use:
+; Examples:
 ;   assertLessThanOrEquals8 a,$03
 ;   assertLessThanOrEquals8 a,c
 ;   assertLessThanOrEquals8 05,(ix)
@@ -1125,6 +1218,7 @@ assertLessThanOrEquals8 macro val1,val2,msg,?s1,?s2,?txt0,?txt1,?txt2,?skip,?pas
   call z80unit_print
 ?nl:
   call z80unit_newln
+  call z80unit_pause
 ?end:
   z80unit_pop_reg
   endm
@@ -1140,7 +1234,7 @@ assertLessThanOrEquals8 macro val1,val2,msg,?s1,?s2,?txt0,?txt1,?txt2,?skip,?pas
 ; used for the argument.
 ; The registers are saved and restored.
 ;
-; Example use:
+; Examples:
 ;   assertZero16 bc
 ;   assertZero16 $34a4
 ;   assertZero16 ($3a00)
@@ -1196,6 +1290,7 @@ assertZero16 macro actual,msg,?sact,?txt0,?txt1,?skip,?fail,?nl,?end
   call z80unit_print
 ?nl:
   call z80unit_newln
+  call z80unit_pause
 ?end:
   z80unit_pop_reg
   endm
@@ -1207,7 +1302,7 @@ assertZero16 macro actual,msg,?sact,?txt0,?txt1,?skip,?fail,?nl,?end
 ; used for the two arguments.
 ; The registers are saved and restored.
 ;
-; Example use:
+; Examples:
 ;   assertEquals16 hl,$03
 ;   assertEquals16 de,ix
 ;   assertEquals16 5,($3a00)
@@ -1288,6 +1383,7 @@ assertEquals16 macro expected,actual,msg,?sexp,?sact,?txt0,?txt1,?txt2,?skip,?fa
   call z80unit_print
 ?nl:
   call z80unit_newln
+  call z80unit_pause
 ?end:
   z80unit_pop_reg
   endm
@@ -1299,7 +1395,7 @@ assertEquals16 macro expected,actual,msg,?sexp,?sact,?txt0,?txt1,?txt2,?skip,?fa
 ; used for the two arguments.
 ; The registers are saved and restored.
 ;
-; Example use:
+; Examples:
 ;   assertNotEquals16 hl,$03
 ;   assertNotEquals16 de,ix
 ;   assertNotEquals16 5,($3a00)
@@ -1373,6 +1469,7 @@ assertNotEquals16 macro expected,actual,msg,?sexp,?sact,?txt0,?txt1,?skip,?pass,
   call z80unit_print
 ?nl:
   call z80unit_newln
+  call z80unit_pause
 ?end:
   z80unit_pop_reg
   endm
@@ -1388,7 +1485,7 @@ assertNotEquals16 macro expected,actual,msg,?sexp,?sact,?txt0,?txt1,?skip,?pass,
 ; used for the first argument.
 ; The registers are saved and restored.
 ;
-; Example use:
+; Examples:
 ;   assertMemString $3a00,'video'
 ;   assertMemString hl,'abc'
 ; s1  defb 'test'
@@ -1484,48 +1581,47 @@ assertMemString macro ptr,string,msg,?sptr,?sstr,?slen,?txt0,?txt1,?txt2,?txt3,?
   call z80unit_print
 ?nl:
   call z80unit_newln
+  call z80unit_pause
 ?end:
   z80unit_pop_reg
   endm
 
 ; ------------------------------------------------------------------
 ; Asserts that the memory pointed to by 'ptr1' and 'ptr2' are the same
-; for 'length' bytes.
+; for 'count bytes. In this version 'count' is a 8-bit value.
 ;
 ; Any 16-bit register or any <exp> valid within "ld hl,<exp>" may be
-; used for the first two arguments. The third must be an  <exp> valid
-; within "ld hl,<exp>".
+; used for the 'ptr' arguments.
+; The 'count' must be an <exp> valid within "ld a,<exp>".
 ; The registers are saved and restored.
 ;
-; Example use:
+; Examples:
 ; s1  defb 'test'
 ; s2  defb 'test'
 ; s2l equ  $-s2
-;   assertMemEquals s1,s2,s2l
+;   assertMemEquals8 s1,s2,s2l
 ;   ld a,4
-;   assertMemEquals s1,s2,a
+;   assertMemEquals8 s1,s2,a
 ;
 ; ptr1     - A pointer to memory.
 ; ptr2     - A pointer to memory.
-; count    - Count of bytes to examine, must be < 65535 (fit in 16-bits).
+; count    - Count of bytes to examine, must be < 256 (fit in 8-bits).
 ; msg      - Added to the diagnostic output if the assertion fails (optional).
-assertMemEquals macro ptr1,ptr2,count,msg,?sp1,?sp2,?sct,?txt0,?txt1,?txt2,?txt3,?skip,?loop,?loop_entry,?fail,?nl,?end
+assertMemEquals8 macro ptr1,ptr2,count,msg,?sp1,?sp2,?sct,?txt0,?txt1,?txt2,?txt3,?skip,?loop,?loop_entry,?fail,?nl,?end
   jp ?skip ; could be >127 characters of output below
 ?sp1	defs	2
 ?sp2	defs	2
-?sct	defs	2
-?txt0	defb	' assertMemEquals ptr1,ptr2,count : at +',0
+?sct	defs	1
+?txt0	defb	' assertMemEquals8 ptr1,ptr2,count : at +',0
 ?txt1	defb	' ',0
 ?txt2	defb	' was not ',0
 ?txt3	defb	' : msg',0
 ?skip:
   z80unit_push_reg
 
-  push hl ; save hl, ptrs might use it
   ; Save the count.
-  ld hl,count
-  ld (?sct),hl
-  pop hl
+  ld a,count
+  ld (?sct),a
 
   ; Save the first pointer.
   push hl ; save hl, other ptr might use it
@@ -1552,7 +1648,8 @@ assertMemEquals macro ptr1,ptr2,count,msg,?sp1,?sp2,?sct,?txt0,?txt1,?txt2,?txt3
   ; Check the assertion.
   ld ix,(?sp1)
   ld iy,(?sp2)
-  ld hl,(?sct) ; number of bytes to compare
+  ld a,(?sct) ; number of bytes to compare
+  ld h,a
   ld bc,0     ; index in the string
   jr ?loop_entry
 ?loop
@@ -1565,10 +1662,9 @@ assertMemEquals macro ptr1,ptr2,count,msg,?sp1,?sp2,?sct,?txt0,?txt1,?txt2,?txt3
   xor d ; (ix) == (iy)
   jr nz,?fail
 
-  dec hl
-  ld d,h
-  ld a,l
-  or d ; hl == 0
+  dec h
+  ld a,h
+  or a ; count == 0
   jr nz,?loop
   
   ; The assertion passed.
@@ -1613,6 +1709,142 @@ assertMemEquals macro ptr1,ptr2,count,msg,?sp1,?sp2,?sct,?txt0,?txt1,?txt2,?txt3
   call z80unit_print
 ?nl:
   call z80unit_newln
+  call z80unit_pause
+?end:
+  z80unit_pop_reg
+  endm
+
+; ------------------------------------------------------------------
+; Asserts that the memory pointed to by 'ptr1' and 'ptr2' are the same
+; for 'count bytes. In this version 'count' is a 16-bit value.
+;
+; Any 16-bit register or any <exp> valid within "ld hl,<exp>" may be
+; used for the 'ptr' and 'count' arguments.
+; The registers are saved and restored.
+;
+; Examples:
+; s1  defb 'test'
+; s2  defb 'test'
+; s2l equ  $-s2
+;   assertMemEquals16 s1,s2,s2l
+;   ld hl,4
+;   assertMemEquals16 s1,s2,hl
+;
+; ptr1     - A pointer to memory.
+; ptr2     - A pointer to memory.
+; count    - Count of bytes to examine, must be < 65535 (fit in 16-bits).
+; msg      - Added to the diagnostic output if the assertion fails (optional).
+assertMemEquals16 macro ptr1,ptr2,count,msg,?sp1,?sp2,?sct,?txt0,?txt1,?txt2,?txt3,?skip,?loop,?loop_entry,?fail,?nl,?end
+  jp ?skip ; could be >127 characters of output below
+?sp1	defs	2
+?sp2	defs	2
+?sct	defs	2
+?txt0	defb	' assertMemEquals16 ptr1,ptr2,count : at +',0
+?txt1	defb	' ',0
+?txt2	defb	' was not ',0
+?txt3	defb	' : msg',0
+?skip:
+  z80unit_push_reg
+
+  push hl ; save hl, ptrs might use it
+  ; Save the count.
+  z80unit_is_reg16 count
+  if z80unit_reg16
+    push count
+    pop hl
+  else
+    ld hl,count
+  endif
+  ld (?sct),hl
+  pop hl
+
+  ; Save the first pointer.
+  push hl ; save hl, other ptr might use it
+  z80unit_is_reg16 ptr1
+  if z80unit_reg16
+    push ptr1
+    pop hl
+  else
+    ld hl,ptr1
+  endif
+  ld (?sp1),hl
+  pop hl
+
+  ; Save the second pointer.
+  z80unit_is_reg16 ptr2
+  if z80unit_reg16
+    push ptr2
+    pop hl
+  else
+    ld hl,ptr2
+  endif
+  ld (?sp2),hl
+
+  ; Check the assertion.
+  ld ix,(?sp1)
+  ld iy,(?sp2)
+  ld hl,(?sct) ; number of bytes to compare
+  ld bc,0      ; index in the string
+  jr ?loop_entry
+?loop
+  inc ix
+  inc iy
+  inc bc
+?loop_entry
+  ld d,(ix)
+  ld a,(iy)
+  xor d ; (ix) == (iy)
+  jr nz,?fail
+
+  dec hl
+  ld d,h
+  ld a,l
+  or d ; count == 0
+  jr nz,?loop
+  
+  ; The assertion passed.
+  call z80unit_passed_progress
+  jp ?end
+
+?fail:
+  ; The assertion failed.
+  push iy
+  push ix
+  push bc ; index in the string
+
+  call z80unit_failed_progress
+
+  ld hl,?txt0
+  call z80unit_print
+
+  ; print the index of problem.
+  pop de
+  call z80unit_print_counter
+
+  ld hl,?txt1
+  call z80unit_print
+
+  ; print the actual byte.
+  pop iy
+  ld a,(iy)
+  call z80unit_print_value8
+
+  ld hl,?txt2
+  call z80unit_print
+
+  ; print the expected byte.
+  pop ix
+  ld a,(ix)
+  call z80unit_print_value8
+
+  ld a,(?txt3+3)
+  or a
+  jr z,?nl ; no msg to display
+  ld hl,?txt3
+  call z80unit_print
+?nl:
+  call z80unit_newln
+  call z80unit_pause
 ?end:
   z80unit_pop_reg
   endm
