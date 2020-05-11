@@ -1,4 +1,4 @@
-# z80unit - programmer-friendly unit testing for TRS-80 assembly
+# z80unit - Programmer-friendly unit testing for TRS-80 assembly
 
 Benefits
 * Portable between machines: supports Model I, Model II, Model 3 and Model 4.

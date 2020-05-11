@@ -12,5 +12,9 @@ main:
   ld b,5
   ld hl,buffer
   call $0040 ; $KBLINE
-  jp $1a19
+  ; This works for TRSDOS 1.3 but page 12/15 of the "TRS-80 MODEL III
+  ; Operation and BASIC Language Reference Manual" says to use $READY:
+  ; which is a jp to $1a19. This doesn't work.
+  ; NOT jp $1a19
+  call $402d ; @EXIT (pg 6-51)
   end main

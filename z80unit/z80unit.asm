@@ -48,7 +48,7 @@ _title_displayed		defb	0 ; 0=no, 1=yes
 _running_test			defb	0 ; 0=no, 1=yes
 _last_passed			defb	1 ; 0=no, 1=yes
 
-_title_txt			defb	'z80unit : programmer-friendly unit testing for TRS-80 assembly',0
+_title_txt			defb	'z80unit : Programmer-friendly unit testing for TRS-80 assembly',0
 _pause_txt			defb	'Examine the diagnostics above & press <ENTER> to continue...',0
 _passed_progress_txt		defb	'P',0
 _failed_progress_txt		defb	'F',0
@@ -142,14 +142,19 @@ z80unit_reg16 |= ?fp == 256 * 'I' + 'y'
 ; Each supported OS needs these two console output interfaces.
 
 ; ------------------------------------------------------------------
+
 ; Tested: trs80gp -m1 mytest.cas
 ;         trs80gp -m3 mytest.cas
 ;         trs80gp -m4 mytest.cas
-z80unit_m1_m3_m4_CASSETTE = 0
+z80unit_m1_m3_m4_CASSETTE = 1
 
 ; Tested: trs80gp -m2 mytest.cmd
 ;     See "TRS-80 Model II Disk Operating System Reference Manual"
 z80unit_m2_TRSDOS2.0a = 0
+; Tested: trs80gp -m2 -ld mytest.cmd
+;     See "The Programmer's Guide to TRSDOS Version 6" / LDOS Version 6 too!
+z80unit_m2_LDOS06.03.01 = 0
+
 ; Tested: trs80gp -m1 mytest.cmd
 ;         trs80gp -m1 -ld mytest.cmd
 ;         trs80gp -m3 -ld mytest.cmd
@@ -158,10 +163,97 @@ z80unit_m1_TRSDOS2.3_and_m3_LDOS5.3.1 = 0
 ; Tested: trs80gp -m3 mytest.cmd
 ;     See "TRS-80 MODEL III Operation and BASIC Language Reference Manual"
 z80unit_m3_TRSDOS1.3 = 0
+
 ; Tested: trs80gp -m4 mytest.cmd
 ;         trs80gp -m4 -ld mytest.cmd
 ;     See "The Programmer's Guide to TRSDOS Version 6" / LDOS Version 6 too!
-z80unit_m4_TRSDOS06.02.01_LDOS06.03.01 = 1
+z80unit_m4_TRSDOS06.02.01_LDOS06.03.01 = 0
+
+if z80unit_m1_m3_m4_CASSETTE
+
+_screen_start	equ	$3c00
+_screen_end	equ	_screen_start+64*16
+_screen_size	equ	_screen_end-_screen_start
+_scroll_start	equ	_screen_start+64*1
+_scroll_end	equ	_screen_start+64*15
+_first_call	defb	1
+; Points to the current cursor position on the screen.
+_cursor		defw	_screen_start
+
+_cls_if_first_call:
+  ; Check if this is the first call.
+  ld a,(_first_call)
+  or a
+  ret z
+  ld a,0
+  ld (_first_call),a
+  ; Clear the screen
+  ld d,$20
+  ld hl,_screen_start
+  ld bc,_screen_size
+_cls_loop:
+  ld (hl),d
+  inc hl
+  dec bc
+  ld a,b
+  or c
+  jr nz,_cls_loop
+  ret
+
+z80unit_print:
+  z80unit_push_reg
+  call _cls_if_first_call
+_print_loop:  
+  ld a,(hl)
+  or a ; a == 0
+  jr z,_print_done
+  inc hl
+  push hl ; Increment the cursor ptr
+  ld hl,(_cursor)
+  ld (hl),a
+  inc hl
+  ld (_cursor),hl
+  pop hl
+  jr _print_loop
+_print_done:
+  z80unit_pop_reg
+  ret
+
+z80unit_newln:
+  z80unit_push_reg
+  call _cls_if_first_call
+  ; Our approach is to shift to the start of the next line in video memory by
+  ; adding 1 after dumping column position on the current line, via LSB >>> 6,
+  ; putting empty column position back via LSB << 6. Adding one to MSB if carry.
+  ld a,(_cursor) ; LSB
+  rept 6
+  srl a ; LSB >>> 6 (dump column position)
+  endm
+  add 1
+  jr nc,_newln_lsb_restore
+  ; We need to incremenct the MSB due to carry.
+  push af
+  ld a,(_cursor+1) ; MSB
+  add 1
+  ld (_cursor+1),a
+  pop af
+_newln_lsb_restore:
+  rept 6
+  sla a ; LSB << 6 (restore empty column position)
+  endm
+  ld (_cursor),a
+  z80unit_pop_reg
+  ret
+
+z80unit_pause:
+  z80unit_push_reg
+  z80unit_pop_reg
+  ret
+
+z80unit_exit:
+ jr z80unit_exit
+
+endif ; z80unit_m1_m3_m4_CASSETTE
 
 ; ------------------------------------------------------------------
 ; TRS80 Model II - TRSDOS version 2.0a
@@ -224,9 +316,10 @@ endif ; z80unit_m2_TRSDOS2.0a
 
 ; ------------------------------------------------------------------
 ; TRS80 Model 1 - TRSDOS version 2.3 & LDOS version 5.3.1
+; TRS80 Model 2 - LDOS version 06.03.01
 ; TRS80 Model 3 - TRSDOS version 1.3 & LDOS version 5.3.1
 ; TRS80 Model 4 - TRSDOS version 06.0201 & LDOS version 06.03.01
-if z80unit_m1_TRSDOS2.3_and_m3_LDOS5.3.1 || z80unit_m3_TRSDOS1.3 || z80unit_m4_TRSDOS06.02.01_LDOS06.03.01
+if z80unit_m1_TRSDOS2.3_and_m3_LDOS5.3.1 || z80unit_m2_LDOS06.03.01 || z80unit_m3_TRSDOS1.3 || z80unit_m4_TRSDOS06.02.01_LDOS06.03.01
 
 z80unit_print:
   z80unit_push_reg
@@ -253,7 +346,7 @@ _change_zero_to_etx:
   if z80unit_m3_TRSDOS1.3
   call $021b ; $VDLINE
   endif
-  if z80unit_m4_TRSDOS06.02.01_LDOS06.03.01
+  if z80unit_m2_LDOS06.03.01 || z80unit_m4_TRSDOS06.02.01_LDOS06.03.01
   ld a,10    ; @DSPLY (pg 7-19)
   rst 40
   endif
@@ -275,7 +368,7 @@ _newln_skip:
   if z80unit_m3_TRSDOS1.3
   call $021b ; $VDLINE
   endif
-  if z80unit_m4_TRSDOS06.02.01_LDOS06.03.01
+  if z80unit_m2_LDOS06.03.01 || z80unit_m4_TRSDOS06.02.01_LDOS06.03.01
   ld a,10    ; @DSPLY (pg 7-19)
   rst 40
   endif
@@ -291,7 +384,7 @@ z80unit_pause:
   if z80unit_m3_TRSDOS1.3 || z80unit_m1_TRSDOS2.3_and_m3_LDOS5.3.1
   call $0040 ; $KBLINE / @KEYIN (pg 6-55)
   endif
-  if z80unit_m4_TRSDOS06.02.01_LDOS06.03.01
+  if z80unit_m2_LDOS06.03.01 || z80unit_m4_TRSDOS06.02.01_LDOS06.03.01
   ld c,0    ; should contain zero
   ld a,9    ; @DSPLY (pg 7-19)
   rst 40
@@ -306,12 +399,12 @@ z80unit_exit:
   ; which is a jp to $1a19. This doesn't work.
   call $402d ; @EXIT (pg 6-51)
   endif
-  if z80unit_m4_TRSDOS06.02.01_LDOS06.03.01
+  if z80unit_m2_LDOS06.03.01 || z80unit_m4_TRSDOS06.02.01_LDOS06.03.01 
   ld hl,0  ; Normal termination
   ld a,22  ; @EXIT (pg 7-19)
   endif
 
-endif ; z80unit_m1_TRSDOS2.3_and_m3_TRSDOS1.3_LDOS5.3.1 || z80unit_m4_TRSDOS06.02.01_LDOS06.03.01
+endif ; z80unit_m1_TRSDOS2.3_and_m3_LDOS5.3.1 || z80unit_m2_LDOS06.03.01 || z80unit_m3_TRSDOS1.3 || z80unit_m4_TRSDOS06.02.01_LDOS06.03.01
 
 ; ---------------------------------------------------------------- ;
 ; / / / / / / / / / / / / SUPPORT ROUTINES / / / / / / / / / / / / ;
