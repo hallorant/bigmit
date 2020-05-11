@@ -402,6 +402,7 @@ z80unit_exit:
   if z80unit_m2_LDOS06.03.01 || z80unit_m4_TRSDOS06.02.01_LDOS06.03.01 
   ld hl,0  ; Normal termination
   ld a,22  ; @EXIT (pg 7-19)
+  rst 40
   endif
 
 endif ; z80unit_m1_TRSDOS2.3_and_m3_LDOS5.3.1 || z80unit_m2_LDOS06.03.01 || z80unit_m3_TRSDOS1.3 || z80unit_m4_TRSDOS06.02.01_LDOS06.03.01
