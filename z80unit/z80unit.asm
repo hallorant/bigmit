@@ -163,6 +163,7 @@ z80unit_m2_TRSDOS2.0a = 0
 ;         trs80gp -m3 -ld mytest.cmd
 ;     See "LDOS Version 5.1: The TRS-80 Operating System Model I and III"
 z80unit_m1_TRSDOS2.3_and_m3_LDOS5.3.1 = 0
+
 ; Tested: trs80gp -m3 mytest.cmd
 ;     See "TRS-80 MODEL III Operation and BASIC Language Reference Manual"
 z80unit_m3_TRSDOS1.3 = 0
@@ -193,6 +194,8 @@ _press_enter macro ?key_pressed,?key_released
   endm
 
 ; Scrolls up the screen one line and fills the last line with blanks.
+; I added the entry point to just erase the last line to get rid of
+; our prompts to continue on test failures.
 ;
 ; Author: William Barden, Jr.
 ;         'More TRS-80 Assembly-Language Programming', 1982 pg 104.
@@ -201,7 +204,7 @@ _barden_scroll:
   ld de,_screen_start
   ld bc,_screen_size-64
   ldir
-_barden_clear_last_line:
+_barden_erase_last_line:
   ld hl,_screen_last_line_start
   ld a,' '
   ld b,64
@@ -228,7 +231,6 @@ _print_loop:
   xor c ; is MSB == $40?
   jr nz,_print_output_ascii_char
   call z80unit_newln
-
 _print_output_ascii_char:
   ld a,(ix)
   ld hl,(_cursor)
@@ -256,7 +258,7 @@ z80unit_pause:
   _press_enter
   ; Just blank the last line and reset the cursor. We don't need
   ; to see the prompt anymore.
-  call _barden_clear_last_line
+  call _barden_erase_last_line
   ld hl,_screen_last_line_start
   ld (_cursor),hl
   z80unit_pop_reg
@@ -341,20 +343,17 @@ if z80unit_m1_TRSDOS2.3_and_m3_LDOS5.3.1 || z80unit_m3_TRSDOS1.3 || z80unit_m4_T
 z80unit_print:
   z80unit_push_reg
   push hl  ; save start of buffer
-
   ; Change string terminator from zero to ETX.
   ld bc,132  ; search only 132 characters, truncate if needed
   ld a,0     ; search for zero
   cpir
   jr nz,_change_zero_to_etx
   dec hl     ; zero that was found is one address back
-
 _change_zero_to_etx:
   ; We either found zero terminator or will truncate.
   ld (hl),$03 ; change string terminator to ETX (restored later)
   pop de      ; restore start of buffer
   push hl     ; save location to restore the zero terminator
-
   ; Print the string with no newline.
   ex de,hl ; put buffer address into hl
   if z80unit_m1_TRSDOS2.3_and_m3_LDOS5.3.1
@@ -367,7 +366,6 @@ _change_zero_to_etx:
   ld a,10    ; @DSPLY (pg 7-19)
   rst 40
   endif
-
   pop hl
   ld (hl),0 ; restore zero terminator
   z80unit_pop_reg
