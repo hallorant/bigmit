@@ -14,7 +14,7 @@ INCLUDE_Z80UNIT equ 1
 ;
 ; 8-bit assertions, where e, an expected value, and a, an actual
 ; value, are any <exp> valid in "ld a,<exp>". All magnitude comparisons
-; are unsigned.
+; are unsigned. (a=actual, e=expected)
 ;   assertZero8 a                     ; a == 0
 ;   assertEquals8 e,a                 ; e == a
 ;   assertNotEquals8 e,a              ; e != a
@@ -25,6 +25,7 @@ INCLUDE_Z80UNIT equ 1
 ;
 ; 16-bit assertions, where e, an expected value, and a, an actual
 ; value, are either a 16-bit register or any <exp> valid in "ld hl,<exp>".
+; (a=actual, e=expected)
 ;   assertZero16 a                    ; a == 0
 ;   assertEquals16 e,a                ; e == a
 ;   assertNotEquals16 e,a             ; e != a
