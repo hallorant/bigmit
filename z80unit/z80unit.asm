@@ -50,7 +50,11 @@ _running_test			defb	0 ; 0=no, 1=yes
 _last_passed			defb	1 ; 0=no, 1=yes
 
 _title_txt			defb	'z80unit : Programmer-friendly unit testing for TRS-80 assembly',0
-_pause_txt			defb	'Examine the diagnostics above & press <ENTER> to continue...',0
+_pause_txt			defb	'  Press <ENTER> when ready to continue...',0
+_undo_pause_64_col_txt		dc	64,8
+				defb	0
+_undo_pause_80_col_txt		dc	80,8
+				defb	0
 _passed_progress_txt		defb	'P',0
 _failed_progress_txt		defb	'F',0
 _complete_progress_bar_txt	defb	')',0
@@ -58,7 +62,7 @@ _report_success_txt		defb	'ALL TESTS PASSED (',0
 _report_problems_txt		defb	'*** TESTS FAILED *** (',0
 _report_passed_txt		defb	' passed, ',0
 _report_failed_txt		defb	' failed)',0
-_no_os_reboot_txt		defb	'                (Reboot your machine when ready)',0
+_no_os_reboot_txt		defb	'              (Press <ENTER> when ready to reboot)',0
 _buffer				defs	32 ; a small scratch buffer
 
 z80unit_push_reg macro
@@ -153,9 +157,6 @@ z80unit_m1_m3_m4_CASSETTE = 1
 ; Tested: trs80gp -m2 mytest.cmd
 ;     See "TRS-80 Model II Disk Operating System Reference Manual"
 z80unit_m2_TRSDOS2.0a = 0
-; Tested: trs80gp -m2 -ld mytest.cmd
-;     See "The Programmer's Guide to TRSDOS Version 6" / LDOS Version 6 too!
-z80unit_m2_LDOS06.03.01 = 0
 
 ; Tested: trs80gp -m1 mytest.cmd
 ;         trs80gp -m1 -ld mytest.cmd
@@ -168,8 +169,9 @@ z80unit_m3_TRSDOS1.3 = 0
 
 ; Tested: trs80gp -m4 mytest.cmd
 ;         trs80gp -m4 -ld mytest.cmd
+;         trs80gp -m2 -ld mytest.cmd
 ;     See "The Programmer's Guide to TRSDOS Version 6" / LDOS Version 6 too!
-z80unit_m4_TRSDOS06.02.01_LDOS06.03.01 = 0
+z80unit_m4_TRSDOS06.02.01_and_m2_LDOS06.03.01 = 0
 
 if z80unit_m1_m3_m4_CASSETTE
 
@@ -178,6 +180,17 @@ _screen_size		equ	64*16
 _screen_end		equ	_screen_start+_screen_size
 _screen_last_line_start	equ	_screen_end-64
 _cursor			defw	_screen_last_line_start
+
+_press_enter macro ?key_pressed,?key_released
+?key_pressed:
+  ld a,($3840)  ; A keyboard row
+  bit 0,a       ; Check bit 0: ENTER
+  jr z,?key_pressed
+?key_released:
+  ld a,($3840)  ; A keyboard row
+  bit 0,a       ; Check bit 0: ENTER
+  jr nz,?key_released
+  endm
 
 ; Scrolls up the screen one line and fills the last line with blanks.
 ;
@@ -188,6 +201,7 @@ _barden_scroll:
   ld de,_screen_start
   ld bc,_screen_size-64
   ldir
+_barden_clear_last_line:
   ld hl,_screen_last_line_start
   ld a,' '
   ld b,64
@@ -239,18 +253,20 @@ z80unit_pause:
   z80unit_push_reg
   ld hl,_pause_txt
   call z80unit_print
-_pause_until_enter:
-  ld a,($3840)  ; A keyboard row
-  bit 0,a       ; Check bit 0: ENTER
-  jr z,_pause_until_enter
+  _press_enter
+  ; Just blank the last line and reset the cursor. We don't need
+  ; to see the prompt anymore.
+  call _barden_clear_last_line
+  ld hl,_screen_last_line_start
+  ld (_cursor),hl
   z80unit_pop_reg
   ret
 
 z80unit_exit:
   ld hl,_no_os_reboot_txt
   call z80unit_print
-_hcf
-  jr _hcf ; no OS to return to so just loop
+  _press_enter
+  jp $0000 ; reboot
 
 endif ; z80unit_m1_m3_m4_CASSETTE
 
@@ -306,6 +322,8 @@ z80unit_pause:
   ld hl,_buffer
   ld a,5   ; KBLINE (pg 230)
   rst 8
+  ld hl,_undo_pause_80_col_txt
+  call z80unit_print
   z80unit_pop_reg
   ret
 
@@ -318,7 +336,7 @@ endif ; z80unit_m2_TRSDOS2.0a
 ; TRS80 Model 2 - LDOS version 06.03.01
 ; TRS80 Model 3 - TRSDOS version 1.3 & LDOS version 5.3.1
 ; TRS80 Model 4 - TRSDOS version 06.0201 & LDOS version 06.03.01
-if z80unit_m1_TRSDOS2.3_and_m3_LDOS5.3.1 || z80unit_m2_LDOS06.03.01 || z80unit_m3_TRSDOS1.3 || z80unit_m4_TRSDOS06.02.01_LDOS06.03.01
+if z80unit_m1_TRSDOS2.3_and_m3_LDOS5.3.1 || z80unit_m3_TRSDOS1.3 || z80unit_m4_TRSDOS06.02.01_and_m2_LDOS06.03.01
 
 z80unit_print:
   z80unit_push_reg
@@ -345,7 +363,7 @@ _change_zero_to_etx:
   if z80unit_m3_TRSDOS1.3
   call $021b ; $VDLINE
   endif
-  if z80unit_m2_LDOS06.03.01 || z80unit_m4_TRSDOS06.02.01_LDOS06.03.01
+  if z80unit_m4_TRSDOS06.02.01_and_m2_LDOS06.03.01
   ld a,10    ; @DSPLY (pg 7-19)
   rst 40
   endif
@@ -367,7 +385,7 @@ _newln_skip:
   if z80unit_m3_TRSDOS1.3
   call $021b ; $VDLINE
   endif
-  if z80unit_m2_LDOS06.03.01 || z80unit_m4_TRSDOS06.02.01_LDOS06.03.01
+  if z80unit_m4_TRSDOS06.02.01_and_m2_LDOS06.03.01
   ld a,10    ; @DSPLY (pg 7-19)
   rst 40
   endif
@@ -382,11 +400,15 @@ z80unit_pause:
   ld hl,_buffer
   if z80unit_m3_TRSDOS1.3 || z80unit_m1_TRSDOS2.3_and_m3_LDOS5.3.1
   call $0040 ; $KBLINE / @KEYIN (pg 6-55)
+  ld hl,_undo_pause_64_col_txt
+  call z80unit_print
   endif
-  if z80unit_m2_LDOS06.03.01 || z80unit_m4_TRSDOS06.02.01_LDOS06.03.01
+  if z80unit_m4_TRSDOS06.02.01_and_m2_LDOS06.03.01
   ld c,0    ; should contain zero
   ld a,9    ; @DSPLY (pg 7-19)
   rst 40
+  ld hl,_undo_pause_80_col_txt
+  call z80unit_print
   endif
   z80unit_pop_reg
   ret
@@ -398,13 +420,13 @@ z80unit_exit:
   ; which is a jp to $1a19. This doesn't work.
   call $402d ; @EXIT (pg 6-51)
   endif
-  if z80unit_m2_LDOS06.03.01 || z80unit_m4_TRSDOS06.02.01_LDOS06.03.01 
+  if z80unit_m4_TRSDOS06.02.01_and_m2_LDOS06.03.01
   ld hl,0  ; Normal termination
   ld a,22  ; @EXIT (pg 7-19)
   rst 40
   endif
 
-endif ; z80unit_m1_TRSDOS2.3_and_m3_LDOS5.3.1 || z80unit_m2_LDOS06.03.01 || z80unit_m3_TRSDOS1.3 || z80unit_m4_TRSDOS06.02.01_LDOS06.03.01
+endif ; z80unit_m1_TRSDOS2.3_and_m3_LDOS5.3.1 || z80unit_m3_TRSDOS1.3 || z80unit_m4_TRSDOS06.02.01_and_m2_LDOS06.03.01
 
 ; ---------------------------------------------------------------- ;
 ; / / / / / / / / / / / / SUPPORT ROUTINES / / / / / / / / / / / / ;

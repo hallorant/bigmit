@@ -36,7 +36,7 @@ main:
   assertZero16 iy
 
   z80unit_test 'Failing assertZero16'
-  assertZero16 $ffff, 'expected'
+  assertZero16 $ffff, 'OK'
   ld hl,$0456
   assertZero16 hl
   ld a,50
@@ -52,7 +52,7 @@ main:
 
   z80unit_test 'Failing assertEquals16'
   ld hl,$0450
-  assertEquals16 hl,$0456, 'expected'
+  assertEquals16 hl,$0456, 'OK'
   assertEquals16 11,(_ten)
 
   z80unit_test 'Passing assertNotEquals16'
@@ -62,7 +62,7 @@ main:
 
   z80unit_test 'Failing assertNotEquals16'
   ld hl,$0456
-  assertNotEquals16 hl,$0456, 'expected'
+  assertNotEquals16 hl,$0456, 'OK'
   assertNotEquals16 10,(_ten)
 
   z80unit_end_and_exit

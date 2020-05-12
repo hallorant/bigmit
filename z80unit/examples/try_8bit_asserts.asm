@@ -16,7 +16,7 @@ main:
 
   z80unit_test 'Failing assertZero8'
   ld ix,_ten
-  assertZero8 (ix),'expected'
+  assertZero8 (ix),'OK'
   assertZero8 (ix)
 
 ifdef stop
@@ -34,7 +34,7 @@ endif
   z80unit_test 'Failing assertEquals8'
   ld a,11
   ld ix,_ten
-  assertEquals8 a,(ix),'expected'
+  assertEquals8 a,(ix),'OK'
   assertEquals8 a,(ix)
 
   z80unit_test 'Passing assertNotEquals8'
@@ -48,7 +48,7 @@ endif
   z80unit_test 'Failing assertNotEquals8'
   ld a,10
   ld ix,_ten
-  assertNotEquals8 a,(ix),'expected'
+  assertNotEquals8 a,(ix),'OK'
   assertNotEquals8 a,(ix)
 
   z80unit_test 'Passing assertGreaterThan8'
@@ -60,7 +60,7 @@ endif
   z80unit_test 'Failing assertGreaterThan8'
   ld a,1
   ld ix,_ten
-  assertGreaterThan8 a,(ix),'expected'
+  assertGreaterThan8 a,(ix),'OK'
   assertGreaterThan8 a,(ix)
 
   z80unit_test 'Passing assertGreaterThanOrEquals8'
@@ -75,7 +75,7 @@ endif
   z80unit_test 'Failing assertGreaterThanOrEquals8'
   ld a,1
   ld ix,_ten
-  assertGreaterThanOrEquals8 a,(ix),'expected'
+  assertGreaterThanOrEquals8 a,(ix),'OK'
   ld a,1
   assertGreaterThanOrEquals8 a,(ix)
 
@@ -88,7 +88,7 @@ endif
   z80unit_test 'Failing assertLessThan8'
   ld a,100
   ld ix,_ten
-  assertLessThan8 a,(ix),'expected'
+  assertLessThan8 a,(ix),'OK'
   assertLessThan8 a,(ix)
 
   z80unit_test 'Passing assertLessThanOrEquals8'
@@ -102,7 +102,7 @@ endif
   z80unit_test 'Failing assertLessThanOrEquals8'
   ld a,100
   ld ix,_ten
-  assertLessThanOrEquals8 a,(ix),'expected'
+  assertLessThanOrEquals8 a,(ix),'OK'
   assertLessThanOrEquals8 a,(ix)
 
   z80unit_end_and_exit

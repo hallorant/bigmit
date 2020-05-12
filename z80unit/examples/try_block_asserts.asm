@@ -16,19 +16,19 @@ main:
   assertMemString s1+2,'test'
 
   z80unit_test 'Failing assertMemString'
-  assertMemString s1,'a*test','expected'
+  assertMemString s1,'a*test','OK'
   assertMemString s1+2,'tes*'
 
   z80unit_test 'Passing assertMemEquals8'
   assertMemEquals8 s1,s2,6
   assertMemEquals8 s1,s2,s2ln
   ld c,s2ln
-  assertMemEquals8 s1,s2,d
+  assertMemEquals8 s1,s2,c
   ld a,s2ln
   assertMemEquals8 s1,s2,a
 
   z80unit_test 'Failing assertMemEquals8'
-  assertMemEquals16 s3,s4,s4ln,'expected'
+  assertMemEquals16 s3,s4,s4ln,'OK'
   assertMemEquals16 s1,s2,150
 
   z80unit_test 'Passing assertMemEquals16'
@@ -40,7 +40,7 @@ main:
   assertMemEquals16 s1,s2,s2ln
 
   z80unit_test 'Failing assertMemEquals16'
-  assertMemEquals16 s3,s4,s4ln,'expected'
+  assertMemEquals16 s3,s4,s4ln,'OK'
   assertMemEquals16 s1,s2,1024
 
   z80unit_end_and_exit
