@@ -830,27 +830,14 @@ z80unit_test macro name,?test_title_txt,?skip
   endm
 
 ; ------------------------------------------------------------------
-; Ends the unit test. Should be called after the last test to report
-; passed/failed counts for the unit test.
-; See also z80unit_end_and_exit if you want to exit the program.
-;
-; Examples:
-;   z80unit_end
-z80unit_end macro ?passed_txt,?failed_txt,?skip
-  z80unit_push_reg
-  call z80unit_end_test
-  call z80unit_report
-  z80unit_pop_reg
-  endm
-
-; ------------------------------------------------------------------
-; Ends the unit test and exits to the OS. Should be called after the
-; last test to report passed/failed counts for the unit test.
+; Ends the unit test, reports passed/failed counts, and exits to the OS.
+; Should be called after the last test.
 ;
 ; Examples:
 ;   z80unit_end_and_exit
 z80unit_end_and_exit macro ?passed_txt,?failed_txt,?skip
-  z80unit_end
+  call z80unit_end_test
+  call z80unit_report
   call z80unit_exit
   endm
 
