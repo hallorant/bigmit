@@ -174,6 +174,8 @@ z80unit_m3_TRSDOS1.3 = 0
 ;     See "The Programmer's Guide to TRSDOS Version 6" / LDOS Version 6 too!
 z80unit_m4_TRSDOS06.02.01_and_m2_LDOS06.03.01 = 0
 
+; ------------------------------------------------------------------
+; TRS80 Model 1,3,4 - No Operating System (Cassette)
 if z80unit_m1_m3_m4_CASSETTE
 
 _screen_start		equ	$3c00
@@ -334,10 +336,13 @@ z80unit_exit:
 endif ; z80unit_m2_TRSDOS2.0a
 
 ; ------------------------------------------------------------------
-; TRS80 Model 1 - TRSDOS version 2.3 & LDOS version 5.3.1
+; TRS80 Model 1 - TRSDOS version 2.3
+;                 LDOS version 5.3.1
 ; TRS80 Model 2 - LDOS version 06.03.01
-; TRS80 Model 3 - TRSDOS version 1.3 & LDOS version 5.3.1
-; TRS80 Model 4 - TRSDOS version 06.0201 & LDOS version 06.03.01
+; TRS80 Model 3 - TRSDOS version 1.3
+;                 LDOS version 5.3.1
+; TRS80 Model 4 - TRSDOS version 06.0201
+;                 LDOS version 06.03.01
 if z80unit_m1_TRSDOS2.3_and_m3_LDOS5.3.1 || z80unit_m3_TRSDOS1.3 || z80unit_m4_TRSDOS06.02.01_and_m2_LDOS06.03.01
 
 z80unit_print:
