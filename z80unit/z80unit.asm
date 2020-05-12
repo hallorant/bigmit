@@ -1,5 +1,5 @@
 ifndef INCLUDE_Z80UNIT
-INCLUDE_BZ80UNIT equ 1
+INCLUDE_Z80UNIT equ 1
 
 ;     _____ _____             _ _
 ;    |  _  |  _  |           (_) |
