@@ -33,10 +33,11 @@ INCLUDE_BZ80UNIT equ 1
 ; you can use hl or ix -- but not as pointers to memory.
 ;
 ; Memory block assertions check memory against an expected vector of bytes.
-; 'ptr' values are either a 16-bit register or any <exp> valid in "ld hl,<exp>".
-;   assertMemString ptr,string        ; memory at 'ptr' contains 'string'
-;   assertMemEquals8 ptr1,ptr2,count  ; 'ptr1' and 'ptr2' equal for 'count':8-bits bytes.
-;   assertMemEquals16 ptr1,ptr2,count ; 'ptr1' and 'ptr2' equal for 'count':16-bits bytes.
+; pointer values are either a 16-bit register or any <exp> valid in
+; "ld hl,<exp>". The 8/16 varients refer to the count of bytes to check.
+;   assertMemString ptr,string  ; memory at 'ptr' contains 'string'
+;   assertMemEquals8 p1,p2,cnt  ; 'p1' and 'p2' equal for 'cnt':8-bits bytes.
+;   assertMemEquals16 p1,p2,cnt ; 'p1' and 'p2' equal for 'cnt':16-bits bytes.
 
 ; ---------------------------------------------------------------- ;
 ; / / / / / / / / / /  IMPLEMENTATION DETAILS  / / / / / / / / / / ;
@@ -57,6 +58,7 @@ _report_success_txt		defb	'ALL TESTS PASSED (',0
 _report_problems_txt		defb	'*** TESTS FAILED *** (',0
 _report_passed_txt		defb	' passed, ',0
 _report_failed_txt		defb	' failed)',0
+_no_os_reboot_txt		defb	'                (Reboot your machine when ready)',0
 _buffer				defs	32 ; a small scratch buffer
 
 z80unit_push_reg macro
@@ -171,49 +173,55 @@ z80unit_m4_TRSDOS06.02.01_LDOS06.03.01 = 0
 
 if z80unit_m1_m3_m4_CASSETTE
 
-_screen_start	equ	$3c00
-_screen_end	equ	_screen_start+64*16
-_screen_size	equ	_screen_end-_screen_start
-_scroll_start	equ	_screen_start+64*1
-_scroll_end	equ	_screen_start+64*15
-_first_call	defb	1
-; Points to the current cursor position on the screen.
-_cursor		defw	_screen_start
+_screen_start		equ	$3c00
+_screen_size		equ	64*16
+_screen_end		equ	_screen_start+_screen_size
+_screen_last_line_start	equ	_screen_end-64
+_cursor			defw	_screen_last_line_start
 
-_cls_if_first_call:
-  ; Check if this is the first call.
-  ld a,(_first_call)
-  or a
-  ret z
-  ld a,0
-  ld (_first_call),a
-  ; Clear the screen
-  ld d,$20
-  ld hl,_screen_start
-  ld bc,_screen_size
-_cls_loop:
-  ld (hl),d
+; Scrolls up the screen one line and fills the last line with blanks.
+;
+; Author: William Barden, Jr.
+;         'More TRS-80 Assembly-Language Programming', 1982 pg 104.
+_barden_scroll:
+  ld hl,_screen_start+64  ; start of second line
+  ld de,_screen_start
+  ld bc,_screen_size-64
+  ldir
+  ld hl,_screen_last_line_start
+  ld a,' '
+  ld b,64
+_barden_scroll_loop:
+  ld (hl),a
   inc hl
-  dec bc
-  ld a,b
-  or c
-  jr nz,_cls_loop
+  djnz _barden_scroll_loop
   ret
 
 z80unit_print:
   z80unit_push_reg
-  call _cls_if_first_call
+  push hl
+  pop ix ; ix points to the string
 _print_loop:  
-  ld a,(hl)
-  or a ; a == 0
+  ld a,(ix)
+  or a  ; is a == 0?
   jr z,_print_done
-  inc hl
-  push hl ; Increment the cursor ptr
+  ; Check we are not at $4000, one byte past the end of the screen,
+  ; we only need to check the MSB.
   ld hl,(_cursor)
-  ld (hl),a
+  ld a,$40
+  ld c,a
+  ld a,h
+  xor c ; is MSB == $40?
+  jr nz,_print_output_ascii_char
+  call z80unit_newln
+
+_print_output_ascii_char:
+  ld a,(ix)
+  ld hl,(_cursor)
+  ld (hl),a ; output the ASCII
   inc hl
   ld (_cursor),hl
-  pop hl
+  inc ix
   jr _print_loop
 _print_done:
   z80unit_pop_reg
@@ -221,37 +229,28 @@ _print_done:
 
 z80unit_newln:
   z80unit_push_reg
-  call _cls_if_first_call
-  ; Our approach is to shift to the start of the next line in video memory by
-  ; adding 1 after dumping column position on the current line, via LSB >>> 6,
-  ; putting empty column position back via LSB << 6. Adding one to MSB if carry.
-  ld a,(_cursor) ; LSB
-  rept 6
-  srl a ; LSB >>> 6 (dump column position)
-  endm
-  add 1
-  jr nc,_newln_lsb_restore
-  ; We need to incremenct the MSB due to carry.
-  push af
-  ld a,(_cursor+1) ; MSB
-  add 1
-  ld (_cursor+1),a
-  pop af
-_newln_lsb_restore:
-  rept 6
-  sla a ; LSB << 6 (restore empty column position)
-  endm
-  ld (_cursor),a
+  call _barden_scroll
+  ld hl,_screen_last_line_start
+  ld (_cursor),hl
   z80unit_pop_reg
   ret
 
 z80unit_pause:
   z80unit_push_reg
+  ld hl,_pause_txt
+  call z80unit_print
+_pause_until_enter:
+  ld a,($3840)  ; A keyboard row
+  bit 0,a       ; Check bit 0: ENTER
+  jr z,_pause_until_enter
   z80unit_pop_reg
   ret
 
 z80unit_exit:
- jr z80unit_exit
+  ld hl,_no_os_reboot_txt
+  call z80unit_print
+_hcf
+  jr _hcf ; no OS to return to so just loop
 
 endif ; z80unit_m1_m3_m4_CASSETTE
 
@@ -861,7 +860,7 @@ assertZero8 macro actual,msg,?sact,?txt0,?txt1,?skip,?fail,?nl,?end
 
   ; Check the assertion.
   ld a,(?sact)
-  or a
+  or a ; is a == 0?
   jr nz,?fail
 
   ; The assertion passed.
@@ -926,7 +925,7 @@ assertEquals8 macro expected,actual,msg,?sexp,?sact,?txt0,?txt1,?txt2,?skip,?fai
   ld a,(?sact)
   ld c,a
   ld a,(?sexp)
-  xor c ; exp == act
+  xor c ; is exp == act?
   jr nz,?fail
 
   ; The assertion passed.
@@ -996,7 +995,7 @@ assertNotEquals8 macro expected,actual,msg,?sexp,?sact,?txt0,?txt1,?skip,?fail,?
   ld a,(?sact)
   ld c,a
   ld a,(?sexp)
-  xor c ; exp == act
+  xor c ; is exp == act?
   jr z,?fail
 
   ; The assertion passed.
@@ -1358,7 +1357,7 @@ assertZero16 macro actual,msg,?sact,?txt0,?txt1,?skip,?fail,?nl,?end
   ; Check the assertion.
   ld hl,(?sact)
   ld a,h
-  or l
+  or l ; is hl == 0?
   jr nz,?fail
 
   ; The assertion passed.
@@ -1440,10 +1439,10 @@ assertEquals16 macro expected,actual,msg,?sexp,?sact,?txt0,?txt1,?txt2,?skip,?fa
   ld hl,(?sact)
   ld de,(?sexp)
   ld a,h
-  xor d ; hl msb == de msb
+  xor d ; is hl MSB == de MSB?
   jr nz,?fail
   ld a,l
-  xor e ; hl lsb == de lsb
+  xor e ; is hl LSB == de LSB?
   jr nz,?fail
 
   ; The assertion passed.
@@ -1532,10 +1531,10 @@ assertNotEquals16 macro expected,actual,msg,?sexp,?sact,?txt0,?txt1,?skip,?pass,
   ld hl,(?sact)
   ld de,(?sexp)
   ld a,h
-  xor d ; hl msb == de msb
+  xor d ; is hl MSB == de MSB?
   jr nz,?pass
   ld a,l
-  xor e ; hl lsb == de lsb
+  xor e ; is hl LSB == de LSB?
   jr nz,?pass
   jr ?fail
 
@@ -1624,7 +1623,7 @@ assertMemString macro ptr,string,msg,?sptr,?sstr,?slen,?txt0,?txt1,?txt2,?txt3,?
 ?loop_entry
   ld d,(ix)
   ld a,(iy)
-  xor d ; (ix) == (iy)
+  xor d ; is (ix) == (iy)?
   jr nz,?fail
 
   dec hl
@@ -1753,7 +1752,7 @@ assertMemEquals8 macro ptr1,ptr2,count,msg,?sp1,?sp2,?sct,?txt0,?txt1,?txt2,?txt
 ?loop_entry
   ld d,(ix)
   ld a,(iy)
-  xor d ; (ix) == (iy)
+  xor d ; is (ix) == (iy)?
   jr nz,?fail
 
   dec h
@@ -1893,7 +1892,7 @@ assertMemEquals16 macro ptr1,ptr2,count,msg,?sp1,?sp2,?sct,?txt0,?txt1,?txt2,?tx
   dec hl
   ld d,h
   ld a,l
-  or d ; count == 0
+  or d ; is count == 0?
   jr nz,?loop
   
   ; The assertion passed.
