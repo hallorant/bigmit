@@ -136,7 +136,7 @@ INCLUDE_Z80UNIT equ 1
 ;
 ;  ------------------------------------
 ;    org $7000
-;  z80unit_LSDOS6 equ 1
+;  z80unit_LDOS6 equ 1
 ;  import 'z80unit.asm'
 ;    <same as above...>
 ;  ------------------------------------
@@ -182,7 +182,7 @@ INCLUDE_Z80UNIT equ 1
 ; z80unit.asm, defining one and only one of the below values.
 ;
 ;    org $7000
-;  z80unit_LSDOS5 equ 1
+;  z80unit_LDOS5 equ 1
 ;  import 'z80unit.asm'
 ;  ...
 ;
@@ -220,7 +220,7 @@ INCLUDE_Z80UNIT equ 1
 ;   Tested:    Model III TRSDOS  1.3 (Model 3)
 ;              NewDos/80 2.0 (Model 3)
 ;
-; z80unit_LSDOS6
+; z80unit_LDOS6
 ;  This is for testing on Model II / Model 4 LDOS 6 (or similar).
 ;  Reference: The Programmer's Guide to TRSDOS Version 6 (also LDOS Version 6)
 ;  Emulator:  trs80gp -m4 mytest.cmd
@@ -614,7 +614,7 @@ z80unit_exit:
   rst 40
   endif
 
-endif ; z80unit_LDOS5 || z80unit_m3_TRSDOS1.3 || z80unit_LDOS6
+endif ; _LDOS5 || _m3_TRSDOS1.3 || _LDOS6
 
 ; ---------------------------------------------------------------- ;
 ; / / / / / / / / / / / / SUPPORT ROUTINES / / / / / / / / / / / / ;
