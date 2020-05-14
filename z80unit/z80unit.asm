@@ -9,6 +9,7 @@ INCLUDE_Z80UNIT equ 1
 ;/___\_____/\___/ \__,_|_| |_|_|\__|
 ;                                   
 ; A programmer-friendly unit testing library for TRS-80 assembly.
+;
 ; Author: Tim Halloran
 ;         (with mentoring by George Phillips, e.g., z80unit_is_reg16)
 ;
@@ -198,7 +199,7 @@ INCLUDE_Z80UNIT equ 1
 ;   This is for testing on Model II TRSDOS version 2.0a (or similar).
 ;   Reference: TRS-80 Model II Disk Operating System Reference Manual
 ;   Emulator:  trs80gp -m2 mytest.cmd
-;   Tested:    TRSDOS 2.0a (Model 2)
+;   Tested:    TRSDOS 2.0a (Model 2, Model 12, Model 16, Model 6000)
 ;
 ; z80unit_m3_TRSDOS1.3
 ;   This is for testing on Model 3 TRSDOS version 1.3 (or similar).
@@ -214,7 +215,7 @@ INCLUDE_Z80UNIT equ 1
 ;             trs80gp -m4 -ld mytest.cmd
 ;             trs80gp -m2 -ld mytest.cmd
 ;  Tested:    TRSDOS 06.02.01 (Model 4)
-;             LDOS 06.03.01 (Model II, Model 4)
+;             LDOS 06.03.01 (Model II, Model 4, Model 12, Model 16, Model 6000)
 
 
 ; ---------------------------------------------------------------- ;
