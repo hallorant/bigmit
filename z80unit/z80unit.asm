@@ -31,6 +31,30 @@ INCLUDE_Z80UNIT equ 1
 ; you don't have to. This library is intended to be useful with real
 ; hardware as well as emulators.
 ;
+; We also assume you develop your program in components. This is critical
+; if you write a single file, myprog.asm, unit testing won't help you. We
+; assume you write several components that then get imported into the
+; your program. z80unit helps you test these component or modules. If you
+; have
+;   module1.asm
+;   module2.asm
+;   module3.asm
+;   prog.asm  // imports module1.asm, module2.asm, modul3.asm
+;
+; You can unit test each module writing
+;   module1.asm
+;   module1_test.asm  // imports module1.asm, z80unit.asm
+;   module2.asm
+;   module2_test.asm  // imports module2.asm, z80unit.asm
+;   module3.asm
+;   module3_test.asm  // imports module3.asm, z80unit.asm
+;   prog.asm  // imports module1.asm, module2.asm, modul3.asm
+;
+; Ideally, you want to keep prog.asm as small as possible.
+;
+; This library is self-contained it is all you need.
+; Let's get going!
+;
 ; QUICK START
 ;
 ; The below shows a simple test
