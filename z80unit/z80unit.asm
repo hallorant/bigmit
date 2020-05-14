@@ -136,7 +136,7 @@ INCLUDE_Z80UNIT equ 1
 ;
 ;  ------------------------------------
 ;    org $7000
-;  z80unit_LSDOS6 = 1   // TODO THIS DOES NOT WORK
+;  z80unit_LSDOS6 equ 1
 ;  import 'z80unit.asm'
 ;    <same as above...>
 ;  ------------------------------------
@@ -177,13 +177,25 @@ INCLUDE_Z80UNIT equ 1
 ; MACHINES AND DOS ENVIRONMENTS
 ;
 ; z80unit allows testing in DOS enviroments. If you are developing a program
+; that uses features of a DOS then we want the test to run in that DOS. To do
+; this add a line at the top of your test, prior to the import of
+; z80unit.asm, defining one and only one of the below values.
 ;
-; z80unit_CASSETTE (default)
+;    org $7000
+;  z80unit_LSDOS5 equ 1
+;  import 'z80unit.asm'
+;  ...
+;
+; Cassette (default - don't define anything)
 ;   This works on Model 1, Model 3, and Model 4 and does not require a DOS.
 ;   You'll have to reboot when the test completes.
 ;   Emulator: trs80gp -m1 mytest.500.cas
 ;             trs80gp -m3 mytest.500.cas
 ;             trs80gp -m4 mytest.500.cas
+;   Note the MYTEST/CMD file will also run on Model 1, Model 3, and Model 4 in
+;   a DOS but you'll have to reboot after the test completes. This default will
+;   not work on any of the Big Tandys (Model II, Model 12, Model 16,
+;   or Model 6000).
 ;
 ; z80unit_LDOS5
 ;   This is for testing on Model 1 or Model 3 LDOS 5.1 (or similar).
@@ -328,33 +340,38 @@ z80unit_reg16 |= ?fp == 256 * 'I' + 'y'
 
 ; ------------------------------------------------------------------
 
-z80unit_CASSETTE = 0 ; default, will be turned off if a DOS is selected
+; Define all of these, only one will be set below.
+_CASSETTE=0
+_LDOS5 = 0
+_m2_TRSDOS = 0
+_m3_TRSDOS1.3 = 0
+_LDOS6 = 0
 
 ; If no DOS is defined, enable cassette user experience.
 ifndef z80unit_LDOS5
 ifndef z80unit_m2_TRSDOS
 ifndef z80unit_m3_TRSDOS1.3
 ifndef z80unit_LDOS6
-z80unit_CASSETTE = 1
+_CASSETTE=1
 endif
 endif
 endif
 endif
 
-ifndef z80unit_LDOS5
-z80unit_LDOS5 = 0
+ifdef z80unit_LDOS5
+_LDOS5 = 1
 endif
-ifndef z80unit_m2_TRSDOS
-z80unit_m2_TRSDOS = 0
+ifdef z80unit_m2_TRSDOS
+_m2_TRSDOS = 1
 endif
-ifndef z80unit_m3_TRSDOS1.3
-z80unit_m3_TRSDOS1.3 = 0
+ifdef z80unit_m3_TRSDOS1.3
+_m3_TRSDOS1.3 = 1
 endif
-ifndef z80unit_LDOS6
-z80unit_LDOS6 = 0
+ifdef z80unit_LDOS6
+_LDOS6 = 1
 endif
 
-if z80unit_CASSETTE
+if _CASSETTE
 
 _screen_start		equ	$3c00
 _screen_size		equ	64*16
@@ -450,9 +467,9 @@ z80unit_exit:
   _press_enter
   jp $0000 ; reboot
 
-endif ; z80unit_CASSETTE
+endif ; _CASSETTE
 
-if z80unit_m2_TRSDOS
+if _m2_TRSDOS
 
 ; Gets the size of a zero-terminated string and puts it in b (8-bits).
 ;
@@ -509,9 +526,9 @@ z80unit_pause:
 
 z80unit_exit:
   rst 0
-endif ; z80unit_m2_TRSDOS
+endif ; _m2_TRSDOS
 
-if z80unit_LDOS5 || z80unit_m3_TRSDOS1.3 || z80unit_LDOS6
+if _LDOS5 || _m3_TRSDOS1.3 || _LDOS6
 
 z80unit_print:
   z80unit_push_reg
@@ -529,13 +546,13 @@ _change_zero_to_etx:
   push hl     ; save location to restore the zero terminator
   ; Print the string with no newline.
   ex de,hl ; put buffer address into hl
-  if z80unit_LDOS5
+  if _LDOS5
   call $4467 ; @DSPLY
   endif
-  if z80unit_m3_TRSDOS1.3
+  if _m3_TRSDOS1.3
   call $021b ; $VDLINE
   endif
-  if z80unit_LDOS6
+  if _LDOS6
   ld a,10    ; @DSPLY (pg 7-19)
   rst 40
   endif
@@ -550,13 +567,13 @@ z80unit_newln:
 _enter  defb  $0d ; <ENTER>
 _newln_skip:
   ld hl,_enter
-  if z80unit_LDOS5
+  if _LDOS5
   call $4467 ; @DSPLY
   endif
-  if z80unit_m3_TRSDOS1.3
+  if _m3_TRSDOS1.3
   call $021b ; $VDLINE
   endif
-  if z80unit_LDOS6
+  if _LDOS6
   ld a,10    ; @DSPLY (pg 7-19)
   rst 40
   endif
@@ -569,12 +586,12 @@ z80unit_pause:
   call z80unit_print
   ld b,1
   ld hl,_buffer
-  if z80unit_m3_TRSDOS1.3 || z80unit_LDOS5
+  if _m3_TRSDOS1.3 || _LDOS5
   call $0040 ; $KBLINE / @KEYIN (pg 6-55)
   ld hl,_undo_pause_64_col_txt
   call z80unit_print
   endif
-  if z80unit_LDOS6
+  if _LDOS6
   ld c,0    ; should contain zero
   ld a,9    ; @DSPLY (pg 7-19)
   rst 40
@@ -585,13 +602,13 @@ z80unit_pause:
   ret
 
 z80unit_exit:
-  if z80unit_LDOS5 || z80unit_m3_TRSDOS1.3
+  if _LDOS5 || _m3_TRSDOS1.3
   ; This works for TRSDOS 1.3 but page 12/15 of the "TRS-80 MODEL III
   ; Operation and BASIC Language Reference Manual" says to use $READY:
   ; which is a jp to $1a19 -- which I think is wrong.
   call $402d ; @EXIT (pg 6-51)
   endif
-  if z80unit_LDOS6
+  if _LDOS6
   ld hl,0  ; Normal termination
   ld a,22  ; @EXIT (pg 7-19)
   rst 40
