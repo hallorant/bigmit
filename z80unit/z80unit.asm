@@ -16,7 +16,7 @@ INCLUDE_Z80UNIT equ 1
 ;
 ; As your TRS-80 programs get larger it becomes difficult to change
 ; them without great risk. Unit testing can not only help you get your
-; code to be correct (debuggers help too!) bug can help you keep it
+; code to be correct (debuggers help too!) but can help you keep it
 ; correct as it evolves. I wrote this to help develop larger TRS-80
 ; assembly language programs.
 ;
