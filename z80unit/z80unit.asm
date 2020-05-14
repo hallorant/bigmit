@@ -16,13 +16,17 @@ INCLUDE_Z80UNIT equ 1
 ;
 ; As your TRS-80 programs get larger it becomes difficult to change
 ; them without great risk. Unit testing can not only help you get your
-; code to be correct (debuggers help too!) and can help you keep it
+; code to be correct (debuggers help too!) bug can help you keep it
 ; correct as it evolves. I wrote this to help develop larger TRS-80
 ; assembly language programs.
 ;
 ; PREREQUISITES
 ;
-; We assume you use zmac from http://48k.ca/zmac.html
+; We require, for tests, that you use zmac from http://48k.ca/zmac.html
+; This code uses many features of that assembler, we require "--zmac" at
+; least for your test code. You can build your program with anything
+; you wish.
+;
 ; We recommend you use trs80gp from http://48k.ca/trs80gp.html but
 ; you don't have to. This library is intended to be useful with real
 ; hardware as well as emulators.
