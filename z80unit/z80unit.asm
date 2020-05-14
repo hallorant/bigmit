@@ -12,6 +12,96 @@ INCLUDE_Z80UNIT equ 1
 ; Author: Tim Halloran
 ;         (with mentoring by George Phillips, e.g., z80unit_is_reg16)
 ;
+; QUICK START
+;
+; The below shows a simple test
+;
+;  ------------------------------------
+;    org $7000
+;  import 'z80unit.asm'
+;
+;  s1      defb    'a test'
+;  s2      defb    'a test'
+;
+;  main:
+;    z80unit_test 'reg adds'
+;    ld a,5
+;    add 5
+;    assertEquals8 10,a
+;    ld hl,900
+;    inc hl
+;    assertEquals16 hl,901
+;
+;    z80unit_test 'memory blocks'
+;    assertMemString s1,'a test'
+;    assertMemString s1+2,'test'
+;    assertMemEquals8 s1,s2,3,'3 chars only'
+;    assertMemEquals8 s1,s2,6
+;
+;    z80unit_end_and_exit
+;    end main
+;  ------------------------------------
+;
+; To compile use:         zmac --zmac quick_start_test.asm
+;                         (assumes z80unit.asm is in the same directory)
+; To run in the emulator: trs80gp zout/quick_start_test.500.cas
+; You can also load onto a real Model 1, Model 3, or Model 4.
+; You should see the below on the screen:
+;
+; | z80unit : Programmer-friendly unit testing for TRS-80 assembly
+; |  reg adds (PP)
+; |  memory blocks (PPPP)
+; | ALL TESTS PASSED (6 passed, 0 failed)
+; |               (Press <ENTER> when ready to reboot)
+;
+; Use "z80unit_test" to start a test. Each test contains your code and one
+; or more asserts. Assertions are described below. Finally, end your test with
+; "z80unit_end_and_exit" to print a report and exit.
+;
+; A test failure prompts you and displays dianostic information. To try this
+; change the first assertion from "assertEquals8 10,a" to "assertEquals8 $45,a".
+; This causes the assertion to fail and you will see on the screen:
+;
+; | z80unit : Programmer-friendly unit testing for TRS-80 assembly
+; |  reg adds (
+; | F assertEquals8 $10,a : expected 0x45=69='E' but was 0x0A=10 
+; |    Press <ENTER> when ready to continue...
+;
+; This allows you to see information about the assertion failure and then continue
+; the test. Note z80unit shows hex, decimal, and ASCII (if printable).
+;
+; You may optionally add a diagnostic message to the assertion. An example was the
+; '3 chars only' as shown below.
+;
+;    assertMemEquals8 s1,s2,3,'3 chars only'
+;
+; To see this fail change "s2 defb 'a test'" to "s2 defb 'A test'" and run again.
+;
+; |  memory blocks (PP
+; | F assertMemEquals8 s1,s2,3 :at +0 0x61=97='a' was not 0x41=65='
+; | A' : 3 chars only
+; |    Press <ENTER> when ready to continue...
+;
+; As you can see the diagnostic message is included in the output. Note if you do
+; this on a Model 1 with no lowercase mod the ASCII 'A' will show up for both but
+; the hex and decmimal values make it clear why the asserion failed.
+;
+; To run on a Model II or the other machines using a DOS you need to tell z80unit
+; which DOS you are using. A description of what is supported is below. However,
+; To run under LDOS 6 we would change the test to
+;
+;  ------------------------------------
+;    org $7000
+;  z80unit_LSDOS6 = 1   // TODO THIS DOES NOT WORK
+;  import 'z80unit.asm'
+;    <same as above...>
+;  ------------------------------------
+;
+; To compile use:         zmac --zmac quick_start_test.asm
+; To run in the emulator: trs80gp -m2 -ld zout/quick_start_test.cmd
+;
+; ASSERTIONS
+;
 ; 8-bit assertions, where e, an expected value, and a, an actual
 ; value, are any <exp> valid in "ld a,<exp>". All magnitude comparisons
 ; are unsigned. (a=actual, e=expected)
@@ -39,6 +129,50 @@ INCLUDE_Z80UNIT equ 1
 ;   assertMemString ptr,string  ; memory at 'ptr' contains 'string'
 ;   assertMemEquals8 p1,p2,cnt  ; 'p1' and 'p2' equal for 'cnt':8-bits bytes.
 ;   assertMemEquals16 p1,p2,cnt ; 'p1' and 'p2' equal for 'cnt':16-bits bytes.
+;
+; MACHINES AND DOS ENVIRONMENTS
+;
+; z80unit allows testing in DOS enviroments. If you are developing a program
+;
+; z80unit_CASSETTE (default)
+;   This works on Model 1, Model 3, and Model 4 and does not require a DOS.
+;   You'll have to reboot when the test completes.
+;   Emulator: trs80gp -m1 mytest.500.cas
+;             trs80gp -m3 mytest.500.cas
+;             trs80gp -m4 mytest.500.cas
+;
+; z80unit_LDOS5
+;   This is for testing on Model 1 or Model 3 LDOS 5.1 (or similar).
+;   Reference: LDOS Version 5.1: The TRS-80 Operating System Model I and III
+;   Emulator:  trs80gp -m1 mytest.cmd
+;              trs80gp -m1 -ld mytest.cmd
+;              trs80gp -m3 -ld mytest.cmd
+;   Tested:    TRSDOS 2.3 (Model 1)
+;              LDOS 5.3.1 (Model 1)
+;              LDOS 5.3.1 (Model 3)
+;
+; z80unit_m2_TRSDOS
+;   This is for testing on Model II TRSDOS version 2.0a (or similar).
+;   Reference: TRS-80 Model II Disk Operating System Reference Manual
+;   Emulator:  trs80gp -m2 mytest.cmd
+;   Tested:    TRSDOS 2.0a (Model 2)
+;
+; z80unit_m3_TRSDOS1.3
+;   This is for testing on Model 3 TRSDOS version 1.3 (or similar).
+;   Reference: TRS-80 MODEL III Operation and BASIC Language Reference Manual
+;   Emulator:  trs80gp -m3 mytest.cmd
+;   Tested:    Model III TRSDOS  1.3 (Model 3)
+;              NewDos/80 2.0 (Model 3)
+;
+; z80unit_LSDOS6
+;  This is for testing on Model II / Model 4 LDOS 6 (or similar).
+;  Reference: The Programmer's Guide to TRSDOS Version 6 (also LDOS Version 6)
+;  Emulator:  trs80gp -m4 mytest.cmd
+;             trs80gp -m4 -ld mytest.cmd
+;             trs80gp -m2 -ld mytest.cmd
+;  Tested:    TRSDOS 06.02.01 (Model 4)
+;             LDOS 06.03.01 (Model II, Model 4)
+
 
 ; ---------------------------------------------------------------- ;
 ; / / / / / / / / / /  IMPLEMENTATION DETAILS  / / / / / / / / / / ;
@@ -150,34 +284,33 @@ z80unit_reg16 |= ?fp == 256 * 'I' + 'y'
 
 ; ------------------------------------------------------------------
 
-; Tested: trs80gp -m1 mytest.cas
-;         trs80gp -m3 mytest.cas
-;         trs80gp -m4 mytest.cas
-z80unit_m1_m3_m4_CASSETTE = 1
+z80unit_CASSETTE = 0 ; default, will be turned off if a DOS is selected
 
-; Tested: trs80gp -m2 mytest.cmd
-;     See "TRS-80 Model II Disk Operating System Reference Manual"
-z80unit_m2_TRSDOS2.0a = 0
+; If no DOS is defined, enable cassette user experience.
+ifndef z80unit_LDOS5
+ifndef z80unit_m2_TRSDOS
+ifndef z80unit_m3_TRSDOS1.3
+ifndef z80unit_LDOS6
+z80unit_CASSETTE = 1
+endif
+endif
+endif
+endif
 
-; Tested: trs80gp -m1 mytest.cmd
-;         trs80gp -m1 -ld mytest.cmd
-;         trs80gp -m3 -ld mytest.cmd
-;     See "LDOS Version 5.1: The TRS-80 Operating System Model I and III"
-z80unit_m1_TRSDOS2.3_and_m3_LDOS5.3.1 = 0
-
-; Tested: trs80gp -m3 mytest.cmd
-;     See "TRS-80 MODEL III Operation and BASIC Language Reference Manual"
+ifndef z80unit_LDOS5
+z80unit_LDOS5 = 0
+endif
+ifndef z80unit_m2_TRSDOS
+z80unit_m2_TRSDOS = 0
+endif
+ifndef z80unit_m3_TRSDOS1.3
 z80unit_m3_TRSDOS1.3 = 0
+endif
+ifndef z80unit_LDOS6
+z80unit_LDOS6 = 0
+endif
 
-; Tested: trs80gp -m4 mytest.cmd
-;         trs80gp -m4 -ld mytest.cmd
-;         trs80gp -m2 -ld mytest.cmd
-;     See "The Programmer's Guide to TRSDOS Version 6" / LDOS Version 6 too!
-z80unit_m4_TRSDOS06.02.01_and_m2_LDOS06.03.01 = 0
-
-; ------------------------------------------------------------------
-; TRS80 Model 1,3,4 - No Operating System (Cassette)
-if z80unit_m1_m3_m4_CASSETTE
+if z80unit_CASSETTE
 
 _screen_start		equ	$3c00
 _screen_size		equ	64*16
@@ -273,11 +406,9 @@ z80unit_exit:
   _press_enter
   jp $0000 ; reboot
 
-endif ; z80unit_m1_m3_m4_CASSETTE
+endif ; z80unit_CASSETTE
 
-; ------------------------------------------------------------------
-; TRS80 Model II - TRSDOS version 2.0a
-if z80unit_m2_TRSDOS2.0a
+if z80unit_m2_TRSDOS
 
 ; Gets the size of a zero-terminated string and puts it in b (8-bits).
 ;
@@ -334,17 +465,9 @@ z80unit_pause:
 
 z80unit_exit:
   rst 0
-endif ; z80unit_m2_TRSDOS2.0a
+endif ; z80unit_m2_TRSDOS
 
-; ------------------------------------------------------------------
-; TRS80 Model 1 - TRSDOS version 2.3
-;                 LDOS version 5.3.1
-; TRS80 Model 2 - LDOS version 06.03.01
-; TRS80 Model 3 - TRSDOS version 1.3
-;                 LDOS version 5.3.1
-; TRS80 Model 4 - TRSDOS version 06.0201
-;                 LDOS version 06.03.01
-if z80unit_m1_TRSDOS2.3_and_m3_LDOS5.3.1 || z80unit_m3_TRSDOS1.3 || z80unit_m4_TRSDOS06.02.01_and_m2_LDOS06.03.01
+if z80unit_LDOS5 || z80unit_m3_TRSDOS1.3 || z80unit_LDOS6
 
 z80unit_print:
   z80unit_push_reg
@@ -362,13 +485,13 @@ _change_zero_to_etx:
   push hl     ; save location to restore the zero terminator
   ; Print the string with no newline.
   ex de,hl ; put buffer address into hl
-  if z80unit_m1_TRSDOS2.3_and_m3_LDOS5.3.1
+  if z80unit_LDOS5
   call $4467 ; @DSPLY
   endif
   if z80unit_m3_TRSDOS1.3
   call $021b ; $VDLINE
   endif
-  if z80unit_m4_TRSDOS06.02.01_and_m2_LDOS06.03.01
+  if z80unit_LDOS6
   ld a,10    ; @DSPLY (pg 7-19)
   rst 40
   endif
@@ -383,13 +506,13 @@ z80unit_newln:
 _enter  defb  $0d ; <ENTER>
 _newln_skip:
   ld hl,_enter
-  if z80unit_m1_TRSDOS2.3_and_m3_LDOS5.3.1
+  if z80unit_LDOS5
   call $4467 ; @DSPLY
   endif
   if z80unit_m3_TRSDOS1.3
   call $021b ; $VDLINE
   endif
-  if z80unit_m4_TRSDOS06.02.01_and_m2_LDOS06.03.01
+  if z80unit_LDOS6
   ld a,10    ; @DSPLY (pg 7-19)
   rst 40
   endif
@@ -402,12 +525,12 @@ z80unit_pause:
   call z80unit_print
   ld b,1
   ld hl,_buffer
-  if z80unit_m3_TRSDOS1.3 || z80unit_m1_TRSDOS2.3_and_m3_LDOS5.3.1
+  if z80unit_m3_TRSDOS1.3 || z80unit_LDOS5
   call $0040 ; $KBLINE / @KEYIN (pg 6-55)
   ld hl,_undo_pause_64_col_txt
   call z80unit_print
   endif
-  if z80unit_m4_TRSDOS06.02.01_and_m2_LDOS06.03.01
+  if z80unit_LDOS6
   ld c,0    ; should contain zero
   ld a,9    ; @DSPLY (pg 7-19)
   rst 40
@@ -418,19 +541,19 @@ z80unit_pause:
   ret
 
 z80unit_exit:
-  if z80unit_m1_TRSDOS2.3_and_m3_LDOS5.3.1 || z80unit_m3_TRSDOS1.3
+  if z80unit_LDOS5 || z80unit_m3_TRSDOS1.3
   ; This works for TRSDOS 1.3 but page 12/15 of the "TRS-80 MODEL III
   ; Operation and BASIC Language Reference Manual" says to use $READY:
-  ; which is a jp to $1a19. This doesn't work.
+  ; which is a jp to $1a19 -- which I think is wrong.
   call $402d ; @EXIT (pg 6-51)
   endif
-  if z80unit_m4_TRSDOS06.02.01_and_m2_LDOS06.03.01
+  if z80unit_LDOS6
   ld hl,0  ; Normal termination
   ld a,22  ; @EXIT (pg 7-19)
   rst 40
   endif
 
-endif ; z80unit_m1_TRSDOS2.3_and_m3_LDOS5.3.1 || z80unit_m3_TRSDOS1.3 || z80unit_m4_TRSDOS06.02.01_and_m2_LDOS06.03.01
+endif ; z80unit_LDOS5 || z80unit_m3_TRSDOS1.3 || z80unit_LDOS6
 
 ; ---------------------------------------------------------------- ;
 ; / / / / / / / / / / / / SUPPORT ROUTINES / / / / / / / / / / / / ;
