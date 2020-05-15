@@ -6144,8 +6144,7 @@ int main(int argc, char *argv[])
 				continue;
 
 			default:	/*  error  */
-				usage("Unknown option", 0);
-
+				usage("Unknown option: %s", argv[i] - 1);
 			}
 			if (skip)
 				break;
