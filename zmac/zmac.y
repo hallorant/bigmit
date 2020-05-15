@@ -257,6 +257,11 @@
 #define MAXPASS		32
 #define MAXINCPATH	32
 
+// Support ZMAC_ARGS environment variable.
+#define ZMAC_ARGS_MAX 132
+#define ZMAC_ARGS_NEW_ARGV_LIMIT 20
+char zmac_args[ZMAC_ARGS_MAX];
+
 int iflist();
 int yylex();
 int phaseaddr(int addr);
@@ -5912,11 +5917,39 @@ int main(int argc, char *argv[])
 	used_o = 0;
 	used_oo = 0;
 
+	// To avoid typing typical command-line arguments every time we
+	// allow ZMAC_ARGS to augment the command-line.
+	char *zmac_args_env = getenv("ZMAC_ARGS");
+	if (getenv("ZMAC_ARGS")) {
+		// Save a copy globally because we (1) mutate it and (2) use it in argv.
+		zmac_args[ZMAC_ARGS_MAX-1] = '\0';
+		strncpy(zmac_args, zmac_args_env, ZMAC_ARGS_MAX-1);
+
+		char *add_to_argv[ZMAC_ARGS_NEW_ARGV_LIMIT];
+		int add_to_argc = 0;
+		char* arg;
+		arg = strtok(zmac_args," \t");
+		while (arg != NULL && add_to_argc < ZMAC_ARGS_NEW_ARGV_LIMIT) {
+			add_to_argv[add_to_argc++] = arg;
+			arg = strtok(NULL, " \t");
+		}
+
+		char **new_argv = malloc((argc + add_to_argc) * sizeof(*new_argv));
+		if (new_argv == NULL) error("malloc to support ZMAC_ARGS failed");
+		memmove(new_argv, argv, sizeof(*new_argv) * argc);
+		for (int i = 0; i < add_to_argc; ++i) {
+			new_argv[argc+i] = add_to_argv[i];
+		}
+		argv = new_argv;
+		argc = argc + add_to_argc;
+	}
+
 	// Special flag for unit testing.
 	if (argc > 1 && strcmp(argv[1], "--test") == 0)
 		exit(!check_keytab());
 
 	for (i=1; i<argc; i++) {
+		printf("arg: %s\n", argv[i]); // TODO ONLY FOR TESTING
 		int skip = 0;
 		if (strcmp(argv[i], "--mras") == 0) {
 			mras = 1;
