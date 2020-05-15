@@ -5949,7 +5949,6 @@ int main(int argc, char *argv[])
 		exit(!check_keytab());
 
 	for (i=1; i<argc; i++) {
-		printf("arg: %s\n", argv[i]); // TODO ONLY FOR TESTING
 		int skip = 0;
 		if (strcmp(argv[i], "--mras") == 0) {
 			mras = 1;
