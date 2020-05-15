@@ -192,6 +192,9 @@
  *		promotion isn't needed as long as shortest code is tried first.
  *
  * gwp 5-1-19	Add cycle count and output bytes to macro invocations.
+ *
+ * tjh 5-15-20  Added support for command-line parameters in the ZMAC_ARGS
+ *              environment variable to save typing common arguments every run.
  */
 
 #if defined(__GNUC__)
