@@ -379,11 +379,18 @@ _screen_end		equ	_screen_start+_screen_size
 _screen_last_line_start	equ	_screen_end-64
 _cursor			defw	_screen_last_line_start
 
-_press_enter macro ?key_pressed,?key_released
+_press_enter macro ?key_pressed,?debounce,?key_released
 ?key_pressed:
   ld a,($3840)  ; A keyboard row
   bit 0,a       ; Check bit 0: ENTER
   jr z,?key_pressed
+  ; Debounce delay by William Barden, Jr.
+  ; 'More TRS-80 Assembly-Language Programming', 1982 pg 141.
+  ld hl,8448
+  ld bc,-1
+?debounce:
+  add hl,bc
+  jr c,?debounce
 ?key_released:
   ld a,($3840)  ; A keyboard row
   bit 0,a       ; Check bit 0: ENTER
