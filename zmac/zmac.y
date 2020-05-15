@@ -471,8 +471,8 @@ char	*errname[FLAGS]={
 	"Not implemented",
 	"General"
 };
-char	errdetail[FLAGS][1024];
-char	detail[1024];
+char	errdetail[FLAGS][1100];
+char	detail[1100];
 
 
 unsigned char inpbuf[LINEBUFFERSIZE];
@@ -6395,7 +6395,11 @@ int main(int argc, char *argv[])
 			if (*outf[i].fpp && outf[i].system) {
 				fclose(*outf[i].fpp);
 				*outf[i].fpp = NULL;
+				// This is intended to be an implicit declaration to aid portablity.
+				#pragma GCC diagnostic push
+				#pragma GCC diagnostic ignored "-Wimplicit-function-declaration"
 				unlink(outf[i].filename);
+				#pragma GCC diagnostic pop
 				if (outf[i].wanted)
 					fprintf(stderr, "Warning: %s not output -- no entry address (forgot \"end label\")\n", outf[i].filename);
 			}
@@ -6844,7 +6848,7 @@ void compactsymtab()
 void putsymtab()
 {
 	int  i, j, k, t, rows;
-	char c, c1, seg = ' ';
+	char c, seg = ' ';
 	int numcol = printer_output ? 4 : 1;
 	struct item *tp;
 
@@ -6871,10 +6875,6 @@ void putsymtab()
 					c = '=' ;
 				if (t == COMMON)
 					c = '/';
-				if (tp->i_uses == 0)
-					c1 = '+' ;
-				else
-					c1 = ' ' ;
 
 				// GWP - decided I don't care about uses
 				// even if it were accurate.
