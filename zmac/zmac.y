@@ -5920,6 +5920,10 @@ int main(int argc, char *argv[])
 	used_o = 0;
 	used_oo = 0;
 
+	// Special flag for unit testing.
+	if (argc > 1 && strcmp(argv[1], "--test") == 0)
+		exit(!check_keytab());
+
 	// To avoid typing typical command-line arguments every time we
 	// allow ZMAC_ARGS to augment the command-line.
 	char *zmac_args_env = getenv("ZMAC_ARGS");
@@ -5946,10 +5950,6 @@ int main(int argc, char *argv[])
 		argv = new_argv;
 		argc = argc + add_to_argc;
 	}
-
-	// Special flag for unit testing.
-	if (argc > 1 && strcmp(argv[1], "--test") == 0)
-		exit(!check_keytab());
 
 	for (i=1; i<argc; i++) {
 		int skip = 0;
