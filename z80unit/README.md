@@ -230,6 +230,10 @@ Reassemble and run the test as we did before to see
 The output above assumes you pressed *ENTER* on the first assertion failure we
 discussed above. As you can see our diagnostic message is included in the output.
 
+This change also breaks the `assertMemEquals8 s1,s2,6` assertion which compares
+all six characters in the strings, not just the first three. So you'll have to
+press *ENTER* twice to finish the test.
+
 ### Running tests on a Big Tandy: DOS support
 
 To run on a Model II or the other machines using a DOS you need to tell z80unit
