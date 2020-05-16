@@ -21,10 +21,9 @@ his [Bouncing Ball demo](http://48k.ca/ball.html) to work on a Model 1 with
 this modification and sent me cassette files to try on the real hardware. He
 also updated the [trs80gp](http://48k.ca/trs80gp.html) with the `-m1_vblank`
 flag to emulate this modification. I wrote a primitive raycasting demo. I
-barely got my demo running prior to the conference (which motivated the
-development of [x80unit](../x80unit). George helped me a lot and dug into my
-code during the conference to speed it up 4x. I made the rookie mistake of
-using a lot of 16-bit mathematics on the Model 1 (sloooowwwww).
+barely got my demo running prior to the conference. George helped me a lot and
+dug into my code during the conference to speed it up 4x. I made the rookie
+mistake of using a lot of 16-bit mathematics on the Model 1 (sloooowwwww).
 
 If you want to run the actual demos on `trs80gp` you can try them out. A real
 Model 1 requires the modification to work.
@@ -34,6 +33,18 @@ Model 1 requires the modification to work.
 
 * [Model 1 VBLANK Raycaster](bin/raycaster.500.cas?raw=true) Download and run
   using `trs80gp -m1 -m1_vblank raycaster.500.cas`
+
+If you want to build the code in this directory use
+
+```zmac --zmac raycaster.asm```
+
+then run it with
+
+```trs80gp -m1 -m1_vblank zout/raycaster.500.cas```
+
+The (few) tests in the [tests](./tests) subdirectory are not
+[x80unit](../x80unit) this work predated and, in fact, motivated x80unit
+development.
 
 # Pictures of the exhibit table
 
