@@ -43,8 +43,8 @@ then run it with
 ```trs80gp -m1 -m1_vblank zout/raycaster.500.cas```
 
 The (few) tests in the [tests](./tests) subdirectory are not
-[x80unit](https://github.com/hallorant/bigmit/tree/master/z80unit) this work
-predated and, in fact, motivated x80unit development.
+[z80unit](../z80unit) this work predated and, in fact, motivated x80unit
+development.
 
 # Pictures of the exhibit table
 
