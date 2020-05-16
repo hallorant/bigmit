@@ -109,7 +109,7 @@ discuss how to test DOS code and code on a Big Tandy below.
 
 You should see the below on the screen
 
-![Running our first z80unit test](..//images/z80unit_qs1.png?raw=true "Running our first z80unit test")
+![Running our first z80unit test](../etc/images/z80unit_qs1.png?raw=true "Running our first z80unit test")
 
 The output reports on your two tests `reg ads` and `memory blocks` and outputs
 a `P` for each assertion in the test that passed. If you look back at the code
@@ -173,14 +173,14 @@ fail. Change the first assertion from `assertEquals8 10,a` to
 
 Reassemble and run the test as we did before to see
 
-![Our first assertion failure](..//images/z80unit_qs2.png?raw=true "Our first assertion failure")
+![Our first assertion failure](../etc/images/z80unit_qs2.png?raw=true "Our first assertion failure")
 
 The test stops when an assertion fails, shows diagnostic information, then prompts you
 to press *ENTER* to continue the test.
 
 What does the diagnostic message tell you? We explain each part below.
 
-![The assertion failure diagnostic message explained](..//images/z80unit_qs3.png?raw=true "The assertion failure diagnostic message explained")
+![The assertion failure diagnostic message explained](../etc/images/z80unit_qs3.png?raw=true "The assertion failure diagnostic message explained")
 
 In order left to right:
 
@@ -207,7 +207,7 @@ In order left to right:
 
 At this point press *ENTER* and you will see
 
-![At the end of running the test](..//images/z80unit_qs4.png?raw=true "At the end of running the test")
+![At the end of running the test](../etc/images/z80unit_qs4.png?raw=true "At the end of running the test")
 
 Note that the library removes the `Press <ENTER> when ready to continue...`
 from the output so the TRS-80 screen isn't cluttered up with these messages.
@@ -225,7 +225,7 @@ To see this assertion fail change `s2 defb 'a test'` (up top) to
 
 Reassemble and run the test as we did before to see
 
-![Adding to the diagnostic message](..//images/z80unit_qs5.png?raw=true "Adding to the diagnostic message")
+![Adding to the diagnostic message](../etc/images/z80unit_qs5.png?raw=true "Adding to the diagnostic message")
 
 The output above assumes you pressed *ENTER* on the first assertion failure we
 discussed above. As you can see our diagnostic message is included in the output.
@@ -263,7 +263,7 @@ clear about the machine and the DOS we want loaded.
 
 You should see the below on the screen
 
-![Testing on Model II LDOS](..//images/z80unit_qs6.png?raw=true "Testing on Model II LDOS")
+![Testing on Model II LDOS](../etc/images/z80unit_qs6.png?raw=true "Testing on Model II LDOS")
 
 The screen above assumes that you pressed *ENTER* when prompted. By this point
 you know why the assertions are failing. What differs in this output is what
