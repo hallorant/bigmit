@@ -10,8 +10,9 @@ demonstration of a no-chip hardware modification to the TRS-80 Model 1 which
 allows visibility to the start or end of VBLANK. VBLANK detection allows for
 graphics without interference or tear as well as up to 192 pixel vertical
 resolution. The Model I could have shipped with this at absolutely no extra
-manufacturing cost. Modification created by Tim Halloran from ideas by George
-Phillips and a special thanks for the motivation to Trash Talk episode 21.
+manufacturing cost. The Modification was created by me (Tim Halloran) from
+ideas by George Phillips. With a special thanks for the motivation to Trash
+Talk episode 21.
 
 George thought this mod up in an email thread where I asked him about Trash
 Talk episode 21 where using VBLANK was discussed on a Model 1. I figured out
