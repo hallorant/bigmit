@@ -5935,7 +5935,7 @@ int main(int argc, char *argv[])
 	// To avoid typing typical command-line arguments every time we
 	// allow ZMAC_ARGS to augment the command-line.
 	char *zmac_args_env = getenv("ZMAC_ARGS");
-	if (getenv("ZMAC_ARGS")) {
+	if (zmac_args_env) {
 		// Save a copy globally because we (1) mutate it and (2) use it in argv.
 		zmac_args[ZMAC_ARGS_MAX-1] = '\0';
 		strncpy(zmac_args, zmac_args_env, ZMAC_ARGS_MAX-1);
