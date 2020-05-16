@@ -118,6 +118,8 @@ consistent with the output. At the bottom it reports `ALL TESTS PASSED` with
 counts of the assertions that passed and failed.  Because we didn't support a
 DOS we have to reboot the computer when we are done looking at the test output.
 
+### Understanding the test code
+
 Let's examine the test code in more depth.
 
 ```
@@ -155,6 +157,8 @@ At the top of `main:` we use `z80unit_test` to start and name a test. Each test
 contains your code and one or more asserts. You may have as many as you wish.
 Finally, at the bottom you end your test with `z80unit_end_and_exit` to print a
 report and exit.
+
+### Making the test fail
 
 This example is okay, however, where z80unit shines is when assertions *fail*
 and how it reports diagnostic information to help you track down the problem.
@@ -208,6 +212,8 @@ At this point press *ENTER* and you will see
 Note that the library removes the `Press <ENTER> when ready to continue...`
 from the output so the TRS-80 screen isn't cluttered up with these messages.
 
+### Adding your own diagnostic message
+
 You may optionally add to the diagnostic message to any assertion. An example
 of this is the `'3 chars only'` in the line
 
@@ -224,20 +230,59 @@ Reassemble and run the test as we did before to see
 The output above assumes you pressed *ENTER* on the first assertion failure we
 discussed above. As you can see our diagnostic message is included in the output.
 
-To run on a Model II or the other machines using a DOS you need to tell z80unit
-which DOS you are using. A description of what is supported is below. However,
-To run under LDOS 6 we would change the test to
+### Running tests on a Big Tandy: DOS support
 
-;  ------------------------------------
-;    org $7000
-;  z80unit_LDOS6 equ 1
-;  import 'z80unit.asm'
-;    <same as above...>
-;  ------------------------------------
-;
-; To compile use:         zmac --zmac quick_start_test.asm
-; To run in the emulator: trs80gp -m2 -ld zout/quick_start_test.cmd
-;
+To run on a Model II or the other machines using a DOS you need to tell z80unit
+which DOS you are using. A list of what is supported is below. However, To run
+under LDOS 6 we would add the line `z80unit_LDOS6 equ 1` *before* the import of
+`z80unit.asm`.
+
+```
+  org $7000
+
+z80unit_LDOS6 equ 1
+import '../z80unit.asm'
+
+s1      defb    'a test'
+s2      defb    'A test'
+...
+```
+
+That's all you have to do! Assemble the same as before
+
+```zmac --zmac quick_start_test.asm```
+
+But to run in the emulator we need to use the *CMD* output (not *CAS*) and be
+clear about the machine and the DOS we want loaded.
+
+```trs80gp -m2 -ld zout/quick_start_test.cmd```
+
+You should see the below on the screen
+
+![Testing on Model II LDOS](..//images/z80unit_qs6.png?raw=true "Testing on Model II LDOS")
+
+The screen above assumes that you pressed *ENTER* when prompted. By this point
+you know why the assertions are failing. What differs in this output is what
+occurs when the test finishes. Control is returned to the DOS and, in this
+example, we see the `LS-DOS Ready` prompt. You do not have to reboot. Go ahead,
+type `DATE` or `DIR`, and double-check that the DOS is really still there.
+
+This works on a real Model II, but getting `quick_start_test.cmd` onto the
+Model II is a bit involved and we assume you have some approach or another to
+do so if you have one of these old machines actually running.
+`quick_start_test.cmd` is just like any other program.
+
+Why do we need this? The main reason is z80unit wants to *support unit testing
+of assembly programs written for a DOS*. With z80unit you can test your LDOS
+code that saves high scores to a file in your game. Further, without this
+capability the Big Tandy machines would really not be supported by z80unit.
+
+You might have noticed we haven't gone into too much detail about the
+assertions themselves. The next section lists *all* the z80unit assertions and
+describes how to use them.
+
+# Assertion Reference
+
 ; ASSERTIONS
 ;
 ; 8-bit assertions, where e, an expected value, and a, an actual
