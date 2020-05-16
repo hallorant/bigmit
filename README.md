@@ -1,3 +1,5 @@
+![bigmit software](etc/images/banner.jpg?raw=true "bigmit software")
+
 # bigmit software
 
 Retro computing code for the TRS-80. Mostly z80 assembly language. This is Tim
