@@ -10,6 +10,6 @@ to *mit*. That and the project name *bigmit* was available here on github.
 
 ## Interesting stuff
 
-* [z80unit](./z80unit) A programmer-friendly unit testing library for TRS-80
-  assembly.
+* [z80unit](./z80unit) &ndash; A programmer-friendly unit testing library for
+  TRS-80 assembly. Supports all z80 TRS-80s and most DOSs.
 
