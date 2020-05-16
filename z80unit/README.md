@@ -341,7 +341,7 @@ The 8 and 16 in `assertMemEquals8` and `assertMemEquals16` refer to the count,
 
 # DOS Reference
  
-z80unit allows testing in many DOS environments. If you are developing a
+z80unit allows testing in many TRS-80 DOS environments. If you are developing a
 program for a DOS then its tests should run in that DOS. To do this add a line
 at the top of your test, prior to the import of z80unit.asm, defining **one and
 only one** of the OS values listed in the table below. For example
@@ -364,8 +364,9 @@ import '../z80unit.asm'
 A few bits of advice
 
 * You must use one of these on a Big Tandy (Model II, Model 12, Model 16, or
-  Model 6000): `z80unit_m2_TRSDOS` or `z80unit_LDOS6`. Why? the default z80unit
-  approach to write directly to video memory doesn't work on these machines.
+  Model 6000). Probably `z80unit_m2_TRSDOS` or `z80unit_LDOS6`. Why? the
+  default z80unit approach to write directly to video memory doesn't work on
+  these machines. (Nothing is easy on a Big Tandy!)
 
 * If your target DOS is not on this list, try a few values. Guess what might
   work and use `trs80gp` to see if it works. Please reach out if you have
