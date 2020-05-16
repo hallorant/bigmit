@@ -115,7 +115,7 @@ The output reports on your two tests `reg ads` and `memory blocks` and outputs
 a `P` for each assertion in the test that passed. If you look back at the code
 there were two assertions in `reg ads` and four in `memory blocks` which is
 consistent with the output. At the bottom it reports `ALL TESTS PASSED` with
-counts of the assertions that passed and failed.  Because we didn't support a
+counts of the assertions that passed and failed.  Because we are not using a
 DOS we have to reboot the computer when we are done looking at the test output.
 
 ### Understanding the test code
@@ -148,9 +148,9 @@ main:
   end main
 ```
 
-First off this test is *really* odd. Why? Normally there would be two `imports`
+First off, this test is *really* odd. Why? Normally there would be two `imports`
 one for your module and the second for `z80unit.asm`. We just have the import
-of `z80unit.asm` in this test. For this simple example our goal is to
+of `z80unit.asm` in this test. For this simple example, our goal is to
 understand z80unit better so we avoid the complexity of the module.
 
 At the top of `main:` we use `z80unit_test` to start and name a test. Each test
@@ -312,14 +312,14 @@ describes how to use them.
 ;
 ; Memory block assertions check memory against an expected vector of bytes.
 ; pointer values are either a 16-bit register or any <exp> valid in
-; "ld hl,<exp>". The 8/16 varients refer to the count of bytes to check.
+; "ld hl,<exp>". The 8/16 variants refer to the count of bytes to check.
 ;   assertMemString ptr,string  ; memory at 'ptr' contains 'string'
 ;   assertMemEquals8 p1,p2,cnt  ; 'p1' and 'p2' equal for 'cnt':8-bits bytes.
 ;   assertMemEquals16 p1,p2,cnt ; 'p1' and 'p2' equal for 'cnt':16-bits bytes.
 ;
 ; MACHINES AND DOS ENVIRONMENTS
 ;
-; z80unit allows testing in DOS enviroments. If you are developing a program
+; z80unit allows testing in DOS environments. If you are developing a program
 ; that uses features of a DOS then we want the test to run in that DOS. To do
 ; this add a line at the top of your test, prior to the import of
 ; z80unit.asm, defining one and only one of the below values.
