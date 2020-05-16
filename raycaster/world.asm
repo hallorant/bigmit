@@ -8,9 +8,9 @@
 ; Author: Tim Halloran
 ; From the tutorial at https://lodev.org/cgtutor/raycasting.html
 
-import '../lib/reverse_bits.asm'
-import '../lib/sla16.asm'
-import '../lib/srl16.asm'
+import 'lib/reverse_bits.asm'
+import 'lib/sla16.asm'
+import 'lib/srl16.asm'
 
 ; Checks if the bit in byte is the value we should return. Reduces pos by one
 ; and logical shifts byte right one bit to get ready for the next call.
@@ -33,47 +33,43 @@ check_bit	macro byte,pos,?ret0value,?cont
 ; Checks if the passed row and column are a wall in the world.
 ; Enter: l  The row in the world (y value).
 ;        c  The column in the world (x value).
-; Exit:  a  Wall value (0 or 1).
-is_wall:	ld h,0
-		ld b,0
-		ld a,5
-		call sla16	; a << 5 equals row * 32.
-		add hl,bc
-		ld a,$07
-		and l
-		ld c,a		; Position 0-7 of bit is in c.
-		ld a,3
-		call srl16	; a >> 3 to remove position bits.
-		ld de,world	; Start at addr of world table.
-		add hl,de	; Add byte offset calculated above.
-		ld b,(hl)	; Table lookup byte is in b.
-		inc c		; Change to 1-8 (from 0-7).
-		check_bit b,c
-		check_bit b,c
-		check_bit b,c
-		check_bit b,c
-		check_bit b,c
-		check_bit b,c
-		check_bit b,c
-		check_bit b,c
+; Exit:  a  Wall value (0 or $FF).
+;
+; Note: currently not called but inlined in cast.asm
 
-; Called once to flip the bits in the world map below. This allows the
+is_wall:
+	ld	a,high($6000)
+	add	l
+	ld	h,a
+	ld	l,c
+	ld	a,(hl)
+	ret
+
+; Called once to convert the world map bits into page-aligned array
+; of bytes.
+; This allows the
 ; map to be easier for humans to work on and is only done at program
 ; start so it won't hurt performance of the raycaster.
-prepare_world:		ld bc,32*4
-			ld hl,world
-__prepare_world_loop:	ld a,(hl)
-			push bc		; Save bc value (or lost on call).
-			call reverse_bits
-			pop bc
-			ld (hl),a
-			inc hl
-			dec bc		; Doesn't set zero flag!
-			ld a,c		; Check if bc is zero.
-			or b
-			ret z
-			jr __prepare_world_loop
-			
+
+prepare_world:
+	ld	hl,world
+	ld	d,high($6000)
+	ld	c,32
+ylp:	ld	b,32/8
+	ld	e,low($6000)
+xlp:	scf
+	rl	(hl)
+blp:	sbc	a,a
+	ld	(de),a
+	inc	e
+	sla	(hl)
+	jr	nz,blp
+	inc	hl
+	djnz	xlp
+	inc	d
+	dec	c
+	jr	nz,ylp
+	ret
 
 ; The world map 32x32 (2^5x3^5 -- a power of 2).
 ;

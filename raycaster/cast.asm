@@ -139,14 +139,15 @@ do_step_y:	ld a,0
 		add a,c
 		ld (cast_y),a
 
-check_if_wall:	ld a,(cast_x)
-		ld c,a
-		ld a,(cast_y)
-		ld l,a
-		call is_wall
-		or a
-		jr nz, found_wall
-		jp step_in_world
+check_if_wall:
+	ld	a,(cast_y)
+	add	a,high($6000)
+	ld	h,a
+	ld	a,(cast_x)
+	ld	l,a
+	ld	a,(hl)
+	or	a
+	jp	z,step_in_world
 
 found_wall:	ld a,(wall_is_solid)
 		or a

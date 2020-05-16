@@ -25,10 +25,10 @@
 
 		org $4a00
 
-import '../lib/barden_move.asm'
-import '../lib/barden_fill.asm'
-import '../lib/barden_mul16.asm'
-import '../lib/barden_hexcv.asm'
+import 'lib/barden_move.asm'
+import 'lib/barden_fill.asm'
+import 'lib/barden_mul16.asm'
+import 'lib/barden_hexcv.asm'
 
 ; Address of the start of video memory.
 screen		equ	$3c00
@@ -97,10 +97,21 @@ import 'world.asm'
 
 import 'cast.asm'	; Depends upon the above includes
 
+line_to_video	macro	src, dst
+		; A line is 56 bytes.
+		phillips_14byte_move src, dst
+		phillips_14byte_move src+14, dst+14
+		phillips_14byte_move src+28, dst+28
+		phillips_14byte_move src+42, dst+42
+		endm
+
 		; ---------------------------------------
 		; Setup the static portion of the screen.
 		; ---------------------------------------
-main:		; Clear the screen
+main:	di
+		ld	sp,$6000
+
+		; Clear the screen
 		ld d,$80
 		ld hl,screen
 		ld bc,64*16
@@ -167,10 +178,15 @@ main:		; Clear the screen
 		; ----------------------------
 		; Clear the video back buffer.
 		; ----------------------------
-game_loop:	ld d,$80
-		ld hl,buff01
-		ld bc,buff_line_width*11
-		call barden_fill
+game_loop:
+		ld	(spsv),sp
+		ld	sp,buff01+buff_line_width*11
+		ld	de,$8080
+		rept	buff_line_width*11/2
+			push	de
+		endm
+		ld	sp,0
+spsv	equ	$-2
 
 		; ------------------------------
 		; Check for input from the user.
