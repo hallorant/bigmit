@@ -195,6 +195,7 @@
  *
  * tjh 5-15-20  Added support for command-line parameters in the ZMAC_ARGS
  *              environment variable to save typing common arguments every run.
+ *              Added -Dsym to allow definition of symbols on the command-line.
  */
 
 #if defined(__GNUC__)
@@ -393,12 +394,12 @@ void clean_outf();
 void clean_outf_temp();
 void suffix_list(char *sfx_lst, int no_open);
 
-int	pass2;	/*set when pass one completed*/
-int	outpass; 	// set when we decide to stop doing passes */
+int	pass2;		// set when pass one completed
+int	outpass; 	// set when we decide to stop doing passes
 int	passfail;	// set when an error means passes should not continue
 int	passretry;	// set when an inconsistency will require another pass
-int	dollarsign ;	/* location counter */
-int	olddollar ;	/* kept to put out binary */
+int	dollarsign ;	// location counter
+int	olddollar ;	// kept to put out binary
 int	oldothdollar;	// output address of next .cmd/.cas/.lcas block
 int	emit_addr;	// where code and data are being placed in memory
 int	tstates;	// cumulative T-states
@@ -428,7 +429,7 @@ int	phdollar, phbegin, phaseflag ;
 
 char	*src_name[NEST_IN] ;
 int	linein[NEST_IN] ;
-int linepeek[NEST_IN];
+int	linepeek[NEST_IN];
 int	now_in ;
 
 
@@ -479,8 +480,8 @@ char	*errname[FLAGS]={
 	"Not implemented",
 	"General"
 };
-char	errdetail[FLAGS][1100];
-char	detail[1100];
+char	errdetail[FLAGS][1100];	// keep large enough to avoid compiler warnings.
+char	detail[1100];		// keep large enough to avoid compiler warnings.
 
 
 unsigned char inpbuf[LINEBUFFERSIZE];
@@ -528,6 +529,12 @@ int	str_getch(struct argparse *ap);
 
 int	mras_undecl_ok;
 int	mras_param[10];
+
+// Used to support -Dsym on the command line.
+#define CL_SYMBOL_LIMIT 10
+int	cl_symbol_cnt = 0;
+char	*cl_symbol[CL_SYMBOL_LIMIT];
+int is_dash_d_equate(char *symbol_name);
 
 char	inmlex;
 char	mlex_list_on;
@@ -2156,7 +2163,7 @@ statement:
 	// IF_DEF_TK UNDECLARED '\n' might work, but probably would define the symbol
 	IF_DEF_TK arg_on ARG arg_off '\n' {
 		struct item *ip = locate(tempbuf);
-		int declared = ip && ip->i_pass == npass;
+		int declared = ip && ip->i_pass >= npass;
 		int value = declared == $1->i_value;
 
 		if (ifptr >= ifstmax)
@@ -5891,6 +5898,7 @@ void help()
 	fprintf(stderr, "   -t\t\toutput error count instead of list of errors\n");
 	fprintf(stderr, "   -z\t\tuse Z-80 timings and interpretation of mnemonics\n");
 	fprintf(stderr, "   -Pk=num\tset @@k to num before assembly (e.g., -P4=10)\n");
+	fprintf(stderr, "   -Dsym\tset symbol sym to 1 before assembly (e.g., -Ddos)\n");
 	fprintf(stderr, "   --od\tdir\tdirectory unnamed output files (default \"zout\")\n");
 	fprintf(stderr, "   --oo\thex,cmd\toutput only listed file suffix types\n");
 	fprintf(stderr, "   --xo\tlst,cas\tdo not output listed file suffix types\n");
@@ -6014,6 +6022,15 @@ int main(int argc, char *argv[])
 
 		if (strcmp(argv[i], "--xo") == 0) {
 			suffix_list(argv[i = getoptarg(argc, argv, i)], 1);
+			continue;
+		}
+
+		if (argv[i][0] == '-' && argv[i][1] == 'D') {
+			if (!argv[i][2])
+				usage("bad -Dsym no symbol name", 0);
+			if (cl_symbol_cnt >= CL_SYMBOL_LIMIT)
+				usage("too many -Dsym arguments", 0);
+			cl_symbol[cl_symbol_cnt++] = argv[i]+2;
 			continue;
 		}
 
@@ -6341,7 +6358,8 @@ int main(int argc, char *argv[])
 				break;
 
 			case EQUATED:
-				ip->i_token = WASEQUATED;
+				// Except -Dsym (we won't see that again).
+				if (!is_dash_d_equate(ip->i_string)) ip->i_token = WASEQUATED;
 				break;
 
 			case DEFLED:
@@ -6430,7 +6448,7 @@ int main(int argc, char *argv[])
 			if (*outf[i].fpp && outf[i].system) {
 				fclose(*outf[i].fpp);
 				*outf[i].fpp = NULL;
-				// This is intended to be an implicit declaration to aid portablity.
+				// unlink is an intended implicit declaration -- silence the gcc warning.
 				#pragma GCC diagnostic push
 				#pragma GCC diagnostic ignored "-Wimplicit-function-declaration"
 				unlink(outf[i].filename);
@@ -6702,8 +6720,15 @@ void suffix_list(char *sfx_lst, int no_open)
 	}
 }
 
-void equate(char *id, int value)
-{
+// Whether the symbol was defined by a -D on the command-line.
+int is_dash_d_equate(char *symbol_name) {
+        for (i = 0; i < cl_symbol_cnt; i++) {
+		if (strcmp(symbol_name, cl_symbol[i]) == 0) return /*true*/1;
+        }
+	return /*false*/0;
+}
+
+void equate_with_scope(char *id, int value, int scope) {
 	struct item *it;
 
 	it = locate(id);
@@ -6711,12 +6736,17 @@ void equate(char *id, int value)
 		nitems++;
 		it->i_value = value;
 		it->i_token = EQUATED;
-		it->i_pass = npass;
-		it->i_scope = SCOPE_BUILTIN;
+		it->i_pass = MAXPASS+1; // ensures ifdef and ifndef work
+		it->i_scope = scope;
 		it->i_uses = 0;
 		it->i_string = malloc(strlen(id)+1);
 		strcpy(it->i_string, id);
 	}
+}
+
+
+void equate(char *id, int value) {
+	equate_with_scope(id, value, SCOPE_BUILTIN);
 }
 
 /*
@@ -6765,6 +6795,11 @@ void setvars()
 
 	mfptr = 0;
 	mfseek(mfile, mfptr, 0);
+
+	// Equ all the -Dsym command-line defined symbols.
+	for (i = 0; i < cl_symbol_cnt; i++) {
+		equate_with_scope(cl_symbol[i], 1, SCOPE_NONE);
+	}
 
 	// These are slighly harmful, but not too bad.  Only
 	// absolutely necessary for MAC compatibility.  But there's
@@ -6931,6 +6966,9 @@ void putsymtab()
 
 				if (tp->i_scope & SCOPE_PUBLIC)
 					fprintf(fout, " (public)");
+
+				if (is_dash_d_equate(tp->i_string))
+					fprintf(fout, " (command line -D)");
 			}
 		}
 		lineout();
