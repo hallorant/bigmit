@@ -14,8 +14,8 @@ C++](https://github.com/google/googletest).
 ## Prerequisites
 
 We require, for tests, that you use zmac from http://48k.ca/zmac.html This code
-uses many features of that assembler, we require `--zmac` at least for your
-test code. You can build your final program with anything you wish.
+uses many features of that assembler. We also require you to set the `--zmac`
+flag when assembling your tests.
 
 We strongly recommend you use trs80gp from http://48k.ca/trs80gp.html but you
 don't have to. This library is intended to be useful with real hardware as well
@@ -33,18 +33,18 @@ How do you test? Let's consider the following program structure:
 * `module1.asm`
 * `module2.asm`
 * `module3.asm`
-* `prog.asm`  // imports `module1.asm`, `module2.asm`, `modul3.asm`
+* `prog.asm` imports `module1.asm`, `module2.asm`, `modul3.asm`
 
 You may prefer other extensions, e.g., `.z`, `.inc`, which is no problem.  You
 can unit test each module by writing a test for it.
 
 * `module1.asm`
-* `module1_test.asm`  // imports `module1.asm`, `z80unit.asm`
+* `module1_test.asm` imports `module1.asm`, `z80unit.asm`
 * `module2.asm`
-* `module2_test.asm`  // imports `module2.asm`, `z80unit.asm`
+* `module2_test.asm` imports `module2.asm`, `z80unit.asm`
 * `module3.asm`
-* `module3_test.asm`  // imports `module3.asm`, `z80unit.asm`
-* `prog.asm`  // imports `module1.asm`, `module2.asm`, `modul3.asm`
+* `module3_test.asm` imports `module3.asm`, `z80unit.asm`
+* `prog.asm` imports `module1.asm`, `module2.asm`, `modul3.asm`
 
 Ideally, you want to keep `prog.asm` as small as possible because it cannot be
 unit tested.

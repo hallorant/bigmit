@@ -15,178 +15,73 @@ INCLUDE_Z80UNIT equ 1
 ;
 ; INTRODUCTION
 ;
-; As your TRS-80 programs get larger it becomes difficult to change
-; them without great risk. Unit testing can not only help you get your
-; code to be correct (debuggers help too!) but can help you keep it
-; correct as it evolves. I wrote this to help develop larger TRS-80
-; assembly language programs.
+; As your TRS-80 programs get larger it becomes difficult to change them
+; without risk. Unit testing can not only help you get your code to be correct
+; but can help you keep it correct as it evolves. We wrote this unit testing
+; framework to help develop larger TRS-80 assembly language programs. It is
+; designed to have the feel of JUnit for Java for Java or Google Test for C++.
 ;
 ; PREREQUISITES
 ;
 ; We require, for tests, that you use zmac from http://48k.ca/zmac.html
-; This code uses many features of that assembler, we require "--zmac" at
-; least for your test code. You can build your program with anything
-; you wish.
+; This code uses many features of that assembler. We also require you to
+; set the --zmac flag when assembling your tests.
 ;
-; We recommend you use trs80gp from http://48k.ca/trs80gp.html but
-; you don't have to. This library is intended to be useful with real
+; We strongly recommend you use trs80gp from http://48k.ca/trs80gp.html
+; but you don't have to. This library is intended to be useful with real
 ; hardware as well as emulators.
-;
-; We also assume you develop your program in components. This is critical
-; if you write a single file, myprog.asm, unit testing won't help you. We
-; assume you write several components that then get imported into the
-; your program. z80unit helps you test these component or modules. If you
-; have
-;   module1.asm
-;   module2.asm
-;   module3.asm
-;   prog.asm  // imports module1.asm, module2.asm, modul3.asm
-;
-; You can unit test each module writing
-;   module1.asm
-;   module1_test.asm  // imports module1.asm, z80unit.asm
-;   module2.asm
-;   module2_test.asm  // imports module2.asm, z80unit.asm
-;   module3.asm
-;   module3_test.asm  // imports module3.asm, z80unit.asm
-;   prog.asm  // imports module1.asm, module2.asm, modul3.asm
-;
-; Ideally, you want to keep prog.asm as small as possible.
-;
-; This library is self-contained it is all you need.
-; Let's get going!
-;
-; QUICK START
-;
-; The below shows a simple test
-;
-;  ------------------------------------
-;    org $7000
-;  import 'z80unit.asm'
-;
-;  s1      defb    'a test'
-;  s2      defb    'a test'
-;
-;  main:
-;    z80unit_test 'reg adds'
-;    ld a,5
-;    add 5
-;    assertEquals8 10,a
-;    ld hl,900
-;    inc hl
-;    assertEquals16 hl,901
-;
-;    z80unit_test 'memory blocks'
-;    assertMemString s1,'a test'
-;    assertMemString s1+2,'test'
-;    assertMemEquals8 s1,s2,3,'3 chars only'
-;    assertMemEquals8 s1,s2,6
-;
-;    z80unit_end_and_exit
-;    end main
-;  ------------------------------------
-;
-; To compile use:         zmac --zmac quick_start_test.asm
-;                         (assumes z80unit.asm is in the same directory)
-; To run in the emulator: trs80gp zout/quick_start_test.500.cas
-; You can also load onto a real Model 1, Model 3, or Model 4.
-; You should see the below on the screen:
-;
-; | z80unit : Programmer-friendly unit testing for TRS-80 assembly
-; |  reg adds (PP)
-; |  memory blocks (PPPP)
-; | ALL TESTS PASSED (6 passed, 0 failed)
-; |               (Press <ENTER> when ready to reboot)
-;
-; Use "z80unit_test" to start a test. Each test contains your code and one
-; or more asserts. Assertions are described below. Finally, end your test with
-; "z80unit_end_and_exit" to print a report and exit.
-;
-; A test failure prompts you and displays dianostic information. To try this
-; change the first assertion from "assertEquals8 10,a" to "assertEquals8 $45,a".
-; This causes the assertion to fail and you will see on the screen:
-;
-; | z80unit : Programmer-friendly unit testing for TRS-80 assembly
-; |  reg adds (
-; | F assertEquals8 $10,a : expected 0x45=69='E' but was 0x0A=10 
-; |    Press <ENTER> when ready to continue...
-;
-; This allows you to see information about the assertion failure and then continue
-; the test. Note z80unit shows hex, decimal, and ASCII (if printable).
-;
-; You may optionally add a diagnostic message to the assertion. An example was the
-; '3 chars only' as shown below.
-;
-;    assertMemEquals8 s1,s2,3,'3 chars only'
-;
-; To see this fail change "s2 defb 'a test'" to "s2 defb 'A test'" and run again.
-;
-; |  memory blocks (PP
-; | F assertMemEquals8 s1,s2,3 :at +0 0x61=97='a' was not 0x41=65='
-; | A' : 3 chars only
-; |    Press <ENTER> when ready to continue...
-;
-; As you can see the diagnostic message is included in the output. Note if you do
-; this on a Model 1 with no lowercase mod the ASCII 'A' will show up for both but
-; the hex and decmimal values make it clear why the asserion failed.
-;
-; To run on a Model II or the other machines using a DOS you need to tell z80unit
-; which DOS you are using. A description of what is supported is below. However,
-; To run under LDOS 6 we would change the test to
-;
-;  ------------------------------------
-;    org $7000
-;  z80unit_LDOS6 equ 1
-;  import 'z80unit.asm'
-;    <same as above...>
-;  ------------------------------------
-;
-; To compile use:         zmac --zmac quick_start_test.asm
-; To run in the emulator: trs80gp -m2 -ld zout/quick_start_test.cmd
 ;
 ; ASSERTIONS
 ;
-; 8-bit assertions, where e, an expected value, and a, an actual
-; value, are any <exp> valid in "ld a,<exp>". All magnitude comparisons
-; are unsigned. (a=actual, e=expected)
+; 8-bit assertions, where 'e', an expected value, and 'a', an actual value,
+; are any <exp> valid in 'ld a,<exp>'. All magnitude comparisons are unsigned.
+; Optionally, a diagnostic message may be added to any of the below, e.g.,
+; "assertZero8 0,'my msg'".
+;
 ;   assertZero8 a                     ; a == 0
 ;   assertEquals8 e,a                 ; e == a
 ;   assertNotEquals8 e,a              ; e != a
 ;   assertGreaterThan8 e,a            ; e >  a (unsigned)
 ;   assertGreaterThanOrEquals8 e,a    ; e >= a (unsigned)
-;   assertLessThan8 e,a;              ; e <  a (unsigned)
+;   assertLessThan8 e,a               ; e <  a (unsigned)
 ;   assertLessThanOrEquals8 e,a       ; e <= a (unsigned)
 ;
-; 16-bit assertions, where e, an expected value, and a, an actual
-; value, are either a 16-bit register or any <exp> valid in "ld hl,<exp>".
-; (a=actual, e=expected)
+; 16-bit assertions, where 'e', an expected value, and 'a', an actual value,
+; are either a 16-bit register or any <exp> valid in 'ld hl,<exp>'. All
+; magnitude comparisons are unsigned.  Optionally, a diagnostic message may
+; be added to any of the below, e.g., "assertZero8 0,'my msg'".
+;
 ;   assertZero16 a                    ; a == 0
 ;   assertEquals16 e,a                ; e == a
 ;   assertNotEquals16 e,a             ; e != a
-; A notable limitation of the 16-bit assertions is that any indirect
-; register value, such as (hl) or (ix), is not supported. Of course,
-; you can use hl or ix -- but not as pointers to memory.
+;
+; A notable limitation of the 16-bit assertions is that an indirect register
+; value, such as (hl) or (ix), is not supported because the z80 only supports
+; this for 8-bit loads and stores. Of course, you can use hl or ix, but not
+; as pointers to memory to load a 16-bit value.
 ;
 ; Memory block assertions check memory against an expected vector of bytes.
-; pointer values are either a 16-bit register or any <exp> valid in
-; "ld hl,<exp>". The 8/16 varients refer to the count of bytes to check.
+; Pointer values are either a 16-bit register or any <exp> valid in
+; 'ld hl,<exp>'. The 8 and 16 in assertMemEquals8 and assertMemEquals16 refer
+; to the count, 'cnt', of bytes to check.
+;
 ;   assertMemString ptr,string  ; memory at 'ptr' contains 'string'
 ;   assertMemEquals8 p1,p2,cnt  ; 'p1' and 'p2' equal for 'cnt':8-bits bytes.
 ;   assertMemEquals16 p1,p2,cnt ; 'p1' and 'p2' equal for 'cnt':16-bits bytes.
 ;
-; MACHINES AND DOS ENVIRONMENTS
+; DOS SUPPORT
 ;
-; z80unit allows testing in DOS enviroments. If you are developing a program
-; that uses features of a DOS then we want the test to run in that DOS. To do
-; this add a line at the top of your test, prior to the import of
-; z80unit.asm, defining one and only one of the below values.
+; z80unit allows testing in many TRS-80 DOS environments. If you are developing
+; a program for a DOS then its tests should run in that DOS. To do this add a
+; line at the top of your test, prior to the import of z80unit.asm, defining
+; one and only one of the OS values listed in the table below. For example
 ;
 ;    org $7000
 ;  z80unit_LDOS5 equ 1
 ;  import 'z80unit.asm'
 ;  ...
 ;
-; Cassette (default - don't define anything)
+; The Cassette (default - don't define anything!)
 ;   This works on Model 1, Model 3, and Model 4 and does not require a DOS.
 ;   You'll have to reboot when the test completes.
 ;   Emulator: trs80gp -m1 mytest.500.cas
