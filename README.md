@@ -6,7 +6,7 @@ Halloran's code site.
 Why *bigmit*? A homage to [Big Five Software](http://www.trs-80.org/big-five/).
 I thought *Big Tim Software*, but that seemed ackward and I get a lot of
 programming help from the TRS-80 community, so I reversed the letters of *tim*
-to *mit*.
+to *mit*. That and the project name *bigmit* was available here on github.
 
 ## Interesting stuff
 
