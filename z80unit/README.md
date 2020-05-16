@@ -55,8 +55,7 @@ However, once you get to *hundreds* or *thousands* of line you probably need to
 split up your code into modules and use unit testing. Unit tests help you keep
 modules working as you evolve and enlarge your program. Lowering the risk that
 a cool change you thought up late in development doesn't introduce a bug that
-will take hours to track down and fix when it emerges in use testing of your
-program.
+will take hours to track down and fix when it emerges.
 
 What do you need to write tests? Just the `z80unit.asm` file. It is
 self-contained and is all you need. Well, also you have to write the test code.
@@ -92,7 +91,11 @@ main:
   end main
 ```
 
-You don't have to type this in it is in [quick_start_test.asm](https://github.com/hallorant/bigmit/blob/master/z80unit/examples/quick_start_test.asm). To compile this test use:
+You don't have to type this in it is in
+[quick_start_test.asm](https://github.com/hallorant/bigmit/blob/master/z80unit/examples/quick_start_test.asm).
+In the
+[examples](https://github.com/hallorant/bigmit/tree/master/z80unit/examples)
+subdirectory. To compile this test use:
 
 ```zmac --zmac quick_start_test.asm```
 
@@ -100,51 +103,131 @@ To run in the emulator use
 
 ```trs80gp zout/quick_start_test.500.cas```
 
-You can also load onto a real Model 1, Model 3, or Model 4 via the cassette
-interface. By default z80unit doesn't build in DOS support. We'll discuss how
-to test DOS code and any code on a Big Tandy below.
+You can also load the test onto a real Model 1, Model 3, or Model 4 via the
+cassette interface. By default z80unit doesn't build in DOS support. We'll
+discuss how to test DOS code and code on a Big Tandy below.
 
-You should see the below on the screen:
+You should see the below on the screen
 
 ![Running our first z80unit test](..//images/z80unit_qs1.png?raw=true "Running our first z80unit test")
 
-Use "z80unit_test" to start a test. Each test contains your code and one or
-more asserts. Assertions are described below. Finally, end your test with
-"z80unit_end_and_exit" to print a report and exit.
+The output reports on your two tests `reg ads` and `memory blocks` and outputs
+a `P` for each assertion in the test that passed. If you look back at the code
+there were two assertions in `reg ads` and four in `memory blocks` which is
+consistent with the output. At the bottom it reports `ALL TESTS PASSED` with
+counts of the assertions that passed and failed.  Because we didn't support a
+DOS we have to reboot the computer when we are done looking at the test output.
 
-A test failure prompts you and displays dianostic information. To try this
-change the first assertion from "assertEquals8 10,a" to "assertEquals8 $45,a".
-This causes the assertion to fail and you will see on the screen:
+Let's examine the test code in more depth.
 
-;
-; | z80unit : Programmer-friendly unit testing for TRS-80 assembly
-; |  reg adds (
-; | F assertEquals8 $10,a : expected 0x45=69='E' but was 0x0A=10 
-; |    Press <ENTER> when ready to continue...
-;
-; This allows you to see information about the assertion failure and then continue
-; the test. Note z80unit shows hex, decimal, and ASCII (if printable).
-;
-; You may optionally add a diagnostic message to the assertion. An example was the
-; '3 chars only' as shown below.
-;
-;    assertMemEquals8 s1,s2,3,'3 chars only'
-;
-; To see this fail change "s2 defb 'a test'" to "s2 defb 'A test'" and run again.
-;
-; |  memory blocks (PP
-; | F assertMemEquals8 s1,s2,3 :at +0 0x61=97='a' was not 0x41=65='
-; | A' : 3 chars only
-; |    Press <ENTER> when ready to continue...
-;
-; As you can see the diagnostic message is included in the output. Note if you do
-; this on a Model 1 with no lowercase mod the ASCII 'A' will show up for both but
-; the hex and decmimal values make it clear why the asserion failed.
-;
-; To run on a Model II or the other machines using a DOS you need to tell z80unit
-; which DOS you are using. A description of what is supported is below. However,
-; To run under LDOS 6 we would change the test to
-;
+```
+  org $7000
+import 'z80unit.asm'
+
+s1      defb    'a test'
+s2      defb    'a test'
+
+main:
+  z80unit_test 'reg adds'
+  ld a,5
+  add 5
+  assertEquals8 10,a
+  ld hl,900
+  inc hl
+  assertEquals16 hl,901
+
+  z80unit_test 'memory blocks'
+  assertMemString s1,'a test'
+  assertMemString s1+2,'test'
+  assertMemEquals8 s1,s2,3,'3 chars only'
+  assertMemEquals8 s1,s2,6
+
+  z80unit_end_and_exit
+  end main
+```
+
+First off this test is *really* odd. Why? Normally there would be two `imports`
+one for your module and the second for `z80unit.asm`. We just have the import
+of `z80unit.asm` in this test. For this simple example our goal is to
+understand z80unit better so we avoid the complexity of the module.
+
+At the top of `main:` we use `z80unit_test` to start and name a test. Each test
+contains your code and one or more asserts. You may have as many as you wish.
+Finally, at the bottom you end your test with `z80unit_end_and_exit` to print a
+report and exit.
+
+This example is okay, however, where z80unit shines is when assertions *fail*
+and how it reports diagnostic information to help you track down the problem.
+Realize that code in the module under test could be broken or the test could be
+broken.  You will encounter both problems.
+
+Let's make
+[quick_start_test.asm](https://github.com/hallorant/bigmit/blob/master/z80unit/examples/quick_start_test.asm)
+fail. Change the first assertion from `assertEquals8 10,a` to
+
+```assertEquals8 $45,a```
+
+Reassemble and run the test as we did before to see
+
+![Our first assertion failure](..//images/z80unit_qs2.png?raw=true "Our first assertion failure")
+
+The test stops when an assertion fails, shows diagnostic information, then prompts you
+to press *ENTER* to continue the test.
+
+What does the diagnostic message tell you? We explain each part below.
+
+![The assertion failure diagnostic message explained](..//images/z80unit_qs3.png?raw=true "The assertion failure diagnostic message explained")
+
+In order left to right:
+
+* Instead of the `P` we get an `F` to indicate an assertion failure.
+
+* The code you typed for the assertion. This can help you locate the failing
+  assertion within your test code. (The line number would be better, but zmac
+  doesn't support that right now.) In most assertions the expected value comes
+  first (e.g., `45` hex) followed by the actual value (e.g., the `a` register).
+
+* The `8` in `assertEquals8` refers to the bit size of the data compared.
+  z80unit also has `assertEquals16` (and similar) for 16-bit assertions.
+
+* Past the `:` we see what the test observed at the time of the assertion. In
+  this example both the expected and actual value are printed. Hex, decimal,
+  and ASCII is printed for both. The ASCII value is omitted if it is not printable.
+  We see this occur in our example: `0x0A=10` doesn't show an ASCII value because
+  10 is not printable.
+
+* Below the diagnostic message we see `Press <ENTER> when ready to continue...`
+  This prompt stops the test and lets you read the diagnostic message. It would
+  be sad to have a great diagnostic message scroll off the TRS-80 screen before
+  you can read it.
+
+At this point press *ENTER* and you will see
+
+![At the end of running the test](..//images/z80unit_qs4.png?raw=true "At the end of running the test")
+
+Note that the library removes the `Press <ENTER> when ready to continue...`
+from the output so the TRS-80 screen isn't cluttered up with these messages.
+
+You may optionally add to the diagnostic message to any assertion. An example
+of this is the `'3 chars only'` in the line
+
+```assertMemEquals8 s1,s2,3,'3 chars only'```
+
+To see this assertion fail change `s2 defb 'a test'` (up top) to
+
+```s2 defb 'A test'"```
+
+Reassemble and run the test as we did before to see
+
+![Adding to the diagnostic message](..//images/z80unit_qs5.png?raw=true "Adding to the diagnostic message")
+
+The output above assumes you pressed *ENTER* on the first assertion failure we
+discussed above. As you can see our diagnostic message is included in the output.
+
+To run on a Model II or the other machines using a DOS you need to tell z80unit
+which DOS you are using. A description of what is supported is below. However,
+To run under LDOS 6 we would change the test to
+
 ;  ------------------------------------
 ;    org $7000
 ;  z80unit_LDOS6 equ 1
