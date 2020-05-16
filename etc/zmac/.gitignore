@@ -1,0 +1,5 @@
+zmac
+zmac.c
+*.exe
+*.o
+*.inl
