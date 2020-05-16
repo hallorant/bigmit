@@ -14,3 +14,7 @@ github.
 * [z80unit](./z80unit) &ndash; A programmer-friendly unit testing library for
   TRS-80 assembly. Supports all z80 TRS-80s and most DOSs.
 
+* [Tandy Assembly 2019 VBLANK Modification Exhibit](./ta19demo) &ndash; This
+  directory contains the z80 assembly code for my Tandy Assembly 2019
+  Raycaster.  I exhibited at Tandy Assembly 2019 with George Phillips the
+  Model I no-chip VBLANK Modification. Includes a few pictures of the conference.

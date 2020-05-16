@@ -1,5 +1,9 @@
 # Tandy Assembly 2019 VBLANK Modification Exhibit with George Phillips
 
+This directory contains all the z80 assembly code from my Tandy Assembly 2019
+VBLANK Modification Exhibit Raycaster demo. As well as some pictures of
+conference.
+
 I exhibited at [Tandy Assembly 2019](http://www.tandyassembly.com/2019/) with
 George Phillips the *Model I no-chip VBLANK Modification*.  This was a
 demonstration of a no-chip hardware modification to the TRS-80 Model 1 which
