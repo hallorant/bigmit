@@ -281,7 +281,7 @@ _press_enter macro ?key_pressed,?debounce,?key_released
   jr z,?key_pressed
   ; Debounce delay by William Barden, Jr.
   ; 'More TRS-80 Assembly-Language Programming', 1982 pg 141.
-  ld hl,8448
+  ld hl,8448 ; 100 ms delay
   ld bc,-1
 ?debounce:
   add hl,bc
