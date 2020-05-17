@@ -1,9 +1,9 @@
-  org $4000
+  org $4200
 
 import '../lib/barden_fill.asm'
 import '../lib/gp_14byte_move.asm'
 
-stack_space	defs	400
+stack_space	defs	100
 stack		equ	$-1
 
 screen		equ	$3c00
@@ -11,23 +11,25 @@ row		equ	64
 
 ; Position the raycasting window on the screen.
 window		equ	screen+64+3
-window_width	equ	27
-window_height	equ	9
+window_width	equ	27 ; WARNING some hardcoding to this value
+window_height	equ	9  ; WARNING some hardcoding to this value
+
+; This back buffer represnts a 27x9 square on the TRS-80 screen.
 bb_width	equ	window_width
 bb_height	equ	window_height
-gb_width	equ	bb_width
-gb_height	equ	bb_height*3
-
-; This back buffer represnts a square on the TRS-80 screen.
-; then this buffer is transferred onto the TRS-80 screen.
 bb		defs	bb_width*bb_height
 bb_size		equ	$-bb
 
-; This graphics buffer (gb) layout differs from the back buffer (bb) and screen layout.
-; It defines "pixels", one per byte, which are 2x1 TRS-80 graphics blocks. This gives us
-; a 1:1 aspect ratio (or very close to it). We use $ff to set and $00 to unset a "pixel".
-; Each row of in the gb represents a column in the bb. Defining bytes, left to right, that
-; fill in 2x1 screen pixels (three per screen row) from top to bottom of the bb.
+; This graphics buffer (gb) layout differs from the back buffer (bb) and
+; screen layout.
+; It defines "pixels", one per byte, which are 2x1 TRS-80 graphics blocks.
+; This gives us a 1:1 aspect ratio (or very close to it). We use $ff to
+; set and $00 to unset a "pixel" (allowing branch-free code in drawing).
+; Each row of in the gb represents a column in the bb. Defining bytes, left
+; to right, that fill in 2x1 screen pixels (three per screen row) from top
+; to bottom of the bb.
+gb_width	equ	bb_width
+gb_height	equ	bb_height*3
 gb		defs	gb_width*gb_height
 gb_size		equ	$-gb
 
@@ -65,7 +67,6 @@ img32  		defb	$00,$00,$00,$00,$00,$00,$00,$00,$00,$00, $00,$00,$00,$00,$00,$00,$
    		defb	$00,$00,$00,$00,$00,$00,$00,$00,$00,$00, $00,$00,$00,$00,$00,$00,$00,$00,$00,$00, $00,$00,$00,$00,$00,$00,$00
    		defb	$00,$00,$00,$00,$00,$00,$00,$00,$00,$00, $00,$00,$00,$00,$00,$00,$00,$00,$00,$00, $00,$00,$00,$00,$00,$00,$00
    		defb	$00,$00,$00,$00,$00,$00,$00,$00,$00,$00, $00,$00,$00,$00,$00,$00,$00,$00,$00,$00, $00,$00,$00,$00,$00,$00,$00
-
 
 img_col		defb	0
 
@@ -188,15 +189,15 @@ draw_bb_to_screen macro
   ld sp,(save_sp)
   endm
 
-tick	defb	0
-save_sp	defw	0
+tick		defb	0 ; Counts ticks of the timer (30 times per second)
+save_sp		defw	0
 
 ifdef model1 ; Model 1 - poll VBLANK (if mod) or just inc tick.
 
 m1_vblank	defb	1 ; Has VBLANK mod? 1 = yes, 0 = no.
 
 setup_ticks macro
-  ; TODO CHECK FOR VBLANK AND SET m1_vblank
+  ; TODO Check if maching has the VBLANK mod
   nop
   endm
 
@@ -223,8 +224,8 @@ _wait_not_in_vblank:
   bit 0,a
   jr z, _wait_not_in_vblank
   ; VBLANK is beginning when we fall through to here.
-_wait_is_over
-  ld a,(tick)
+_wait_is_over:
+  nop
   endm
 
 else ; Model 3 or 4 - Use timer interrupt for ticks
@@ -249,7 +250,6 @@ setup_ticks macro
   ei
   endm
 
-; Exit: a set to (tick)
 wait_for_next_tick macro,?wait_loop
   ld a,(tick)
   ld b,a
@@ -257,6 +257,17 @@ wait_for_next_tick macro,?wait_loop
   ld a,(tick)
   xor b ; is a == b?
   jr z,?wait_loop
+  endm
+
+; ticks_to_wait immediate 8bit value.
+wait_ticks macro,ticks_to_wait,?wait_loop
+  ld a,(tick)
+  add ticks_to_wait ; future time
+  ld b,a
+?wait_loop:
+  ld a,(tick)
+  xor b ; is a == b?
+  jr nz,?wait_loop
   endm
 
 endif
