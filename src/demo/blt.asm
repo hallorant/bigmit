@@ -194,10 +194,27 @@ save_sp		defw	0
 
 ifdef model1 ; Model 1 - poll VBLANK (if mod) or just inc tick.
 
-m1_vblank	defb	1 ; Has VBLANK mod? 1 = yes, 0 = no.
+m1_vblank	defb	0 ; Model 1 has VBLANK mod? 1 = yes, 0 = no.
 
-setup_ticks macro
-  ; TODO Check if maching has the VBLANK mod
+setup_ticks macro ?vblank_changing_search,?vblank_found,?done
+  ; Runtime check if this Model 1 has the VBLANK mod.
+  ld hl,1350
+  ld bc,-1
+?vblank_changing_search:
+  in a,($ff)         ; 11
+  ; A normal Model 1 will never have a 0 in bit 0 of in $ff.
+  ; If we see a 0 this is the VBLANK mod in action. We want to observe
+  ; for at least 1/60th of a second. On a Model 1 this is 29566 t-states.
+  ; The loop below is 44 t-states * 1354 loops = 59400 (~1/30th of a second).
+  bit 0,a            ; 8
+  jr z,?vblank_found ; 7
+  add hl,bc          ; 11
+  jr c,?vblank_changing_search ; 7
+  jr ?done           ; no VBLANK mod detected
+?vblank_found:
+  ld a,1
+  ld (m1_vblank),a
+?done:
   nop
   endm
 
@@ -317,6 +334,7 @@ _vl_loop:
   add iy,de
   djnz _vl_loop
   
+break:
   setup_ticks
   
   ; ---------------------
