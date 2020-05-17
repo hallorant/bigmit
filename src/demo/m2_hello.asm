@@ -1,5 +1,5 @@
 ; Toy Model 2 program that writes "Hello TRS-80 Model II" at the center
-; of the screen via operating system calls.
+; of the screen via TRSDOS operating system calls.
   org $3000
 text	defb	'Hello TRS-80 Model II'	
 main:

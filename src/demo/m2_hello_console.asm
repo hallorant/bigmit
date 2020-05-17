@@ -1,5 +1,5 @@
 ; Toy Model 2 program that writes "Hello TRS-80 Model II" to the console
-; via operating system calls.
+; via TRSDOS operating system calls.
   org $7000
 text	defb	'Hello TRS-80 Model II'	
 textln	equ	$-text
