@@ -323,8 +323,7 @@ A notable limitation of the 16-bit assertions is that an indirect register
 value, such as `(hl)` or `(ix)`, is not supported because the z80 only supports
 this for 8-bit loads and stores. Of course, you can use `hl` or `ix`, but not
 as pointers to memory to load a 16-bit value. We have left the magnitude
-comparisons as future work so please let us know if that limitation is limiting
-for your testing.
+comparisons as future work.
 
 ## Memory block assertions
 
@@ -391,6 +390,9 @@ ones.
 
 * No line numbers for assertion failures. We have to enhance zmac to get
   this feature.
+
+* We have left the 16-bit magnitude comparisons as future work. Please let us
+  know if that limiting your testing.
 
 * Tests have to use `zmac --zmac ...` because we use a lot of advanced features
   George Phillips added to zmac. Please realize you do not have to do this for
