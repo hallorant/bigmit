@@ -1,5 +1,5 @@
-; Model 1 VBLANK MOD demonstration/test program.
-; Dynamically detects the MOD and, if found, animates a line.
+; Model 1 VBLANK mod demonstration/test program.
+; Dynamically detects the mod and, if found, animates a line.
   org $4200
 screen         equ  $3c00
 blank_line     dc   64,$80
@@ -11,7 +11,7 @@ no_vblank_len  equ  $-no_vblank_txt
 vblank_txt     defb 'MODEL I VBLANK MOD DETECTED'
 vblank_len     equ  $-vblank_txt
 
-; Runtime check if this Model 1 has the VBLANK MOD installed.
+; Runtime check if this Model 1 has the VBLANK mod installed.
 ;
 ; On Exit: a -  VBLANK mod detected? 1=yes, 0=no
 detect_m1_vblank:
@@ -77,7 +77,7 @@ main:
   or a ; is a == 0?
   jr nz,vblank_found
 
-  ; No VBLANK MOD detected, display a message and stop.
+  ; No VBLANK mod detected, display a message and stop.
   ld hl,no_vblank_txt
   ld de,screen+64*11
   ld bc,no_vblank_len
