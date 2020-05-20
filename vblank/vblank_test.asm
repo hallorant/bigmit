@@ -4,8 +4,8 @@
 screen         equ  $3c00
 blank_line     dc   64,$80
 top_line       dc   64,$83
-mid_line       dc   64,$8c
-bot_line       dc   64,$b0
+middle_line    dc   64,$8c
+bottom_line    dc   64,$b0
 no_vblank_txt  defb 'MODEL I VBLANK MOD *NOT* DETECTED'
 no_vblank_len  equ  $-no_vblank_txt
 vblank_txt     defb 'MODEL I VBLANK MOD DETECTED'
@@ -55,17 +55,17 @@ ldir_row macro line,row
 animate_row_down macro row
   ldir_row top_line,row
   wait_for_vblank_start
-  ldir_row mid_line,row
+  ldir_row middle_line,row
   wait_for_vblank_start
-  ldir_row bot_line,row
+  ldir_row bottom_line,row
   wait_for_vblank_start
   ldir_row blank_line,row
   endm
 
 animate_row_up macro row
-  ldir_row bot_line,row
+  ldir_row bottom_line,row
   wait_for_vblank_start
-  ldir_row mid_line,row
+  ldir_row middle_line,row
   wait_for_vblank_start
   ldir_row top_line,row
   wait_for_vblank_start
