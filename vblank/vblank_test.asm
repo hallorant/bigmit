@@ -1,6 +1,6 @@
 ; Model 1 VBLANK mod demonstration/test program.
 ; Dynamically detects the mod and, if found, animates a line.
-  org $4200
+  org $4a00
 screen         equ  $3c00
 blank_line     dc   64,$80
 top_line       dc   64,$83
