@@ -1,11 +1,12 @@
 ; Model 1 VBLANK mod demonstration/test program.
-; Dynamically detects the mod and, if found, animates a line.
+; Dynamically detects the mod and animates a line with or without it.
   org $4a00
 screen         equ  $3c00
 blank_line     dc   64,$80
 top_line       dc   64,$83
 middle_line    dc   64,$8c
 bottom_line    dc   64,$b0
+has_vblank     defs 1 ; has VBLANK mod? 1 = yes, 0 = no.
 no_vblank_txt  defb 'MODEL I VBLANK MOD *NOT* DETECTED'
 no_vblank_len  equ  $-no_vblank_txt
 vblank_txt     defb 'MODEL I VBLANK MOD DETECTED'
@@ -13,7 +14,7 @@ vblank_len     equ  $-vblank_txt
 
 ; Runtime check if this Model 1 has the VBLANK mod installed.
 ;
-; On Exit: a -  VBLANK mod detected? 1=yes, 0=no
+; On Exit: a - Is the VBLANK mod detected? 1=yes, 0=no
 detect_m1_vblank:
   ld hl,1350
   ld bc,-1
@@ -45,6 +46,25 @@ wait_for_vblank_start macro ?wait_in_vblank,?wait_not_in_vblank
   jr z,?wait_not_in_vblank
   endm
 
+; Waits a bit to draw the next animation frame.
+;
+; If the VBLANK mod is installed we wait for the next VBLANK,
+; otherwise a loop delay is used.
+wait_a_bit macro ?no_vblank_mod,?delay,?done
+  ld a,(has_vblank)
+  or a ; is a == 0?
+  jr z,?no_vblank_mod
+  wait_for_vblank_start
+  jr ?done
+?no_vblank_mod
+  ld hl,1200
+  ld bc,-1
+?delay
+  add hl,bc
+  jr c,?delay
+?done
+  endm
+
 ldir_row macro line,row
   ld hl,line
   ld de,screen+64*row
@@ -54,50 +74,51 @@ ldir_row macro line,row
 
 animate_row_down macro row
   ldir_row top_line,row
-  wait_for_vblank_start
+  wait_a_bit
   ldir_row middle_line,row
-  wait_for_vblank_start
+  wait_a_bit
   ldir_row bottom_line,row
-  wait_for_vblank_start
+  wait_a_bit
   ldir_row blank_line,row
   endm
 
 animate_row_up macro row
   ldir_row bottom_line,row
-  wait_for_vblank_start
+  wait_a_bit
   ldir_row middle_line,row
-  wait_for_vblank_start
+  wait_a_bit
   ldir_row top_line,row
-  wait_for_vblank_start
+  wait_a_bit
   ldir_row blank_line,row
   endm
 
 main:
   call detect_m1_vblank
+  ld (has_vblank),a
   or a ; is a == 0?
-  jr nz,vblank_found
+  jr nz,vblank_detected
 
-  ; No VBLANK mod detected, display a message and stop.
+vblank_not_detected:
   ld hl,no_vblank_txt
   ld de,screen+64*11
   ld bc,no_vblank_len
   ldir
-stop:
-  jr stop
+  jr start_animation
 
-vblank_found:
+vblank_detected:
   ld hl,vblank_txt
   ld de,screen+64*11
   ld bc,vblank_len
   ldir
 
-  wait_for_vblank_start ;
-smooth_animation:
+start_animation:
+  wait_a_bit
+animation_loop:
   irpc row,0123456789
   animate_row_down &row
   endm
   irpc row,9876543210
   animate_row_up &row
   endm
-  jp smooth_animation
+  jp animation_loop
   end main
