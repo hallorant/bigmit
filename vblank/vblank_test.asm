@@ -1,6 +1,7 @@
 ; Model 1 VBLANK mod demonstration/test program.
 ; Dynamically detects the mod and animates a line with or without it.
-  org $4a00
+  org $5200 ; change to org $4200 for 4K cassette system.
+
 screen         equ  $3c00
 blank_line     dc   64,$80
 top_line       dc   64,$83

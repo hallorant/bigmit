@@ -1,4 +1,4 @@
-  org $4200
+  org $4a00
 
 import '../lib/barden_fill.asm'
 import '../lib/gp_14byte_move.asm'
@@ -215,7 +215,6 @@ setup_ticks macro ?vblank_changing_search,?vblank_found,?done
   ld a,1
   ld (m1_vblank),a
 ?done:
-  nop
   endm
 
 wait_for_next_tick macro
@@ -242,7 +241,6 @@ _wait_not_in_vblank:
   jr z, _wait_not_in_vblank
   ; VBLANK is beginning when we fall through to here.
 _wait_is_over:
-  nop
   endm
 
 else ; Model 3 or 4 - Use timer interrupt for ticks
