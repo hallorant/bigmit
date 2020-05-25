@@ -28,7 +28,7 @@ cast_next_dist_y	defw	0
 ;
 ; Entry: cast_dir        The angle to use for this call.
 ;        player_x/y      The position of the player in the world.
-;	 cast_camera_dir Angle used make fisheye correction.
+;	 camera_dist_cor Distance to make fisheye correction.
 ; Exit:  wall_hh         The half-height of the wall to draw
 ;        wall_is_solid   1 if the wall should be drawn solid, 0 for outline. 
 cast:		; Set step x and step y to the correct values by 'cast_dir'.
@@ -162,7 +162,7 @@ camera_fix:	; Correct distance for camera plane.
 		ld d,h
 		ld e,l
 		pop hl
-		or a		; Clear carry
+		or a ; clear carry
 		sbc hl,de
 
 		; Using the distance to the wall, determine half-height of
