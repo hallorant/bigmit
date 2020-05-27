@@ -1,7 +1,9 @@
-  org $4a00
+  org $5200
 
 import '../lib/barden_fill.asm'
 import '../lib/gp_14byte_move.asm'
+import '../lib/gp_get_trs80_model.asm'
+import '../lib/m1_vblank.asm'
 
 stack_space	defs	100
 stack		equ	$-1
@@ -34,39 +36,37 @@ gb		defs	gb_width*gb_height
 gb_size		equ	$-gb
 
 img32  		defb	$00,$00,$00,$00,$00,$00,$00,$00,$00,$00, $00,$00,$00,$00,$00,$00,$00,$00,$00,$00, $00,$00,$00,$00,$00,$00,$00
-   		defb	$00,$00,$00,$00,$00,$00,$00,$00,$00,$00, $00,$00,$00,$00,$00,$00,$00,$00,$00,$00, $00,$00,$00,$00,$00,$00,$00
+		defb	$ff,$00,$00,$00,$ff,$00,$00,$00,$ff,$00, $00,$00,$ff,$00,$00,$00,$ff,$00,$00,$00, $ff,$00,$00,$00,$ff,$00,$00
+		defb	$00,$ff,$00,$ff,$00,$ff,$00,$ff,$00,$ff, $00,$ff,$00,$ff,$00,$ff,$00,$ff,$00,$ff, $00,$ff,$00,$ff,$00,$ff,$00
+		defb	$00,$00,$ff,$00,$00,$00,$ff,$00,$00,$00, $ff,$00,$00,$00,$ff,$00,$00,$00,$ff,$00, $00,$00,$ff,$00,$00,$00,$ff
+		defb	$00,$ff,$00,$ff,$00,$ff,$00,$ff,$00,$ff, $00,$ff,$00,$ff,$00,$ff,$00,$ff,$00,$ff, $00,$ff,$00,$ff,$00,$ff,$00
+		defb	$ff,$00,$00,$00,$ff,$00,$00,$00,$ff,$00, $00,$00,$ff,$00,$00,$00,$ff,$00,$00,$00, $ff,$00,$00,$00,$ff,$00,$00
+		defb	$00,$ff,$00,$ff,$00,$ff,$00,$ff,$00,$ff, $00,$ff,$00,$ff,$00,$ff,$00,$ff,$00,$ff, $00,$ff,$00,$ff,$00,$ff,$00
+		defb	$00,$00,$ff,$00,$00,$00,$ff,$00,$00,$00, $ff,$00,$00,$00,$ff,$00,$00,$00,$ff,$00, $00,$00,$ff,$00,$00,$00,$ff
+		defb	$00,$ff,$00,$ff,$00,$ff,$00,$ff,$00,$ff, $00,$ff,$00,$ff,$00,$ff,$00,$ff,$00,$ff, $00,$ff,$00,$ff,$00,$ff,$00
+		defb	$ff,$00,$00,$00,$ff,$00,$00,$00,$ff,$00, $00,$00,$ff,$00,$00,$00,$ff,$00,$00,$00, $ff,$00,$00,$00,$ff,$00,$00
+		defb	$00,$ff,$00,$ff,$00,$ff,$00,$ff,$00,$ff, $00,$ff,$00,$ff,$00,$ff,$00,$ff,$00,$ff, $00,$ff,$00,$ff,$00,$ff,$00
+		defb	$00,$00,$ff,$00,$00,$00,$ff,$00,$00,$00, $ff,$00,$00,$00,$ff,$00,$00,$00,$ff,$00, $00,$00,$ff,$00,$00,$00,$ff
+		defb	$00,$ff,$00,$ff,$00,$ff,$00,$ff,$00,$ff, $00,$ff,$00,$ff,$00,$ff,$00,$ff,$00,$ff, $00,$ff,$00,$ff,$00,$ff,$00
+		defb	$ff,$00,$00,$00,$ff,$00,$00,$00,$ff,$00, $00,$00,$ff,$00,$00,$00,$ff,$00,$00,$00, $ff,$00,$00,$00,$ff,$00,$00
+		defb	$00,$ff,$00,$ff,$00,$ff,$00,$ff,$00,$ff, $00,$ff,$00,$ff,$00,$ff,$00,$ff,$00,$ff, $00,$ff,$00,$ff,$00,$ff,$00
+		defb	$00,$00,$ff,$00,$00,$00,$ff,$00,$00,$00, $ff,$00,$00,$00,$ff,$00,$00,$00,$ff,$00, $00,$00,$ff,$00,$00,$00,$ff
+		defb	$00,$ff,$00,$ff,$00,$ff,$00,$ff,$00,$ff, $00,$ff,$00,$ff,$00,$ff,$00,$ff,$00,$ff, $00,$ff,$00,$ff,$00,$ff,$00
+		defb	$ff,$00,$00,$00,$ff,$00,$00,$00,$ff,$00, $00,$00,$ff,$00,$00,$00,$ff,$00,$00,$00, $ff,$00,$00,$00,$ff,$00,$00
+		defb	$00,$ff,$00,$ff,$00,$ff,$00,$ff,$00,$ff, $00,$ff,$00,$ff,$00,$ff,$00,$ff,$00,$ff, $00,$ff,$00,$ff,$00,$ff,$00
+		defb	$00,$00,$ff,$00,$00,$00,$ff,$00,$00,$00, $ff,$00,$00,$00,$ff,$00,$00,$00,$ff,$00, $00,$00,$ff,$00,$00,$00,$ff
+		defb	$00,$ff,$00,$ff,$00,$ff,$00,$ff,$00,$ff, $00,$ff,$00,$ff,$00,$ff,$00,$ff,$00,$ff, $00,$ff,$00,$ff,$00,$ff,$00
+		defb	$ff,$00,$00,$00,$ff,$00,$00,$00,$ff,$00, $00,$00,$ff,$00,$00,$00,$ff,$00,$00,$00, $ff,$00,$00,$00,$ff,$00,$00
+		defb	$00,$ff,$00,$ff,$00,$ff,$00,$ff,$00,$ff, $00,$ff,$00,$ff,$00,$ff,$00,$ff,$00,$ff, $00,$ff,$00,$ff,$00,$ff,$00
+		defb	$00,$00,$ff,$00,$00,$00,$ff,$00,$00,$00, $ff,$00,$00,$00,$ff,$00,$00,$00,$ff,$00, $00,$00,$ff,$00,$00,$00,$ff
+		defb	$00,$ff,$00,$ff,$00,$ff,$00,$ff,$00,$ff, $00,$ff,$00,$ff,$00,$ff,$00,$ff,$00,$ff, $00,$ff,$00,$ff,$00,$ff,$00
+		defb	$ff,$00,$00,$00,$ff,$00,$00,$00,$ff,$00, $00,$00,$ff,$00,$00,$00,$ff,$00,$00,$00, $ff,$00,$00,$00,$ff,$00,$00
+		defb	$00,$ff,$00,$ff,$00,$ff,$00,$ff,$00,$ff, $00,$ff,$00,$ff,$00,$ff,$00,$ff,$00,$ff, $00,$ff,$00,$ff,$00,$ff,$00
+		defb	$00,$00,$ff,$00,$00,$00,$ff,$00,$00,$00, $ff,$00,$00,$00,$ff,$00,$00,$00,$ff,$00, $00,$00,$ff,$00,$00,$00,$ff
+		defb	$00,$ff,$00,$ff,$00,$ff,$00,$ff,$00,$ff, $00,$ff,$00,$ff,$00,$ff,$00,$ff,$00,$ff, $00,$ff,$00,$ff,$00,$ff,$00
+		defb	$ff,$00,$00,$00,$ff,$00,$00,$00,$ff,$00, $00,$00,$ff,$00,$00,$00,$ff,$00,$00,$00, $ff,$00,$00,$00,$ff,$00,$00
 		defb	$00,$00,$00,$00,$00,$00,$00,$00,$00,$00, $00,$00,$00,$00,$00,$00,$00,$00,$00,$00, $00,$00,$00,$00,$00,$00,$00
-		defb	$00,$00,$00,$00,$00,$00,$00,$00,$00,$00, $00,$00,$00,$ff,$ff,$ff,$ff,$ff,$00,$00, $00,$00,$00,$00,$00,$00,$00
-   		defb	$00,$00,$00,$00,$00,$00,$00,$00,$00,$ff, $ff,$ff,$ff,$00,$00,$00,$00,$00,$ff,$ff, $ff,$ff,$00,$00,$00,$00,$00
-   		defb	$00,$00,$00,$00,$00,$00,$00,$ff,$ff,$00, $00,$00,$00,$00,$00,$00,$00,$00,$00,$00, $00,$00,$ff,$ff,$ff,$00,$00
-   		defb	$00,$00,$00,$00,$00,$ff,$ff,$00,$00,$00, $00,$00,$00,$00,$00,$00,$00,$00,$00,$00, $00,$00,$00,$00,$00,$ff,$ff
-   		defb	$00,$00,$ff,$ff,$ff,$00,$ff,$00,$00,$00, $00,$00,$00,$00,$00,$00,$00,$00,$00,$ff, $00,$00,$00,$00,$00,$00,$00
-   		defb	$ff,$ff,$00,$00,$00,$ff,$00,$ff,$00,$00, $00,$00,$00,$00,$00,$00,$00,$00,$00,$00, $00,$00,$00,$00,$00,$00,$00
-   		defb	$00,$00,$00,$00,$00,$ff,$00,$ff,$00,$00, $00,$00,$00,$00,$00,$00,$00,$00,$00,$00, $ff,$00,$00,$00,$00,$00,$00
-   		defb	$00,$00,$00,$00,$00,$00,$ff,$00,$ff,$00, $00,$00,$00,$00,$00,$00,$00,$00,$00,$00, $ff,$00,$00,$00,$00,$00,$00
-   		defb	$00,$00,$00,$00,$00,$00,$ff,$00,$00,$ff, $00,$00,$00,$00,$00,$00,$00,$00,$00,$00, $ff,$00,$00,$00,$00,$00,$00
-   		defb	$00,$00,$00,$00,$00,$00,$ff,$00,$00,$00, $ff,$00,$00,$00,$00,$00,$00,$00,$00,$00, $00,$00,$00,$00,$00,$00,$00
-   		defb	$00,$00,$00,$00,$00,$00,$00,$ff,$00,$00, $00,$ff,$00,$00,$00,$00,$00,$00,$00,$00, $00,$00,$00,$00,$00,$00,$00
-   		defb	$00,$00,$00,$00,$00,$00,$00,$ff,$00,$00, $00,$00,$ff,$ff,$00,$00,$00,$00,$00,$00, $ff,$00,$00,$00,$00,$00,$00
-   		defb	$00,$00,$00,$00,$00,$00,$00,$ff,$00,$00, $00,$00,$00,$00,$ff,$ff,$00,$00,$00,$00, $ff,$ff,$ff,$ff,$00,$00,$00
-   		defb	$00,$00,$00,$00,$00,$00,$00,$ff,$00,$00, $00,$00,$00,$00,$00,$00,$ff,$ff,$00,$ff, $00,$00,$00,$00,$ff,$ff,$ff
-   		defb	$00,$00,$00,$00,$00,$00,$00,$ff,$00,$00, $00,$00,$00,$00,$00,$00,$00,$ff,$ff,$ff, $00,$00,$00,$00,$00,$00,$00
-   		defb	$00,$00,$00,$00,$00,$00,$00,$ff,$00,$00, $00,$00,$00,$00,$00,$00,$00,$00,$ff,$00, $00,$00,$00,$00,$00,$00,$00
-   		defb	$00,$00,$00,$00,$00,$00,$00,$ff,$00,$00, $00,$00,$00,$00,$00,$00,$00,$ff,$ff,$ff, $00,$00,$00,$00,$00,$00,$00
-   		defb	$00,$00,$00,$00,$00,$00,$00,$ff,$00,$00, $00,$00,$00,$00,$00,$00,$ff,$00,$00,$ff, $00,$00,$00,$00,$00,$00,$00
-   		defb	$00,$00,$00,$00,$00,$00,$00,$ff,$00,$00, $00,$00,$00,$00,$00,$ff,$00,$00,$00,$00, $00,$00,$00,$00,$00,$00,$00
-   		defb	$00,$00,$00,$00,$00,$00,$00,$ff,$00,$00, $00,$00,$00,$ff,$ff,$00,$00,$00,$00,$00, $ff,$00,$00,$00,$00,$00,$00
-   		defb	$ff,$ff,$ff,$ff,$00,$00,$00,$ff,$00,$00, $00,$ff,$ff,$00,$00,$00,$00,$00,$00,$00, $ff,$00,$00,$00,$00,$00,$00
-   		defb	$00,$00,$00,$00,$ff,$00,$ff,$00,$00,$00, $ff,$00,$00,$00,$00,$00,$00,$00,$00,$00, $ff,$00,$00,$00,$00,$00,$00
-   		defb	$00,$00,$00,$00,$00,$ff,$ff,$00,$00,$ff, $00,$00,$00,$00,$00,$00,$00,$00,$00,$00, $00,$00,$00,$00,$00,$00,$00
-   		defb	$00,$00,$00,$00,$00,$00,$00,$ff,$ff,$00, $00,$00,$00,$00,$00,$00,$00,$00,$00,$00, $00,$00,$00,$00,$ff,$ff,$ff
-   		defb	$00,$00,$00,$00,$00,$00,$00,$00,$00,$ff, $ff,$ff,$ff,$00,$00,$00,$00,$00,$00,$00, $ff,$ff,$ff,$ff,$00,$00,$00
-   		defb	$00,$00,$00,$00,$00,$00,$00,$00,$00,$00, $00,$00,$00,$ff,$ff,$ff,$ff,$ff,$ff,$ff, $00,$00,$00,$00,$00,$00,$00
-   		defb	$00,$00,$00,$00,$00,$00,$00,$00,$00,$00, $00,$00,$00,$00,$00,$00,$00,$00,$00,$00, $00,$00,$00,$00,$00,$00,$00
-   		defb	$00,$00,$00,$00,$00,$00,$00,$00,$00,$00, $00,$00,$00,$00,$00,$00,$00,$00,$00,$00, $00,$00,$00,$00,$00,$00,$00
-   		defb	$00,$00,$00,$00,$00,$00,$00,$00,$00,$00, $00,$00,$00,$00,$00,$00,$00,$00,$00,$00, $00,$00,$00,$00,$00,$00,$00
-   		defb	$00,$00,$00,$00,$00,$00,$00,$00,$00,$00, $00,$00,$00,$00,$00,$00,$00,$00,$00,$00, $00,$00,$00,$00,$00,$00,$00
-   		defb	$00,$00,$00,$00,$00,$00,$00,$00,$00,$00, $00,$00,$00,$00,$00,$00,$00,$00,$00,$00, $00,$00,$00,$00,$00,$00,$00
+		defb	$ff,$ff,$ff,$ff,$ff,$ff,$ff,$ff,$ff,$ff, $ff,$ff,$ff,$ff,$ff,$ff,$ff,$ff,$ff,$ff, $ff,$ff,$ff,$ff,$ff,$ff,$ff
 
 img_col		defb	0
 
@@ -189,107 +189,68 @@ draw_bb_to_screen macro
   ld sp,(save_sp)
   endm
 
-tick		defb	0 ; Counts ticks of the timer (30 times per second)
-save_sp		defw	0
-
-ifdef model1 ; Model 1 - poll VBLANK (if mod) or just inc tick.
-
-m1_vblank	defb	0 ; Model 1 has VBLANK mod? 1 = yes, 0 = no.
-
-setup_ticks macro ?vblank_changing_search,?vblank_found,?done
-  ; Runtime check if this Model 1 has the VBLANK mod.
-  ld hl,1350
-  ld bc,-1
-?vblank_changing_search:
-  in a,($ff)         ; 11
-  ; A normal Model 1 will never have a 0 in bit 0 of in $ff.
-  ; If we see a 0 this is the VBLANK mod in action. We want to observe
-  ; for at least 1/60th of a second. On a Model 1 this is 29566 t-states.
-  ; The loop below is 44 t-states * 1354 loops = 59400 (~1/30th of a second).
-  bit 0,a            ; 8
-  jr z,?vblank_found ; 7
-  add hl,bc          ; 11
-  jr c,?vblank_changing_search ; 7
-  jr ?done           ; no VBLANK mod detected
-?vblank_found:
-  ld a,1
-  ld (m1_vblank),a
-?done:
-  endm
-
-wait_for_next_tick macro
-  ; increment tick
-  ld a,(tick)
-  inc a
-  ld (tick),a
-
-  ; Check if we are suppose to use the VBLANK hardware.
-  ld a,(m1_vblank)
-  or a ; is a == 0?
-  jr z,_wait_is_over
-
-  ; ** Model 1 with VBLANK mod only **
-  ; Wait for the start of VBLANK. We want to see a 0 value to
-  ; Ensure we aren't jumping in at the end of VBLANK.
-_wait_in_vblank:
-  in a,($ff)
-  bit 0,a
-  jr nz,_wait_in_vblank
-_wait_not_in_vblank:
-  in a,($ff)
-  bit 0,a
-  jr z, _wait_not_in_vblank
-  ; VBLANK is beginning when we fall through to here.
-_wait_is_over:
-  endm
-
-else ; Model 3 or 4 - Use timer interrupt for ticks
+save_sp		defs	2
+trs80_model	defb	0 ; TRS80 Model? 1 = Model 1, 3 = Model 3, 4 = Model 4
+m1_vblank	defb	0 ; Has the Model 1 VBLANK mod? 1 = yes, 0 = no.
+m34_ticks	defb	0 ; Counts ticks of the timer (30 times per second)
 
 ; Our timer interrupt handler.
 ; Return back to ROM interrupt processing;
 ; the vector was set by init code below.
-tick_interrupt:
-  ld a,(tick)
+m34_ticks_interrupt:
+  push af
+  ld a,(m34_ticks)
   inc a
-  ld (tick),a
+  ld (m34_ticks),a
+  pop af
 tick_jp:
   jp 0 ; The 0 is self-modified into the original handler address.
 
-; Setup timer interrupt Model 3 & 4.
-setup_ticks macro
+; Setup the 30 times/sec timer interrupt Model 3 & 4.
+m34_setup_ticks macro
   di
   ld hl,(0x4013)
   ld (tick_jp+1),hl
-  ld hl,tick_interrupt
+  ld hl,m34_ticks_interrupt
   ld (0x4013),hl
   ei
   endm
 
-wait_for_next_tick macro,?wait_loop
-  ld a,(tick)
+wait_for_next_tick macro ?m34_wait,?m34_wait_loop,?done_waiting
+  ld a,(trs80_model)
+  xor 1 ; is a == 1 (Model 1)?
+  jr nz,?m34_wait
+  ; Check if we are suppose to use the VBLANK hardware.
+  ld a,(m1_vblank)
+  or a ; is a == 0 (no)?
+  jr z,?done_waiting
+  wait_for_vblank_start
+  jr ?done_waiting
+?m34_wait:
+  ld a,(m34_ticks)
   ld b,a
-?wait_loop:
-  ld a,(tick)
+?m34_wait_loop:
+  ld a,(m34_ticks)
   xor b ; is a == b?
-  jr z,?wait_loop
+  jr z,?m34_wait_loop
+?done_waiting:
   endm
-
-; ticks_to_wait immediate 8bit value.
-wait_ticks macro,ticks_to_wait,?wait_loop
-  ld a,(tick)
-  add ticks_to_wait ; future time
-  ld b,a
-?wait_loop:
-  ld a,(tick)
-  xor b ; is a == b?
-  jr nz,?wait_loop
-  endm
-
-endif
 
 main:
   ld sp,stack
 
+  ; Save TRS80 Model and, if a Model 1, if the VBLANK mod is installed.
+  call gp_get_trs80_model
+  ld (trs80_model),a
+  xor 1
+  jr nz,_m34_interrupt_setup
+  call detect_m1_vblank
+  ld (m1_vblank),a
+  jr prepare
+_m34_interrupt_setup:
+  m34_setup_ticks
+
+prepare:
   ; Clear the graphics buffer
   ld d,$00
   ld hl,gb
@@ -331,9 +292,6 @@ _vl_loop:
   add ix,de
   add iy,de
   djnz _vl_loop
-  
-break:
-  setup_ticks
   
   ; ---------------------
   ; ----- GAME LOOP -----
