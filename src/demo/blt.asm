@@ -1,3 +1,8 @@
+; BLT demo program
+;
+; Terms:
+; gb = graphics buffer our sideways representation of pixels.
+; bb = screen back buffer of a 27x9 window of the screen.
   org $5200
 
 import '../lib/barden_fill.asm'
@@ -12,9 +17,9 @@ screen		equ	$3c00
 row		equ	64
 
 ; Position the raycasting window on the screen.
-window		equ	screen+64+3
-window_width	equ	27 ; WARNING some hardcoding to this value
-window_height	equ	9  ; WARNING some hardcoding to this value
+window		equ	screen+64+2
+window_width	equ	27 ; WARNING much hardcoding to this value
+window_height	equ	9  ; WARNING much hardcoding to this value
 
 ; This back buffer represnts a 27x9 square on the TRS-80 screen.
 bb_width	equ	window_width
@@ -22,11 +27,10 @@ bb_height	equ	window_height
 bb		defs	bb_width*bb_height
 bb_size		equ	$-bb
 
-; This graphics buffer (gb) layout differs from the back buffer (bb) and
-; screen layout.
+; This graphics buffer represents 27x27 pixels (sort of laying on its side).
 ; It defines "pixels", one per byte, which are 2x1 TRS-80 graphics blocks.
 ; This gives us a 1:1 aspect ratio (or very close to it). We use $ff to
-; set and $00 to unset a "pixel" (allowing branch-free code in drawing).
+; set and $00 to unset a "pixel" (allowing branch-free code drawing).
 ; Each row of in the gb represents a column in the bb. Defining bytes, left
 ; to right, that fill in 2x1 screen pixels (three per screen row) from top
 ; to bottom of the bb.
@@ -137,38 +141,38 @@ _img_col_draw:
   endm
 
 ; hl must point to the correct position in the graphics buffer.
-draw_gb_to_bb_char macro bb_dst
+draw_gb_to_bb_character macro bb_dst
   ld d,$80 ; empty graphics character
   ld a,$83 ; top 2x1 dot
   and (hl)
   or d
-  ld d,a ; update character result
+  ld d,a   ; update character result
   inc hl
   ld a,$8c ; middle 2x1 dot
   and (hl)
   or d
-  ld d,a ; update character result
+  ld d,a   ; update character result
   inc hl
   ld a,$b0 ; bottom 2x1 dot
   and (hl)
   or d
-  ld (bb_dst),a ; write character result to dst (in back buffer)
+  ld (bb_dst),a ; write character into the screen back buffer
   inc hl
   endm
 
-; blts a single vertical column on the screen (9 lines).
+; blts a single vertical column on the screen back buffer.
 ; hl must point to the start row position in the graphics buffer.
-; 9 rows of the screen (hardcoded)
+; Hardcoded to 9 rows in the screen back buffer.
 draw_gb_to_bb_column macro bb_dst
-  draw_gb_to_bb_char bb_dst+bb_width*0
-  draw_gb_to_bb_char bb_dst+bb_width*1
-  draw_gb_to_bb_char bb_dst+bb_width*2
-  draw_gb_to_bb_char bb_dst+bb_width*3
-  draw_gb_to_bb_char bb_dst+bb_width*4
-  draw_gb_to_bb_char bb_dst+bb_width*5
-  draw_gb_to_bb_char bb_dst+bb_width*6
-  draw_gb_to_bb_char bb_dst+bb_width*7
-  draw_gb_to_bb_char bb_dst+bb_width*8
+  draw_gb_to_bb_character bb_dst+bb_width*0
+  draw_gb_to_bb_character bb_dst+bb_width*1
+  draw_gb_to_bb_character bb_dst+bb_width*2
+  draw_gb_to_bb_character bb_dst+bb_width*3
+  draw_gb_to_bb_character bb_dst+bb_width*4
+  draw_gb_to_bb_character bb_dst+bb_width*5
+  draw_gb_to_bb_character bb_dst+bb_width*6
+  draw_gb_to_bb_character bb_dst+bb_width*7
+  draw_gb_to_bb_character bb_dst+bb_width*8
   endm
 
 ; 21 columns of the screen (hardcoded) we blt each row out of gb.
@@ -281,11 +285,11 @@ main:
   jr nz,_m34_interrupt_setup
   call detect_m1_vblank
   ld (m1_vblank),a
-  jr prepare
+  jr prep_screen
 _m34_interrupt_setup:
   m34_setup_ticks
 
-prepare:
+prep_screen:
   ; Clear the graphics buffer
   ld d,$00
   ld hl,gb
@@ -304,39 +308,40 @@ prepare:
   ld bc,row*16
   call barden_fill
 
+  ld a,'>'
+  ld (screen+row*3),a
+
   ; Frame the raycasting window on the screen.
   ld ix,window-row-1
   ld iy,window-row-1+row*(window_height+1)
   ld b,window_width+2
-_hl_loop:
+hline_loop:
   ld (ix),$b0 ; top horizontal line
   ld (iy),$83 ; bottom horizontal line
   inc ix
   inc iy
-  djnz _hl_loop
+  djnz hline_loop
 
   ld ix,window-1
   ld iy,window-1+window_width+1
   ld de,row
   ld b,window_height
-_vl_loop:
+vline_loop:
   ld (ix),$bb   ; left vertical line
-  ld (ix-1),$8c ; decoration to left of line
   ld (iy),$b7   ; right vertical line
-  ld (iy+1),$8c ; decoration to right of line
   add ix,de
   add iy,de
-  djnz _vl_loop
+  djnz vline_loop
   
   ; ---------------------
   ; ----- GAME LOOP -----
   ; ---------------------
-_game_loop:
+game_loop:
   animate_img_to_gb
   draw_gb_to_bb
 
   wait_for_next_tick
   draw_bb_to_screen
 
-  jp _game_loop
+  jp game_loop
   end main
