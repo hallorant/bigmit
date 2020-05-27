@@ -80,7 +80,6 @@ comma		equ	','
 
 cast_col	defb	0
 cast_camera_dir	defb	0
-camera_dist_cor	defw	0
 buff_addr	defw	0
 cast_dir	defb	0
 wall_hh		defb	0
@@ -279,16 +278,7 @@ raycast:	ld a,buff_line_width
 		add a,256-(buff_line_width/2)
 		ld (cast_dir),a		; Raycasting angle of the first column.
 		
-col_loop:	; Calculate the camera distance correction for this column
-		; of the screen, unlike the ray distance this is independent
-		; of the player's direction. It uses X delta_dist centered on
-		; angle 64.
-		ld a,(cast_camera_dir)
-		ld c,a
-		call delta_dist_x
-		ld (camera_dist_cor),de
-
-		; Cast and draw the wall at the left-hand-side of the column.
+col_loop:	; Cast and draw the wall at the left-hand-side of the column.
 		call cast
 		ld ix,(buff_addr)
 		ld iy,wall_hh
