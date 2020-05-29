@@ -10,15 +10,14 @@ import '../lib/m1_vblank.asm'
 
 save_sp		defs	2
 trs80_model	defb	0 ; TRS80 Model? 1 = Model 1, 3 = Model 3, 4 = Model 4
-m1_vblank	defb	0 ; Has the Model 1 VBLANK mod? 1 = yes, 0 = no.
-ticks		defb	0 ; Counts ticks of the timer (30 times per second)
+m1_vblank	defb	0 ; Has the Model 1 VBLANK mod? 1 = yes, 0 = no
+ticks		defb	0 ; Ticks of the 30 Hz timer, reset each frame draw
 
 timer_interrupt_handler:
-  push af
-  ld a,(ticks)
-  inc a
-  ld (ticks),a
-  pop af
+  push hl
+  ld hl,ticks
+  inc (hl)
+  pop hl
 tick_jp:
   jp 0 ; The 0 is self-modified into the original handler address.
 
@@ -31,6 +30,8 @@ setup_timer_interrupt_handler macro
   ei
   endm
 
+; Setup timer to tell when to draw. Does dynamic checks to support the
+; Model 1, Model 3, and Model 4.
 timer_setup macro ?use_interrupt,?done
   ; Save TRS80 Model and, if a Model 1 check if the VBLANK mod is installed.
   call gp_get_trs80_model
@@ -45,6 +46,7 @@ timer_setup macro ?use_interrupt,?done
 ?done:
   endm
 
+; Await a good time to draw the next frame to the screen
 timer_await macro ?m34_wait,?m34_wait_loop,?done_waiting
   ld a,(trs80_model)
   xor 1 ; is a == 1 (Model 1)?
@@ -62,6 +64,9 @@ timer_await macro ?m34_wait,?m34_wait_loop,?done_waiting
   ld a,(ticks)
   xor b ; is a == b?
   jr z,?m34_wait_loop
+  ; Reset the tick counter.
+  xor a ; a = 0
+  ld (ticks),a
 ?done_waiting:
   endm
 
