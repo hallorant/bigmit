@@ -4,10 +4,12 @@ INCLUDE_TIMER equ 1
 import '../lib/gp_get_trs80_model.asm'
 import '../lib/m1_vblank.asm'
 
-; --.--o
-;   |  .,-.-.,---.,---.
-;   |  || | ||---'|
-;   `  `` ' '`---'`
+; _____ _
+;|_   _(_)
+;  | |  _ _ __ ___   ___ _ __ 
+;  | | | | '_ ` _ \ / _ \ '__|
+;  | | | | | | | | |  __/ |
+;  \_/ |_|_| |_| |_|\___|_|
 ;
 ; Handles timing when to draw an animation frame to the screen.
 ; We want this to right at the start of the vertical blanking interval.
