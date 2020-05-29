@@ -1,13 +1,12 @@
-; BLT demo program
-;
-; Terms:
-; gb = graphics buffer our sideways representation of pixels.
-; bb = screen back buffer of a 27x9 window of the screen.
   org $5200
-
 import '../lib/barden_fill.asm'
 import 'timer.asm'
 import 'screen.asm'
+
+; |   |               |             |    --.--
+; |---|,---..   .,---.|--- ,---.,---|      |  ,---.. . .,---.,---.
+; |   |,---||   ||   ||    |---'|   |      |  |   || | ||---'|
+; `   '`---^`---'`   '`---'`---'`---'      `  `---'`-'-'`---'`
 
 stack_space	defs	100
 stack		equ	$-1
@@ -116,7 +115,7 @@ _img_col_draw:
 main:
   ld sp,stack
 
-  timer_setup
+  setup_timer
 
 prep_screen:
   ; Clear the graphics buffer
@@ -169,7 +168,7 @@ game_loop:
   animate_img_to_gb
   draw_gb_to_bb
 
-  timer_await
+  await_vblank
   draw_bb_to_screen
 
   jp game_loop

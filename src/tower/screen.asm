@@ -1,13 +1,18 @@
 ifndef INCLUDE_SCREEN
 INCLUDE_SCREEN equ 1
 
+import '../lib/gp_14byte_move.asm'
+
+; ,---.
+; `---.,---.,---.,---.,---.,---.
+;     ||    |    |---'|---'|   |
+; `---'`---'`    `---'`---'`   '
+;
 ; Defines the graphics buffer, the screen back buffer, 
 ; Public interface:
 ;  draw_gb_to_bb
 ;  draw_bb_to_screen
 ;  (and all the definitions)
-
-import '../lib/gp_14byte_move.asm'
 
 screen		equ	$3c00
 row		equ	64
