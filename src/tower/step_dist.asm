@@ -19,11 +19,11 @@ INCLUDE_STEP_DIST equ 1
 ;        b  for one unit step in the x direction at the given angle the y-distance
 ;           (length) in the next finer unit.
 step_x:
-  ld d,0
   ; If the angle > 64 subtract 64 from it.
   ld a,e
   and $3f; To do this we just unset bit 7 (and 8).
   ld e,a
+  ld d,0 ; Ensure d is zeroed out (the msb of adds below).
   ld hl,x_step_distance
   add hl,de  ; offset the lookup table addr 
   ld c,(hl)
