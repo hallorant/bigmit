@@ -5,6 +5,7 @@ import 'dist_to_hh.asm'
 main:
   ; -----------------------------------------------------------
   z80unit_test 'angle deflection uses correct table'
+
   ld b,0   ; deflection angle
   ld c,255 ; max distance to wall to return 0 half-height.
   call dist_to_hh
@@ -73,6 +74,7 @@ main:
 
   ; -----------------------------------------------------------
   z80unit_test 'boundary cases on table lookup'
+
   ld b,0   ; deflection angle
   ld c,0   ; distance to wall
   call dist_to_hh
@@ -95,8 +97,7 @@ main:
 
   ; -----------------------------------------------------------
   z80unit_test 'distance transition from one hh to another'
-  ; Test the boundary of 26 in angle 7 as we count down in
-  ; distance to the wall.
+
   ld b,7   ; deflection angle
   ld c,27  ; distance to wall
   call dist_to_hh
