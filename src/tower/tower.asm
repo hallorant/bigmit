@@ -1,5 +1,6 @@
   org $5200
 import '../lib/barden_fill.asm'
+import 'step_dist.asm'
 import 'dist_to_hh.asm'
 import 'timer.asm'
 import 'screen.asm'

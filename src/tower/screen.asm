@@ -43,7 +43,7 @@ gb		defs	gb_width*gb_height
 gb_size		equ	$-gb
 
 ; hl must point to the correct position in the graphics buffer.
-; private
+; @private
 draw_gb_to_bb_character macro bb_dst
   ld d,$80 ; empty graphics character
   ld a,$83 ; top 2x1 dot
@@ -66,7 +66,7 @@ draw_gb_to_bb_character macro bb_dst
 ; blts a single vertical column on the screen back buffer.
 ; hl must point to the start row position in the graphics buffer.
 ; Hardcoded to 9 rows in the screen back buffer.
-; private
+; @private
 draw_gb_to_bb_column macro bb_dst
   draw_gb_to_bb_character bb_dst+bb_width*0
   draw_gb_to_bb_character bb_dst+bb_width*1
@@ -111,7 +111,7 @@ draw_gb_to_bb macro
   draw_gb_to_bb_column bb+26
   endm
 
-; private
+; @private
 draw_bb_row_to_screen macro bb_src,screen_dst
   gp_14byte_move bb_src, screen_dst
   ; We re-move the middle byte to use fast 14 byte moves.

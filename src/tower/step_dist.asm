@@ -10,38 +10,44 @@ INCLUDE_STEP_DIST equ 1
 ;            | |______
 ;            |_|______|
 
-; Looks up the distance a ray has to travel to go from one x-side to
-; the next x-side for a passed angle.
+; Returns, for one unit step in the horizontal direction at the given angle,
+; the distance travelled and the vertical distance (in the next finer unit).
 ;
-; Enter: c   the byte-angle
-; Exit:  de  The distance a ray has to travel to go from one x-side
-;            to the next x-side
-delta_dist_x:	xor a
-		ld b,a		; Zero out b
-		; If c > 128 (bit 8 is set) subtract 128 from c.
-		ld a,$7f	; To do this we just unset bit 8.
-		and c
-		ld c,a
-		sla c		; Double the offset (2 bytes per table entry)
-		ld hl,delta_dist_table
-		add hl,bc	; Determine lookup table addr 
-		ld e,(hl)	; Low order byte
-		inc hl
-		ld d,(hl)	; High order byte
-		ret
+; Entry: e  the angle [0,128)
+; Exit:  c  for one unit step in the x direction at the given angle the distance
+;           (hypotenuse) in the next finer unit.
+;        b  for one unit step in the x direction at the given angle the y-distance
+;           (length) in the next finer unit.
+step_x:
+  ; If the angle > 64 subtract 64 from it.
+  ld a,e
+  and $3f ; unset bit 7 (and 8)
+  ld e,a
+  ld d,0  ; ensure d is zero (it is the msb of the offset adds below)
+  ld hl,x_step_distance
+  add hl,de  ; offset the lookup table addr 
+  ld c,(hl)
+  ld hl,x_step_y_length
+  add hl,de  ; offset the lookup table addr 
+  ld b,(hl)
+  ret
 
-; Looks up the distance a ray has to travel to go from one y-side to
-; the next y-side for a passed angle.
+; Returns, for one unit step in the vertical direction at the given angle,
+; the distance travelled and the horizontal distance (in the next finer unit).
 ;
-; Enter: c   the byte-angle
-; Exit:  de  The distance a ray has to travel to go from one y-side
-;            to the next y-side
-delta_dist_y:	ld a,c
-		add a,64
-		ld c,a
-		call delta_dist_x
-		ret
-
+; Entry: e  the angle [0,128)
+; Exit:  c  for one unit step in the y direction at the given angle the distance
+;           (hypotenuse) in the next finer unit.
+;        b  for one unit step in the y direction at the given angle the x-distance
+;           (length) in the next finer unit.
+step_y:
+  ; Rotate the angle clockwise 32 then reuse the step_x function.
+  ld a,e
+  add a,32
+  and $7f ; ensure angle range remains within [0,128)
+  ld e,a
+  call step_x
+  ret
 
 ; For one unit step in the x direction this lookup table maps a
 ; given angle to the distance (hypotenuse) in the next finer unit.

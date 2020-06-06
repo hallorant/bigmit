@@ -9,6 +9,10 @@ INCLUDE_DIST_TO_HH equ 1
 ; \__,_|_|___/\__| \__\___/ |_| |_|_| |_|
 ;              ______   ______
 ;             |______| |______|
+;
+; Used to calculate the half-height of a wall in the raycaster using
+; the distance to the wall and the viewer deflection angle. The latter
+; is used to do fisheye correction.
 
 ; Comparision macro for a single table row. Returns if distance to the
 ; wall is less than the table lookup distance, otherwise increments the
@@ -19,7 +23,7 @@ INCLUDE_DIST_TO_HH equ 1
 ;        c   current wall half-height
 ; Exit:  c   incremented if no return
 ;       hl   incremented if no return
-; private
+; @private
 hh_row_check macro ?next_row
   ld b,(hl)
   cp b
@@ -34,21 +38,24 @@ hh_row_check macro ?next_row
 ; and the deflection angle off-center. Fisheye correction is built into
 ; the table distances and drives the need to know the deflection angle.
 ;
-; Entry: a   distance in world units
+; Entry: c   distance in world units
 ;        b   deflection angle off-center [0,11) where 0 is center
 ; Exit:  c   wall half height [0,11]
+;        hl  pointer to the table entry last checked (testing only)
 dist_to_hh:
   ; Find lookup table address using deflection angle.
   ld hl,hh_for_angle_00
-  djnz _setup_table_loop
-  jr _calc_hh
-_setup_table_loop:
+  ld a,b
+  or a ; is a == 0?
+  jr z,_calc_hh
+  ; There is a non-zero deflection angle, calculate the table address.
   ld de,hh_table_size
 _table_loop:
   add hl,de
   djnz _table_loop
 _calc_hh:
   ; Calculate the wall half-height.
+  ld a,c ; distance to the wall
   ld c,0 ; where we return the wall half-height
   hh_row_check ; row 0
   hh_row_check ; row 1

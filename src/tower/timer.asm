@@ -21,7 +21,7 @@ trs80_model	defb	0 ; TRS80 Model? 1 = Model 1, 3 = Model 3, 4 = Model 4
 m1_vblank	defb	0 ; Has the Model 1 VBLANK mod? 1 = yes, 0 = no
 ticks		defb	0 ; Ticks of the 30 Hz timer, reset each frame draw
 
-; private
+; @private
 timer_interrupt_handler:
   push hl
   ld hl,ticks
@@ -30,7 +30,7 @@ timer_interrupt_handler:
 tick_jp:
   jp 0 ; The 0 is self-modified into the original handler address.
 
-; private
+; @private
 setup_timer_interrupt_handler macro
   di
   ld hl,($4013)
