@@ -21,9 +21,9 @@ INCLUDE_STEP_DIST equ 1
 step_x:
   ; If the angle > 64 subtract 64 from it.
   ld a,e
-  and $3f; To do this we just unset bit 7 (and 8).
+  and $3f ; unset bit 7 (and 8)
   ld e,a
-  ld d,0 ; Ensure d is zeroed out (msb of the adds below).
+  ld d,0  ; ensure d is zeroed out because it is the msb of the adds below
   ld hl,x_step_distance
   add hl,de  ; offset the lookup table addr 
   ld c,(hl)
@@ -44,7 +44,7 @@ step_y:
   ; Rotate the angle clockwise 32 then reuse the step_x function.
   ld a,e
   add a,32
-  and $7f ; Ensure range is [0,128)
+  and $7f ; ensure angle range remains within [0,128)
   ld e,a
   call step_x
   ret
