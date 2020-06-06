@@ -23,7 +23,7 @@ step_x:
   ld a,e
   and $3f ; unset bit 7 (and 8)
   ld e,a
-  ld d,0  ; ensure d is zeroed out because it is the msb of the adds below
+  ld d,0  ; ensure d is zero (it is the msb of the offset adds below)
   ld hl,x_step_distance
   add hl,de  ; offset the lookup table addr 
   ld c,(hl)
