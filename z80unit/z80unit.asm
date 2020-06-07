@@ -173,9 +173,9 @@ z80unit_pop_reg macro
 ;
 ; Big thanks to George Phillips for suggesting this approach.
 ;
-; value - the text
-; match - this symbol is updated to indicate if value was a
-;         16-bit register name: zero is no, non-zero is yes.
+; value         - the text
+; z80unit_reg16 - this symbol is updated to indicate if value was a
+;                 16-bit register name: zero is no, non-zero is yes.
 z80unit_is_reg16 macro value,?fp
 ?fp	defl	0
   irpc letter,value
