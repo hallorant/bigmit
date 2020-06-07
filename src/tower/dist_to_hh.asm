@@ -14,8 +14,8 @@ INCLUDE_DIST_TO_HH equ 1
 ; the distance to the wall and the viewer deflection angle. The latter
 ; is used to do fisheye correction.
 
-; Comparision macro for a single table row. Returns if distance to the
-; wall is less than the table lookup distance, otherwise increments the
+; Comparision for a single half-height table row. Returns if distance to
+; the wall is less than the table lookup distance, otherwise increments the
 ; table row address and the wall half-height.
 ;
 ; Entry: hl  address of table row to examine
@@ -27,11 +27,39 @@ INCLUDE_DIST_TO_HH equ 1
 hh_row_check macro ?next_row
   ld b,(hl)
   cp b
-  jr c,?next_row ; dist <  table lookup dist (check next)
-  ret            ; dist >= table lookup dist
+  jr c,?next_row ; dist <  table lookup distance (check next)
+  ret            ; dist >= table lookup distance
 ?next_row:
   inc c
   inc hl
+  endm
+
+; Comparison at offset in the lookup table at hh_offset on hl. Aids in doing
+; a binary search on the lookup table. Examines the table value at the offset
+; and if a's value < the table value jumps to jump_tgt after adjusting hl and c.
+; Otherwise resets hl and c to their original values and continues.
+;
+; Entry: hl  address of a table row
+;        a   distance to the wall
+;        c   current wall half-height
+binary_search_hh_row macro hh_offset,jump_tgt,?reset
+  ld d,0       ; de <- hh_offset byte offset
+  ld e,hh_offset
+  add hl,de    ; hl += hh_offset
+  ld b,(hl)    ; check table's distance versus a
+  cp b
+  jr nc,?reset ; dist >= table lookup distance @ hh_offset
+  ; We didn't pre-offset c so we have to it now.
+  ld d,a       ; save a
+  ld a,c
+  add a,hh_offset
+  ld c,a       ; c = c + hh_offset
+  ld a,d       ; restore a
+  jr jump_tgt
+?reset
+  ; Point hl back where it was pointing.
+  or a         ; clear carry
+  sbc hl,de    ; hl = hl - hh_offset (reset the pointer)
   endm
 
 ; Calculates the wall half-height based upon the distance to the wall
@@ -43,28 +71,35 @@ hh_row_check macro ?next_row
 ; Exit:  c   wall half height [0,11]
 ;        hl  pointer to the table entry last checked (testing only)
 dist_to_hh:
-  ; Find lookup table address using deflection angle.
-  ld hl,hh_for_angle_00
-  ld a,b
-  or a ; is a == 0?
-  jr z,_calc_hh
-  ; There is a non-zero deflection angle, calculate the table address.
-  ld de,hh_table_size
-_table_loop:
+  ; Find lookup table address via the index using the deflection angle.
+  ld hl,hh_table_index
+  ld d,0 ; de <- b
+  ld e,b
+  sla e ; deflection angle * 2 (two bytes per index address)
   add hl,de
-  djnz _table_loop
-_calc_hh:
-  ; Calculate the wall half-height.
+  ld e,(hl)
+  inc hl
+  ld d,(hl)
+  ld h,d ; hl <- de
+  ld l,e
+  ; Calculate the wall half-height via a binary search on
+  ; the lookup table (it is ordered and pointed to by hl).
   ld a,c ; distance to the wall
   ld c,0 ; where we return the wall half-height
+  binary_search_hh_row 5,_at_row_5
+  binary_search_hh_row 2,_at_row_2
   hh_row_check ; row 0
   hh_row_check ; row 1
+_at_row_2:
   hh_row_check ; row 2
   hh_row_check ; row 3
   hh_row_check ; row 4
+_at_row_5:
+  binary_search_hh_row 3,_at_row_8
   hh_row_check ; row 5
   hh_row_check ; row 6
   hh_row_check ; row 7
+_at_row_8:
   hh_row_check ; row 8
   hh_row_check ; row 9
   hh_row_check ; row 10
@@ -235,5 +270,18 @@ hh_for_angle_10		defb	218	; for a wall half height of 0
 			defb	46	; for a wall half height of 8
 			defb	25	; for a wall half height of 9
 			defb	3	; for a wall half height of 10
+
+; Helps find the lookup table needed for a deflection angle quickly.
+hh_table_index		defw	hh_for_angle_00
+			defw	hh_for_angle_01
+			defw	hh_for_angle_02
+			defw	hh_for_angle_03
+			defw	hh_for_angle_04
+			defw	hh_for_angle_05
+			defw	hh_for_angle_06
+			defw	hh_for_angle_07
+			defw	hh_for_angle_08
+			defw	hh_for_angle_09
+			defw	hh_for_angle_10
 
 endif ; INCLUDE_DIST_TO_HH
