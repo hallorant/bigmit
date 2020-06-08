@@ -43,18 +43,15 @@ hh_row_check macro ?next_row
 ;        a   distance to the wall
 ;        c   current wall half-height
 binary_search_hh_row macro hh_offset,jump_tgt,?reset
-  ld d,0       ; de <- hh_offset byte offset
-  ld e,hh_offset
-  add hl,de    ; hl += hh_offset
-  ld b,(hl)    ; check table's distance versus a
+  ld de,hh_offset
+  add hl,de
+  ld b,(hl)    ; get the table's distance @ hh_offset
   cp b
   jr nc,?reset ; dist >= table lookup distance @ hh_offset
   ; We didn't pre-offset c so we have to it now.
-  ld d,a       ; save a
-  ld a,c
-  add a,hh_offset
-  ld c,a       ; c = c + hh_offset
-  ld a,d       ; restore a
+  rept hh_offset
+  inc c
+  endm
   jr jump_tgt
 ?reset
   ; Point hl back where it was pointing.
@@ -87,19 +84,15 @@ dist_to_hh:
   ld a,c ; distance to the wall
   ld c,0 ; where we return the wall half-height
   binary_search_hh_row 5,_at_row_5
-  binary_search_hh_row 2,_at_row_2
   hh_row_check ; row 0
   hh_row_check ; row 1
-_at_row_2:
   hh_row_check ; row 2
   hh_row_check ; row 3
   hh_row_check ; row 4
 _at_row_5:
-  binary_search_hh_row 3,_at_row_8
   hh_row_check ; row 5
   hh_row_check ; row 6
   hh_row_check ; row 7
-_at_row_8:
   hh_row_check ; row 8
   hh_row_check ; row 9
   hh_row_check ; row 10
