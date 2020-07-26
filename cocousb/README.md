@@ -1,4 +1,4 @@
-# CoCoUSB - Running your COCO from a USB powerstrip
+# CoCo USB Power Mod - Running your COCO from a USB powerstrip
 
 This modification can be useful if your power supply is bad. However, my
 primary motivation was how hot my CoCo 2 ran. This modification changes your
