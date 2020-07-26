@@ -142,9 +142,9 @@ to remove Q1. We describe the options and our rationale below.
   to actually damage it.
 
 Start by removing the motherboard and its backing. Q1 has a heat sync around
-it. Part of this is bent in to not touch and melt the keyboard plastic.
-Carefully hand bend this straight. Use needlenose pliers or a driver to loosen
-the bolts and carefully remove them.
+it. Part of this heat sync is bent in so it does not touch and melt the
+keyboard plastic. Carefully hand bend this straight. Use needlenose pliers or a
+driver to loosen the bolts and carefully remove them.
 
 Desolder the two connections (between the screws) on the underside of the
 motherboard and remove Q1. I used a solder sucker and sort of gently pulled at
@@ -188,9 +188,10 @@ everytime I take the top shell off my CoCo.
 
 You might ask why we don't run the 1/8" mono plug out the hole the power cord
 went out? This seems reasonable until you look inside the case. The strain
-relief posts are right behind this opening and you cannot fit the 1/8" plug in
-that space without cutting those posts out. A small hole seemed less scary to
-me than cutting out the posts.
+relief posts are right behind this opening (you can clearly seen the posts in
+the next image below) and you cannot fit the 1/8" plug in that space without
+cutting those posts out. A small hole seemed less scary to me than cutting out
+the posts.
 
 #### Attach the DC-DC Step-up Boost Converter Dual Output Power Supply
 
