@@ -5,8 +5,9 @@ primary motivation was how hot my CoCo 2 ran. This modification changes your
 CoCo from running on AC power to operating on DC power.
 
 The permanent modification requires some hardware skill to accomplish.
-Removing the transformer (easy) and the Q1 power transistor (much harder).
-However, you can try this out with a simple clip-on cable attached to your CoCo
+Removing the transformer (easy) and the Q1 power transistor (much harder) take
+a bit of skill as well as soldering connections to the motherboard.  However,
+you can try this out with a simple clip-on cable attached to your CoCo
 motherboard. The tryout setup has some limitations, but can let you see if you
 really want to proceed with a permanent modification.
 
@@ -125,7 +126,7 @@ to remove Q1. We describe the options and our rationale below.
   option being simple to do (the SALT is socketed in my CoCo). The SALT is not
   a replaceable chip.
 * (NOPE) Trace cut the connections to Q1. This would be fine but is harder to
-  undo. But is reasonable approach.
+  undo. But is a reasonable approach.
 
 * (CHOSEN) Desolder and remove the Q1 transistor from the CoCo. This stops the
   SALT from creating 5V DC power but allows all its other functions to work.
@@ -136,8 +137,8 @@ to remove Q1. We describe the options and our rationale below.
 
 Start by removing the motherboard and its backing. Q1 has a heat sync around
 it. Part of this is bent in to not touch and melt the keyboard plastic.
-Carefully bend this straight. Use needlenose pliers or a driver to loosen the
-bolts and carefully remove them.
+Carefully hand bend this straight. Use needlenose pliers or a driver to loosen
+the bolts and carefully remove them.
 
 Desolder the two connections (between the screws) on the underside of the
 motherboard and remove Q1. I used a solder sucker and sort of gently pulled at
@@ -240,4 +241,6 @@ The permanent mod is complete.
 
 Its a good idea to pull at all the solder connections to be sure they are solid
 and test connections with a multimeter (beep test). Before you screw on the
-top, power up the machine and make sure everything works okay.
+top, power up the machine and make sure everything works okay. The heat sink Q1
+was inside of won't heat up so if your keyboard fits you don't need to bend it
+back like it was (just hand bend it so your keyboard fits in okay).
