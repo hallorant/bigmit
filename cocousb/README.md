@@ -83,6 +83,11 @@ note.
   the power system in the CoCo can provide. Most USB power strips provide
   5V DC at 2.4 amps but a CoCo only uses 1 amp (or less).
 
+It is oka to switch back and forth from using the tryout cable USB power to
+wall plug power. Say you need to use the cassette for a bit. The only rule is
+__use one or the other__. Don't plug them both in at once! I ran this setup for
+several months.
+
 ### Permanent USB power modification
 
 The permanent USB power modification overcomes all the shortcomings of the
