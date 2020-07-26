@@ -18,7 +18,7 @@ output connection. But you want to open up your CoCo 2 and look at the left
 side of the motherboard (just below the transformer). If you have a Rev B
 you'll see an identification as shown in the picture below.
 
-!["CoCo 2 Rev B Motherboard Identification](../etc/images/coco2_rev_b_id.jpg?raw=true "CoCo 2 Rev B Motherboard Identification")
+!["CoCo 2 Rev B Motherboard Identification](../etc/images/coco2_rev_b_board_id.jpg?raw=true "CoCo 2 Rev B Motherboard Identification")
 
 ### How to spot an incompatible modification
 
