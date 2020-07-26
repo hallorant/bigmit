@@ -83,10 +83,10 @@ note.
   the power system in the CoCo can provide. Most USB power strips provide
   5V DC at 2.4 amps but a CoCo only uses 1 amp (or less).
 
-It is safe to switch back and forth betwee using the tryout-cable-USB power to
-wall-plug power. Say you need to use the cassette for a bit. The only rule is
-__use one or the other__. Don't plug them both in at once! I ran this setup for
-several months.
+It is safe to switch back and forth between using the tryout-cable-USB power
+and wall-plug power. Say you need to use the cassette for a bit. The only rule
+is __use one or the other__. Don't plug them both in at once! I ran this setup
+for several months.
 
 ### Permanent USB power modification
 
