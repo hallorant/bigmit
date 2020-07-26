@@ -124,7 +124,8 @@ to remove Q1. We describe the options and our rationale below.
 
 * (NOPE) Bend up pins on the SALT. I dismissed this immediately despite this
   option being simple to do (the SALT is socketed in my CoCo). The SALT is not
-  a replaceable chip.
+  a replaceable chip. It is also not clear this would "turn off" Q1 completely.
+  It might still generate significant heat.
 * (NOPE) Trace cut the connections to Q1. This would be fine but is harder to
   undo. But is a reasonable approach.
 
