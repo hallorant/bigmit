@@ -181,6 +181,12 @@ damaging the wire connections. You can see I put the CoCoVGA sound mod over to
 the left. That mod is another 1/8" mono plug that I don't need to remove
 everytime I take the top shell off my CoCo.
 
+You might ask why we don't run the 1/8" mono plug out the hole the power cord
+went out? This seems reasonable until you look inside the case. The strain
+relief posts are right behind this opening and you cannot fit the 1/8" plug in
+that space without cutting those posts out. A small hole seemed to me to be a
+less scary than cutting out the posts.
+
 #### Attach the DC-DC Step-up Boost Converter Dual Output Power Supply
 
 Attach the little board to the back screw hole of the original power supply. Do
