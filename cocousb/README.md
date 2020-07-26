@@ -169,7 +169,7 @@ __Case mod:__ Drill a hole in the lower case such that the 1/8" jack plug
 connector fits through the hole. This may be anywhere on the case but I show
 where I put it in the picture below (circled in green). Use care and ensure the
 jack fits behind the plastic (about half way up seems to work okay). I also
-recommend drilling a little small hole then the bigger one.
+recommend drilling a little hole then using that to guide the bigger one.
 
 !["CoCo 2 Rev B Case Mod"](../etc/images/coco2_rev_b_case_mod.jpg?raw=true "CoCo 2 Rev B Case Mod")
 
@@ -184,8 +184,8 @@ everytime I take the top shell off my CoCo.
 You might ask why we don't run the 1/8" mono plug out the hole the power cord
 went out? This seems reasonable until you look inside the case. The strain
 relief posts are right behind this opening and you cannot fit the 1/8" plug in
-that space without cutting those posts out. A small hole seemed to me to be a
-less scary than cutting out the posts.
+that space without cutting those posts out. A small hole seemed less scary to
+me than cutting out the posts.
 
 #### Attach the DC-DC Step-up Boost Converter Dual Output Power Supply
 
