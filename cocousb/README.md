@@ -153,11 +153,11 @@ from the transistor to the heat sync and can stick a little. I did some minor
 damage to the traces (right near the transistor attachment) but this would be
 much easier to fix than a trace cut.
 
-Once you have the transistor out. I suggest you put the bolts back on. You
-could even tape the transistor into the cage to save it inside the CoCo (make
-sure you cover the pins with electrical tape). Below is a picture of this out
-of the machine and the bolts back in. This is, by far, the hardest part of this
-modification so take your time and get help if you need it.
+Once you have the transistor out. I suggest you put the heat sink and bolts
+back on. You could even tape the transistor into the cage to save it inside the
+CoCo (make sure you cover the pins with electrical tape). Below is a picture of
+this out of the machine and the bolts back in. This is, by far, the hardest
+part of this modification so take your time and get help if you need it.
 
 !["CoCo 2 Rev B Q1 Transistor Removed"](../etc/images/coco2_rev_b_q1.jpg?raw=true "CoCo 2 Rev B Q1 Transistor Removed")
 
@@ -200,6 +200,14 @@ not crank this down, just snug it. The screw is insolated so it doesn't short
 out the little board. The image below shows what this looks like (when the mod
 is complete). Reminder, do not crank the screw, just snug it so the board
 doesn't flop around.
+
+You might have a small notch in the boost converter and a normal screw. To
+attach this start the screw and slide the notch into the gap. Snug the srew so
+the board holds.
+
+If you have no screw the back of your boost converter has two sided tape.
+remove the backing and push to attach the boost coverter to the bottom of the
+power supply square.
 
 !["CoCo 2 Rev B Attach DC to DC board"](../etc/images/coco2_rev_b_dc_to_dc.jpg?raw=true "CoCo 2 Rev B Attach DC to DC board")
 
