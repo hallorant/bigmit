@@ -7,10 +7,36 @@ REG     EQU     79H     ;WRITE REG PORT
 ADDR    EQU     79H     ;WRITE VRAM DATA ADDR
 DATA    EQU     78H     ;READ/WRITE VRAM DATA
 
+chroma_status	defb	0
+
+WAIT:
+  push bc
+  ld b,0
+_outer:
+  ld c,0
+_inner:
+  nop
+  nop
+  djnz _inner
+  dec b
+  jr z,_outer
+  pop bc
+  ret
+
+LONG_WAIT:
+  push bc
+  ld b,0
+_lw0:
+  call WAIT
+  djnz _lw0
+  pop bc
+  ret
+
 PORTON	PUSH	AF	;ENABLE SYSTEM I/O BUS
 	LD	A,10H
-	OUT	(0ECH),A
+	OUT	($EC),A
 	IN	A,(REG)	;TMS9918A STATUS
+	LD	(chroma_status),a
 	POP	AF
 	RET
 ;
@@ -22,7 +48,7 @@ RAMOUT	CALL	PORTON	;ENABLE I/O BUS
 	RES	7,H
 	OUT	(C),L	;OUTPUT ADDRESS
 	OUT	(C),H
-	NOP
+        NOP
 	OUT	(DATA),A	;SEND DATA TO VRAM
 	RET
 ;
@@ -33,9 +59,40 @@ RAMIN	CALL	PORTON
 	RES	7,H
 	OUT	(C),L
 	OUT	(C),H
-	NOP
+        NOP
 	IN	A,(DATA)	;GET DATA
 	RET
+
+;
+; ROUTINE TO WRITE DATA TO A REGISTER
+; DATA IN A, REG # IN B
+REGOUT  CALL    PORTON  ;SEE TABLE 2-1 OF TMS9918A MANUAL
+        OUT     (REG),A
+        LD      A,B
+        OR      80H
+        OUT     (REG),A
+        RET
+
+;
+; ROUTINE TO INITILIZE MODE 2 GRAPHICS
+;
+MODE2   LD      HL,M2TBL        ;DATA
+        LD      B,6             ;REGISTER #
+LP0     LD      A,(HL)
+        CALL    REGOUT  ;OUT DATA TO REGISTERS
+        INC     HL
+        DEC     B
+        JP      P,LP0
+        RET
+;
+M2TBL   DEFB    7       ;SEE SECTIONS 2.2 TO 2.7 OF
+        DEFB    56      ;TMS9918A MANUAL
+        DEFB    3
+        DEFB    255
+        DEFB    6
+        DEFB    0C2H
+        DEFB    2
+
 
 ; ------------------------------------------------------------------
 ; Subroutine to covert 1 byte into a hex value in ASCII. This has been
@@ -77,7 +134,7 @@ title_txt	defb    'TRS-80 CHROMATRS CHECKOUT'
 title_len	equ     $-title_txt
 memory_txt	defb    'CHROMATRS MEMORY:'
 memory_len	equ     $-memory_txt
-status_txt	defb    '  $0000 set to $00 read back $00'
+status_txt	defb    '  $0000 set to $00'
 status_len	equ     $-status_txt
 pf_txt		defb    '  Pass count $0000 Fail count $0000'
 pf_len		equ     $-pf_txt
@@ -91,18 +148,18 @@ chroma_fail	defw	0
 log_addr_start	equ	screen+row*5
 log_addr	defw	log_addr_start
 
+test_page	defb	0
 test_addr	defw	0
-test_byte	defb	0
+test_byte	defb	$a5
 read_byte	defb	0
 
-
-; reads and writes a memory location on the chroma board updates
+; reads and writes a 256-byte memory block on the chroma board updates
 ; status_txt with the outcome.
-; hl chroma address
-; a byte to write
+; a - msb of chroma address to write block
 chroma_mem:
+  ld h,a
+  ld l,0
   ld (test_addr),hl
-  ld (test_byte),a
 
   ld a,h
   ld hl,status_txt+3
@@ -114,15 +171,6 @@ chroma_mem:
   ld a,(test_byte)
   ld hl,status_txt+16
   call barden_hexcv
-  ld hl,(test_addr)
-  ld a,(test_byte)
-  call RAMOUT
-  xor a ; clear a
-  ld hl,(test_addr)
-  call RAMIN
-  ld (read_byte),a
-  ld hl,status_txt+30
-  call barden_hexcv
 
   ; Show the memory test status text on the screen.
   ld hl,status_txt
@@ -130,22 +178,66 @@ chroma_mem:
   ld bc,status_len
   call barden_move
 
-  ld a,(read_byte)
-  ld c,a
+  ; Output the first byte.
+  ld hl,(test_addr)
   ld a,(test_byte)
-  cp c
-  jr z,pass
-fail:
-  ld hl,(chroma_fail)
-  inc hl
-  ld (chroma_fail),hl
-  call output_fail_log
+  call RAMOUT
+  ; Output 254 bytes now that autoincrement addr is setup.
+  ld b,$ff
+_write_block:
+  out (DATA),a
+  djnz _write_block ; 254 times
+
+  call LONG_WAIT
+
+  call reset_log
+
+  ; Input the first byte.
+  xor a
+  ld hl,(test_addr)
+  call RAMIN
+  call log_byte
+  ; Input 254 bytes now that autoincrement addr is setup.
+  ld b,$ff
+_read_block:
+  in a,(DATA)
+  call log_byte
+  djnz _read_block ; 254 times
   ret
-pass:
-  ld hl,(chroma_pass)
+
+log_byte:
+  push af
+  push hl
+  push bc
+  ld hl,(log_addr)
+  push hl
+  call barden_hexcv
+  pop hl
   inc hl
-  ld (chroma_pass),hl
+  inc hl
+  ld (log_addr),hl
+  call WAIT
+  pop bc
+  pop hl
+  pop af
   ret
+
+reset_log:
+  push hl
+  push bc
+  ld hl,log_addr_start
+  ld (log_addr),hl
+  ld c,2
+_outerr:
+  ld b,0
+_innerr:
+  ld (hl),$70
+  djnz _innerr
+  dec c
+  jr z,_outerr
+  pop bc
+  pop hl
+ret
 
 output_fail_log:
   ld a,(read_byte)
@@ -230,25 +322,18 @@ main:
   ld bc,memory_len
   call barden_move
 
-memtest:
-  ld c,0
-wait:
-  nop
-  nop
-  djnz wait
+  call MODE2
 
-  ld hl,(chroma_addr)
-  ld a,$a5 ; 1010_0101
+memtest:
+
+  ld a,(test_page)
   call chroma_mem
 
-  ld hl,(chroma_addr)
-  inc hl
+  ld a,(test_page)
+  inc a
   ; loop around after 16K
-  ld a,h
   and $3f ; 0011_1111
-  ld h,a
-  ld (chroma_addr),hl
+  ld (test_page),a
+  jr memtest
 
-  call output_pass_fail
-  jp memtest
   end main
