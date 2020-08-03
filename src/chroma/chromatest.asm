@@ -136,10 +136,8 @@ memory_txt	defb    'CHROMATRS MEMORY:'
 memory_len	equ     $-memory_txt
 status_txt	defb    '  $0000 set to $00'
 status_len	equ     $-status_txt
-pf_txt		defb    '  Pass count $0000 Fail count $0000'
-pf_len		equ     $-pf_txt
-log_txt		defb    '$0000->[$00] '
-log_len		equ     $-log_txt
+bad_byte_txt	defb	'  $00 bad bytes'
+bad_byte_len	equ     $-bad_byte_txt
 
 chroma_addr	defw	0
 chroma_pass	defw	0
@@ -152,6 +150,8 @@ test_page	defb	0
 test_addr	defw	0
 test_byte	defb	$a5
 read_byte	defb	0
+
+bad_byte_ct	defb	0
 
 ; reads and writes a 256-byte memory block on the chroma board updates
 ; status_txt with the outcome.
@@ -209,6 +209,7 @@ log_byte:
   push af
   push hl
   push bc
+  push af
   ld hl,(log_addr)
   push hl
   call barden_hexcv
@@ -216,6 +217,14 @@ log_byte:
   inc hl
   inc hl
   ld (log_addr),hl
+  pop af
+  cp $a5
+  jr z,_log_wait
+  ld a,(bad_byte_ct)
+  inc a
+  ld (bad_byte_ct),a
+_log_wait:
+  call output_bad_byte_count
   call WAIT
   pop bc
   pop hl
@@ -223,8 +232,11 @@ log_byte:
   ret
 
 reset_log:
+  push af
   push hl
   push bc
+  ld a,0
+  ld (bad_byte_ct),a
   ld hl,log_addr_start
   ld (log_addr),hl
   ld c,2
@@ -237,69 +249,18 @@ _innerr:
   jr z,_outerr
   pop bc
   pop hl
+  pop af
 ret
 
-output_fail_log:
-  ld a,(read_byte)
-  ld hl,log_txt+9
-  call barden_hexcv
-  ld hl,(test_addr)
-  ld a,h
-  ld hl,log_txt+1
-  call barden_hexcv
-  ld hl,(test_addr)
-  ld a,l
-  ld hl,log_txt+3
+output_bad_byte_count:
+  ld a,(bad_byte_ct)
+  ld hl, bad_byte_txt+3
   call barden_hexcv
 
-  ; output log about a failure
-  ld hl,log_txt
-  ld de,(log_addr)
-  ld bc,log_len
-  call barden_move
-
-  ld hl,(log_addr)
-  ld d,0
-  ld e,log_len
-  add hl,de
-  ld (log_addr),hl
-
-  ; Check if we went off the screen
-  ld hl,(log_addr)
-  ld a,h
-  cp $3f
-  ret c ; a < $3f
-  ld hl,(log_addr)
-  ld a,l
-  cp $f0
-  ret c
-  ret z
-  ld hl,log_addr_start
-  ld (log_addr),hl
-  ret
-
-output_pass_fail:
-  ld hl,(chroma_pass)
-  ld a,h
-  ld hl, pf_txt+14
-  call barden_hexcv
-  ld hl,(chroma_pass)
-  ld a,l
-  ld hl, pf_txt+16
-  call barden_hexcv
-  ld hl,(chroma_fail)
-  ld a,h
-  ld hl, pf_txt+31
-  call barden_hexcv
-  ld hl,(chroma_fail)
-  ld a,l
-  ld hl, pf_txt+33
-  call barden_hexcv
-
-  ; Show the pass/fail counts on the screen.
-  ld hl,pf_txt
-  ld de,screen+64*4
-  ld bc,pf_len
+  ; Show the bad byte count on the screen.
+  ld hl,bad_byte_txt
+  ld de,screen+64*15
+  ld bc,bad_byte_len
   call barden_move
   ret
 
