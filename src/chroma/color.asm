@@ -1,3 +1,9 @@
+; Robert French has permitted making the enclosed freely downloadable with the
+; following copyright notice:
+;
+; This material is licensed under Attribution-ShareAlike 4.0 International
+; (CC BY-SA 4.0) https://creativecommons.org/licenses/by-sa/4.0/
+
 ;	ORG	0B000H	;FOR 32K MACHINES
 	ORG	0F000H	;FOR 48K MACHINES
 ;
