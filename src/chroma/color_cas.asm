@@ -5,13 +5,16 @@
 ; (CC BY-SA 4.0) https://creativecommons.org/licenses/by-sa/4.0/
 
 ;
-; [Sep 2020 Tim Halloran] Original code for floppy disk version of the driver.
+; [Sep 2020 Tim Halloran] Cassette version of the driver in 'color_cas.asm'
+;   The INIDOS has been removed (was setting 'Mem Size?' in the code)
+;   because this broke the BASIC checks in DEMO/BAS (14 bytes off).
+;   JP 402DH (the DOS exit) has been replaced with JP 1A19H.
 ;
 
 ;	ORG	0B000H	;FOR 32K MACHINES
 	ORG	0F000H	;FOR 48K MACHINES
 ;
-GO	JP	INIDOS
+GO	JP	CONT
 ;
 INIT1	JP	MODE1	;INITIALIZE MODE 1 GRAPHICS
 INIT2	JP	MODE2	;INITIALIZE MODE 2 GRAPHICS
@@ -61,13 +64,6 @@ REG	EQU	79H	;WRITE REG PORT
 ADDR	EQU	79H	;WRITE VRAM DATA ADDR
 DATA	EQU	78H	;READ/WRITE VRAM DATA
 ;
-INIDOS	LD	HL,GO
-	LD	A,(125H)	;CHECK MODEL i OR iii
-	CP	49H		;IF MODiii THEN YES
-	JP	Z,MODIII
-	LD	(4049H),HL	;MOD i
-	JP	CONT
-MODIII	LD	(4411H),HL	;MODIII
 CONT	CALL	MODE2
 	CALL	CLS
 	CALL	INSPR
@@ -80,12 +76,12 @@ CONT	CALL	MODE2
 	LD	HL,LINE4
 	CALL	IMESG
 	CALL	CBAR
-	JP	402DH
+	JP	1A19H
 ;
 LINE1	DEFW	140AH	;X COR,Y COR,STR LEN,COLOR
-	DEFW	6F26H
-;	DEFM	'CHROMAtrs 32K Diskette Software, V 1.1'
-	DEFM	'CHROMAtrs 48k Diskette Software, V 1.1'
+	DEFW	6F25H
+;	DEFM	'CHROMAtrs V 1.1 32k Cassette Software'
+	DEFM	'CHROMAtrs V 1.1 48k Cassette Software'
 LINE2	DEFW	1414H
 	DEFW	5F27H
 	DEFM	'(C) 1982, SOUTH SHORE COMPUTER CONCEPTS'
@@ -94,7 +90,7 @@ LINE3	DEFW	141EH
 	DEFM	'1590 BROADWAY, HEWLETT, NY 11557 '
 LINE4	DEFW	1428H
 	DEFW	0CF23H
-	DEFM	'ORDERS & INFO: (516) 569-4390      '
+	DEFM	'ORDERS & INFO: Ian Mavric          '
 LINE5	DEFW	64B4H
 ;
 IMESG	LD	A,(HL)	;PLACE 4 PARAMETERS & STR ADDRESS
