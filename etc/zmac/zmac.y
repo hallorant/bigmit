@@ -1,6 +1,6 @@
 %{
 // GWP - keep track of version via hand-maintained date stamp.
-#define VERSION "7jun2020"
+#define VERSION "25aug2020"
 
 /*
  *  zmac -- macro cross-assembler for the Zilog Z80 microprocessor
@@ -211,10 +211,12 @@
  *		Register aliases.  Multiple statements per line roughed in.
  *
  * gwp 20-4-20	Preserve case of symbols in symbol table.  Output hexadecimal
- *		in upper case and show decimal value of symobls.
+ *		in upper case and show decimal value of symbols.
  *
  * tjh 9-5-20	Add -Dsym to allow definition of symbols on the command line.
  *		ZMAC_ARGS environment variable added to command line.
+ *
+ * gwp 25-8-20	Fix crash in "out (c),0"
  */
 
 #if defined(__GNUC__)
@@ -234,6 +236,7 @@
 #ifdef _MSC_VER
 #define strdup _strdup
 #define unlink _unlink
+#define strncasecmp _strnicmp
 #endif
 #endif
 
@@ -3446,7 +3449,7 @@ operation:
 			}
 			expr_free($6);
 
-			emit(2, E_CODE8, 0, 0355, 0101 + (6 << 3));
+			emit(2, E_CODE, 0, 0355, 0101 + (6 << 3));
 		}
 |
 	IM expression
@@ -6171,6 +6174,7 @@ int main(int argc, char *argv[])
 	int  files;
 	int used_o;
 	int used_oo;
+	char *zmac_args_env;
 #ifdef DBUG
 	extern  yydebug;
 #endif
@@ -6189,7 +6193,7 @@ int main(int argc, char *argv[])
 
 	// To avoid typing typical command-line arguments every time we
 	// allow ZMAC_ARGS environment variable to augment the command-line.
-	char *zmac_args_env = getenv("ZMAC_ARGS");
+	zmac_args_env = getenv("ZMAC_ARGS");
 	if (zmac_args_env) {
 		int new_argc = 0;
 		char *arg;
