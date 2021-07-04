@@ -1,0 +1,958 @@
+--------------------------------------------------------------------
+- VIDEO RECORDING WINDOWS 10
+- CAS FILE FORMAT
+- T-STATE COUNTING
+- COCO OS9
+- COCO VGA
+- COCO DISK USE
+- COCO DRIVEWIRE & CASSETTE
+- Z80 MHZ
+- GIT STUFF
+- ORG LOCATIONS
+- K CHART IN HEX
+- TRS80GP TESTING
+- RUNNING CMD ON TRS80GP (MY MACRO BUG)
+- LOADING PROGRAMS ON A MODEL II
+- ZMAC TEMP/LOCAL LABELS WITH --zmac
+- MEMORY MAPS
+- CASE OF THE BAD ENDING
+- THE QUEST FOR TEAR-FREE DRAWING
+- FUZZ OUT ON SCROLLING MODEL 1
+- EDTASM FILE FIX IN VI
+- CRTs
+--------------------------------------------------------------------
+- BASIC
+high memory peeks/pokes
+
+60020 IFPEEK(30634)=49THENPRINT"16K";:TM=119:O=0:GOSUB60072
+60022 IFPEEK(45226-65536)=51THENPRINT"32K";:TM=176:O=50944:GOSUB60072
+60024 IFPEEK(61610-65536)=52THENPRINT"48K";:TM=240:O=34560:GOSUB60072
+60030 IFPEEK(45240-65536)=51THENPRINT"32K";:TM=176:O=50944:GOSUB60075
+60040 IFPEEK(61624-65536)=52THENPRINT"48K";:TM=240:O=34560:GOSUB60075
+
+ hallorant: Hmm, IFPEEK(45226-65536)
+[10:03 PM] hallorant: These are negative numbers, this one is -20310
+[10:03 PM] hallorant: Some odd basic trick to get to higher memory?
+[10:04 PM] gp2000: Yes.  Peek only takes signed integer values.  So anything above 32767 has to be expressed in the -ve.  32768 is peek(-32768) and upward from there down to peek(-1) for 65535.
+--------------------------------------------------------------------
+- PI
+pi raspberry (default user)
+
+To change default account userid properly:
+ sudo passwd root (add password for root, login as root)
+ usermod -l newname pi
+ usermod -m -d /home/newname newname
+ sudo passwd -l root  (as new user to disable root again)
+
+sudo raspi-config (setup stuff, network, locale)
+sudo rpi-update (firmware)
+
+add to Windows 10 hosts: C:\Windows\System32\drivers\etc\hosts
+--------------------------------------------------------------------
+- CRTs
+
+Ian Mavric
+badge icon
+Gina from the Georgia VDC branch can still order them for you
+ email: gstuddard@mindspring.com
+  The order code I use is VDC1208DP31BE
+That's the same code for the tube that I just bought. I didn't know about VDC
+and Gina or I would have ordered from her.  I got mine from the company below.
+It was $95 and well packaged. Just putting this out for information that's all.
+They currently have white and green tubes and sadly, no amber.
+ Scott Dansky | President
+ Lexel Imaging Systems, Inc. | 510 Henry Clay Blvd | Lexington, KY 40505
+ t: (859) 721-1600 ext. 153 | c: (859) 221-2153
+ e: sdansky@lexelimaging.com
+--------------------------------------------------------------------
+
+- MODEL 1 TRSIO
+2.4GHz network -- configure little google in dual band.
+SMB share, raspberry pi
+SMB only allows one component
+
+From Arno Puder to Everyone:  08:40 PM
+http://members.iinet.net.au/~ianmav/downloads/Quinnterface.zip
+From Me to Everyone:  08:41 PM
+
+http://members.iinet.net.au/~ianmav/trs80/downloads.htm
+
+From Arno Puder to Everyone:  08:46 PM
+https://raw.githubusercontent.com/apuder/TRS-IO/master/examples/trs-nic/WHOIS.BAS
+
+From Arno Puder to Everyone:  08:54 PM
+https://raw.githubusercontent.com/apuder/TRS-IO/master/examples/trs-fs/CAT.BAS
+https://github.com/apuder/TRS-IO/blob/master/src/esp/components/retrostore/rsclient.cmd
+
+--------------------------------------------------------------------
+- EDTASM FILE FIX IN VI
+
+This reminds me, the /ASM format for the original files is <CR> delimited lines
+with 5 byte 0-padded line numbers on each line with the high bit set.  And
+there's a classic CP/M ^Z to mark EOF.  Each line number has a space after it
+so this'll do most of the job in vi: 1,$s/^......//;
+
+George Phillips
+
+--------------------------------------------------------------------
+- FUZZ OUT ON SCROLLING MODEL 1
+
+It seems to me that when a scroll is performed the next line up from the bottom
+has all the video ram filled with 1s. This implies a read problem. Instead of
+reading what is in the ram the value 1111111 is read and then transferred to
+the next line up. The bottom line is always OK because you are constantly
+writing to it. If the tri-state buffers which connect the data out pins of the
+VRAM to the data bus are not activated, then the data bus will be floating and
+would most likely be interpreted as a series of 1s.
+Higgs Bosin
+
+Despite the apparent evidence to the contrary, I think the suggestions that
+video RAM read circuitry was faulty were the correct cause. Obviously the
+screen could read video memory just fine but the processor could not. Possibly
+as simple as Z-80's read request signals not activating the video RAM was at
+fault.  Randomly guessing, it may be that the read request by the Z-80 is out
+of spec but the new video RAM tolerates the out of spec signal.
+
+George Phillips.
+--------------------------------------------------------------------
+- GOTEK (Drives)
+gp2000: Likely you need to enable the driver for it.  I believe the command for Model 3 LDOS is:
+SYSTEM (DRIVE=3,ENABLE)
+SYSGEN - make it perminent
+--------------------------------------------------------------------
+- COCO Q1 is a 2N6569
+Schematic calls Q1 a 2N6569 Special. Parts list say SJ5812
+--------------------------------------------------------------------
+- VIDEO RECORDING WINDOWS 10
+
+- Whole Screen - Use PowerPoint go into Insert -> Screen Capture. If you want
+  to record the entire screen, press the Windows + Shift + F keys
+simultaneously.  (controls hide off the top.) Windows + Shift + R starts
+recording. Windows + Shift + Q stops. Right click on the video in the slide and
+choose "Save Media As..." to save movie.
+
+- Window - Windows + G when in the right window. You control this with a little
+  dialog box. Press stop when done. Saves to Captures in Videos.
+
+--------------------------------------------------------------------
+- CAS FILE FORMAT
+  Barden pg 223 More TRS-80 Assembly Language Programming &
+  loader.cpp in the trld source code by George Phillips
+
+  255 bytes of $00
+  1 byte $a5 (sync)
+  1 byte $55 (media byte)
+  n RECORDS
+    $3c
+      length 1 byte  (note 00 indicates 256 -- decrement is prior to check)
+      address (lsb, msb) 2 bytes, e.g., org $5200 is $00 $52
+      output length bytes (so length is of the program data, not the record)
+      output checksum 1 byte: add up all the bytes EXCEPT the length.
+    END-OF-RECORD
+  1 byte $78
+  2 byte entry point address lsb then msb, e.g., org $5200 is $00 $52
+
+--------------------------------------------------------------------
+- T-STATE COUNTING
+
+In the listing (with line numbers off) I see the t-state counts (which is super
+nice).
+
+    -   5200            barden_fill:
+   0+7  5200  72          ld (hl),d  ; Actually do fill
+   7+6  5201  23          inc hl     ; To next addr
+  13+6  5202  0B          dec bc     ; Count down byte count
+  19+4  5203  78          ld a,b     ; Get MSB of count
+  23+4  5204  B1          or c       ; Merge in LSB of count -- will be 0 iff both bytes were 0
+  27+7+5        5205  20F9        jr nz,barden_fill
+  34+10 5207  C9          ret
+
+The above is great for this function (it is first) but the totals keep going
+up. Is there a way (e.g., a pragma or some such) to reset the total back to
+zero at points in my assembly code?
+
+I'm wanting to do something like
+
+pragma cycle_counts reset
+bardin_fill:
+  ...
+  ret
+
+I do know how to do counts like below (and find equ value in the bottom of the
+listing)
+
+code1:
+  hh_row_check ; row 0
+time_check    equ     t($)-t(code1)
+
+Which is super useful, but not good for a casual glance at a function to check
+it is not growing to be outrageous (like when I inline macro after macro, which
+is using macros, you get the idea).
+
+Tim
+
+Yes, there's the sett pseudo op:
+
+    sett    0
+
+Any expression is possible and it even works out to reference t($) so you can
+add time with it.  Sometimes I'll do something like:
+
+    call    sub
+    sett    t($)+time_sub
+
+Then the running count includes the fixed time spent in the subroutine.
+
+Or also to account for a loop:
+
+        ld        b,5
+t0    equ    t($)
+lp:    ld    (hl),a
+        dec   b
+        jp      nz,lp
+sett    t($)+5*(t($)-t0)
+
+Notice that I didn't use relative branching there because the calculation gets
+more complicated and you start to need the tlo() and thi() functions.
+
+Have considered various ways to help track cycles in an even more helpful way
+but nothing has really struck me as a good solution.  For the most part I think
+coming up with a set of macros to handle it would be as good as anything.
+                                        -- George
+--------------------------------------------------------------------
+- COCO USB
+R Allen Murphey
+he was on CoCoTALK in April for the "Virtual CoCoFest" episode demoing it
+
+Terry Trappe has been reverse engineering the SALT not sure I've ever seen one
+- but the CoCo1 used discrete components rather than a SALT and I think that's
+what Terry has been reversing from so digging into the CoCo1 schematic should
+show you the circuits that they consolidated INTO the SALT chip in the later
+revs
+
+https://www.facebook.com/groups/2359462640/permalink/10158191599277641/
+https://www.facebook.com/groups/2359462640/permalink/10158249875927641/
+
+--------------------------------------------------------------------
+- COCO OS9
+DOS to boot (level 1 use VGA versions)
+chd <path>
+dir -x -e [path]
+free <devicename>
+list <filename>
+mkdir <filename>
+rename <filename1> <filename2>
+
+tsmon /t1 &  -- to start terminal login 2400 is default on Level 2
+procs -e to see terminal
+xmode to see terminal settings
+
+Use <clear>+0 to un-caps lock.
+--------------------------------------------------------------------
+- COCO VGA
+0.92 (11/17/2019)
+AMC2 REV 01 board form factor (CoCo 2 vertical RF can, some Dragons)
+Ordered programmer on 23 May 2020
+--------------------------------------------------------------------
+- COCO OS9
+green terminal
+  display 1b 33 2 1b 32 3 1b 34 2
+black on white
+  display 1b 33 0 1b 32 2 1b 34 0
+
+montype r
+--------------------------------------------------------------------
+- COCO DISK USE
+LOAD "F.BAS"
+LOADM "F.BIN"
+EXEC
+--------------------------------------------------------------------
+- COCO DRIVEWIRE & CASSETTE
+To load most wav files from cassette:
+CLOADM:EXEC
+
+Drivewire on coco:
+CLOADM:EXEC
+-then play hdbcc#.wav
+
+To start drivewire program on pc:
+{hallo@DESKTOP-NSGS5UG:/d/Media/bin/DriveWire4} ./DW4UI.sh
+-Check the Device Manager for the COM port you got under Ports.
+-Under DriveWire under the Config menu choos Simple Config Wizard..
+ - Choose your machine and COM port.
+-Load the disk up top and right-click and choose reload disk in drive X.
+ (I'm not sure what this does but some on-line docs said it is needed.)
+-The server log is quite helpful, look what errors it says to diagnose.
+
+For OS9: mount os9 disk image then on coco enter: DOS
+
+--------------------------------------------------------------------
+- Z80 MHZ
+
+Model 1 Z80   1.774 MHz   1774000 t-states per second
+Model 3 Z80A  2 Mhz       2000000 t-states per second
+Model 4 Z80A  4 Mhz       4000000 t-states per second
+
+Screen refresh 60 times per second
+Timer interrupt (Model 3) 30 times per second
+
+Model 1 VBLANK signal -- It should be about 16.666 ms per cycle or 60 cycles per second.
+
+The quarter of a cycle is about right for VBLANK.  The display is 264 lines of
+which 72 of them are the vertical blanking interval which is about 27.3 %.
+
+Port $FF input only provides D6 and D7 from Z44 (a buffer, I think).  There are
+a number of spare gates and buffers so I imagine VDRV could be put onto bit 0
+of port $FF through a spare buffer outputting to D0 and activated by INSIG*
+(the port $FF decoding logic is at the bottom of the 4th panel of Sheet 2 of
+the schematics I have.
+
+The VBLANK interval is 72 lines at 112 T-States per line.  Polling for the bit
+will take well under 112 T-States so we just need some screen access to happen
+for 71 lines to stay within VBLANK.  Here's something that should do:
+
+--------------------------------------------------------------------
+
+- GIT STUFF
+  revert a file: git checkout -- dot_animation_toy.asm
+--------------------------------------------------------------------
+- ZMAC STRING PROCESSING
+
+zmac doesn't have too much in the way of string processing.  It's a bit of a
+shortcoming as I think some of the original assemblers have some limited string
+comparison.
+
+There is IRPC which lets you iterate over the characters in a string.  It's
+nasty but you can parlay that into a macro that recognizes "bc" or the like.
+
+Here's an example I whipped up.  Needs refinement as it doesn't lowercase the
+input and it will overflow.  Probably best to compute the length of the string
+as you go and stop updating "value" at that point and decide that the strings
+don't match.
+
+isbc    macro    param
+value = 0
+    irpc    x,param
+    value *= 256
+    value += '&x'
+    endm
+match = value == 256 * 'b' + 'c'
+    endm
+
+    isbc    abc
+
+    if    match
+    ascii    'Matches'
+    else
+    ascii    'No!'
+    endif
+
+    isbc    bc
+
+    if    match
+    ascii    'Matches'
+    else
+    ascii    'No!'
+    endif
+
+    isbc    BC
+
+    if    match
+    ascii    'Matches'
+    else
+    ascii    'No!'
+    endif
+
+                                                    -- George
+--------------------------------------------------------------------
+- ORG LOCATIONS
+Poor old Model I doesn't have square or curly brackets.
+
+Model I and III programs can start at $5200; Model 4 at $2600
+
+I think it has to be higher on the Model 4 if you call library programs (like DIR).
+ -- George
+--------------------------------------------------------------------
+- K CHART IN HEX
+ 3rd pos time 4 + (onef 0for00 1for40 2for80 3forc0)
+     HEX     DEC
+ 1K $0400    1024
+ 2K $0800    2048
+ 3K $0c00    3072
+ 4K $1000    4096
+ 5K $1400    5120
+ 6K $1800    6144
+ 7K $1c00    7168
+ 8K $2000    8192
+ 9K $2400    9216
+10K $2800   10240
+11K $2c00   11264
+12K $3000   12288
+13K $3400   13312
+14K $3800   14366
+15K $3c00   15360
+16K $4000   16384
+20K $5000   20480 (4K system limit)
+24K $6000   24576
+32K $8000   32768 (16K system limit)
+48K $c000   49152 (32K system limit)
+65K $ffff   65536 (48K system limit)
+--------------------------------------------------------------------
+- TRS80GP TESTING
+
+Oh, that reminds me of another thing about unit testing.  In the "-i" series of
+macros there are various ones that save screen shots.  And others which exit
+the emulator.  With "-batch" (so the screen shots are given an automatic name
+rather than prompting the user) it can be pretty easy to set up a whole series
+of unit tests.  We do this with the emulator itself.
+
+Take a look at the "Keyboard Input" section of the command line options:
+    http://48k.ca/trs80gp.html#cli
+and the "Automatic Input" section;
+    http://48k.ca/trs80gp.html#autoin
+
+It's not directly stated but the key thing is that the options can be chained
+together.  So you can do say -i "prog\r" to run a command and then wait for it
+to finish with "-iw Done" and then do a VRAM dump with "-it".  And then end
+with the "-ix" so trs80gp terminates.  Then just have the external program
+check that the VRAM dump matches what you expect.
+
+--------------------------------------------------------------------
+- RUNNING CMD ON TRS80GP (MY MACRO BUG)
+
+Playing around with trs80gp. I'm writing a z80unit testing framework (like
+junit) and decided to use OS calls for text display. Targeted at TRSDOS/LDOS 6
+right now.
+
+There seems to some difference between running
+
+trs80gp -m4 x80unit.cmd
+
+versus running
+
+trs80gp -m4 -d1 :tu4 -frehd
+then in the emulator (TRS621.DSK)
+IMPORT2 Z80UNIT.CMD
+Z80UNIT/CMD
+
+The bottom works the top doesn't. I also adjusted for LDOS, same results. I'm
+wondering if I'm doing something wrong here. From the docs, I think these two
+should be the same.
+
+Let me know what you think when you get time. I'm not blocked -- the IMPORT2
+works fine.
+
+I'm a bit shocked these operations systems are so different in their interface.
+My simple model 2 program is a lot different than the one below for similar
+system calls. How different are these DOSs over time? Wow
+
+Tim
+
+My z80unit.asm code is below:
+
+  org $3000
+
+; TODO move to include after this works
+
+; assertEquals <reg> <expected immediate value> <error message>
+; e.g., assertEquals a,10,'accumulator bad value'
+assertEquals macro reg,imm,msg,?msg_txt,?msg_len
+?msg_txt defb '`msg`'
+.term    defb $0d
+  ld hl,?msg_txt
+  ld a,10  ; @DSPLY
+  rst 40
+  endm
+
+; Fake main to try out stuff with.
+main:
+  assertEquals a,4,'foo bar'
+
+  ; Return to TRSDOS prompt.
+  ld hl,0  ; Normal termination
+  ld a,22  ; @EXIT
+  rst 40
+  end main
+
+ - - - - -
+
+The general answer here is to keep in mind that the CMD file injection by
+trs80gp is something of a hack so can't really be exactly the same as running a
+CMD file from the TRSDOS shell.
+
+One particular problem is that the injected CMD file won't have command line
+arguments.  Normally HL points to the rest of the command line past the program
+name.  Of course, that isn't what your program is running into but just an
+example.
+
+Ah, I didn't notice you included the source code.  Well, what I said above
+still stands but there is a big problem with your assertEquals macro in that it
+sticks the message right where it is instantiated.  ASCII characters will tend
+to move data between registers or operate on A so goodness what state things
+are in after that.  Best to make your macro:
+
+assertEquals macro reg,imm,msg,?msg_txt,?msg_len,?skip
+              jr   ?skip
+?msg_txt defb '`msg`'
+.term    defb $0d
+?skip:
+    ...
+
+Or "jp ?skip" if you expect to have especially long-winded (> 127 character)
+messages.
+
+BTW, if you're doing the "IMPORT2" method consider the "-i" series of commands
+that can execute the steps for you.
+
+And for anything but Model II I find trswrite to be quite handy.  Something
+along the lines:
+
+    zmac program
+    copy blank.dmk test.dmk
+    trswrite test.dmk zout\program.cmd
+    trs80gp -m4 -i "program\r"
+
+TRS-DOS on the TRS-80 has quite the journey.  It first came out on the Model I
+and was steadily improved but earlier they made something up for the Model II
+with its radical differences (for example, having program attribute bits).
+Seems that they then took that and stripped it down for the Model III.  Which
+is why TRSDOS on the III has a different file system than the Model I.
+
+They were at a bit of a loss when it came to TRSDOS for the Model 4 so gave the
+job to the LDOS guys.  They based it on LDOS which is more similar to Model I
+TRSDOS so it kind of came full circle.  Although Model 4 TRSDOS looks more like
+the Model II version in that it uses RST instructions for system calls.  LDOS 5
+for the Model I/III actually uses RST internally but the only documented entry
+points are the standard TRSDOS CALL locations.
+                                        -- George
+--------------------------------------------------------------------
+- LOADING PROGRAMS ON A MODEL II
+
+George Phillips The utilities disk for the Model II that comes with trs80gp
+includes an "IMPORT2" command than can bring in files. Check out the "File
+Import and Export" section in the trs80gp documentation:
+http://48k.ca/trs80gp.html Basic gist is that you do something like "trs80gp
+-m2 -d1 :tu2 -frehd" and then run "IMPORT2 -p HELLO"
+
+ trs80gp -m4 -d1 :tu4 -frehd
+ trs80gp -m4 -d1 :lu4 -frehd -ld
+trs80gp -m2 -d1 :lu2 -frehd -ld
+
+Then try to run it. If that works save a copy of the disk you wrote it to and
+then you should be able to bring that .DMK or .IMD file into your floppy
+emulator.
+
+George Phillips Another way is to use "File -> Load" which will just load your
+program into memory and then use the TRS-DOS DUMP command to save it out as a
+program file. And then move the virtual disk image to the floppy emulator.
+
+Timothy Halloran Does the load respect the ORG?
+
+George Phillips Yes, it loads it into memory as directed by ORGs.
+
+Timothy Halloran George Phillips This should work for all emulated machines
+too, right? not just the Model II.
+
+George Phillips Yes, I think they all have the DUMP command.  Though there's
+also IMPORT2 on utilities disks for Model I, III and 4.
+
+--------------------------------------------------------------------
+- ZMAC TEMP/LOCAL LABELS WITH --zmac
+
+With the --zmac flag labels that start with "." are temporary.  They're
+basically reset every time a non-temporary label is used.  And labels that
+start with "_" are local to the current file and aren't visible outside it.
+
+I waver on my usage of it.  For backwards compatibility with old assemblers the
+"." and "_" conventions can't be the default.  So I tend not to use the feature
+just because typing "--zmac" is so much extra work.  Yes, I've heard of shell
+scripts and batch files but then there's just another mouth to feed :-)
+                                        -- George
+--------------------------------------------------------------------
+- MEMORY MAPS
+
+Model I (Level 1)
+0000-0fff Level I ROM
+1000-37FF Not used
+3800-380f Keyboard
+3810-3bff Not used
+3c00-3fff Video
+4000-41ff RAM used by Basic Level 1
+4200-4fff Usable RAM here in a 4K machine
+5000-5fff Additional RAM in a 8K machine
+6000-7fff Additional RAM in a 16K machine
+8000-ffff Not used
+
+Model I (Level 2)
+0000-2fff Level II ROM
+3000-37df Not used
+37e0-37ff Memory Mapped I/O
+3800-38ff Keyboard map
+3900-3bff (Keyboard 'shadow'ed here)
+3c00-3fff Video
+4000-41ff RAM used by the ROM routines (Basic)
+4200-7Fff Usable RAM here in a 16K machine
+8000-bfff Additional RAM in a 32K machine
+c000-ffff Additional RAM in a 48K machine
+
+Model III (Model 4-Memory Map I)
+Addr      Description     Size (1K=1024)
+0000-1fff ROM A           8K
+2000-2fff ROM B           8K
+3000-37ff ROM C           2K (m4? less 37e8 - 37e9)
+37e8-37e9 Printer Status  2
+3800-3bff Keyboard        1K
+3c00-3fff Video           1K (M4: Page bit selects 1K of 2K)
+4000-7fff RAM             16K
+8000-bfff RAM             16K
+c000-ffff RAM             16K
+
+Model 4-Memory Map II
+0000-37ff RAM             14K
+3800-3bff Keyboard
+3c00-3fff Video RAM
+4000-7fff RAM             16K (end of one 32K bank)
+8000-ffff RAM             32K
+
+Model 4-Memory Map III
+0000-7fff RAM             32K (end of one 32K bank)
+8000-f3ff RAM             29K
+f400-f7ff Keyboard
+f800-ffff Video RAM
+
+Model 4-Memory Map IV
+0000-7fff RAM             32K (one 32K bank)
+8000-ffff RAM             32K (second 32K bank)
+f400-f7ff Keyboard
+f800-ffff Video RAM
+
+--------------------------------------------------------------------
+- CASE OF THE BAD ENDING
+
+	org	4a00h
+video	equ	3c00h
+start:	ld	hl,messge
+	ld	ix,video+512
+loop:	ld	a,(hl)
+	cp	0
+	jr	z,done
+	ld	(ix),a
+	inc	hl
+	inc	ix
+	jp	loop
+done:	jp	done
+messge	defb	'This is the TRS-80 Model III'
+	defb	0
+	end
+
+OK, sometimes I can be a little slow on the uptake.  I realize the problem with
+your hello.asm program.  It does not have an entry address.  Instead of just:
+
+    end
+
+it should have:
+
+    end    start
+
+Then things will work fine.
+
+But despite all that this is still a zmac bug.  Unlike /CMD and other formats,
+SYSTEM cassette files don't have a way of expressing the idea that data is to
+be loaded but not executed.  The SYSTEM command will keep loading data blocks
+until it sees one indicating the execution address.
+
+I'm not sure how to solve this.  The most obvious thing to do is to simply not
+output .cas files when there is no entry point.  That's technically correct as
+a .cas file cannot be generated.  But rather hard to explain why zmac refuses
+to output .cas (and associated .wav) files.
+
+The other option is to come put in some default entry address.  Well, if we
+stick in 0 then loading the .cas file will cause a reboot when you type
+"/<ENTER>".  I could put it to READY ($1A19) so that "/<ENTER>" goes to "READY
+>_" but that would be pretty confusing, too.
+
+Maybe there's a better option.  Any ideas?
+                                        -- George
+
+New zmac on the web site that doesn't do SYSTEM .cas or .wav output if an entry
+address is missing.  But it only warns if you explicitly ask for the output.
+And I put a note in the documentation.
+
+I think their problem was with using trs80gp's ability to instantly run
+programs.  I probably didn't make it clear that this is a development
+convenience and works in most cases but ultimately can't be the same as the
+normal loading process.  If given a .cas in SYSTEM file format I think it is
+quite close.  But if you drop in a /CMD there will be differences.
+
+So that's probably want went wrong.
+                                        -- George
+
+--------------------------------------------------------------------
+- THE QUEST FOR TEAR-FREE DRAWING
+
+George,
+
+Not sure you remember me from Tandy Assembly last year, but finally (after much
+hardware restoration) I'm getting back to zmac, and reading your website with
+great interest.
+
+I was playing with double-buffering animation (model 1 and model 3). Simply
+blasting a 1K double-buffer in a tight loop to the video memory seems to work
+on your emulator (at least model 3, not model 1) but not on real hardware. I'm
+trying to figure out why.
+
+That said your raster work got me interest if I can, as a much simpler problem
+than you have tacked, sync my buffer copy to the screen with the monitor's
+raster beam in order to avoid tearing. I think I'd want to know when the beam
+hit the bottom and is in transition up to the top -- that is where I'd want to
+copy the memory.
+
+Any pointers or suggestions?
+
+I believe you are heading back to TA this year (from Trash Talk they said you
+would be doing a tutorial). Hope to see you and your brother if he is coming,
+there.
+
+And super big thanks for your website and all the interesting stuff, zmac and
+your emulator really help make assembly on the TRS-80 much more fun to play
+around with.
+- Tim
+
+Peter and I will both be back at Tandy Assembly again this year; looking
+forward to chatting with you again.
+
+I can't think of why copying a 1K buffer to the screen in a tight loop would
+work on the emulator and not the real hardware.  I'd be happy to look at your
+code to see if I could spot any difficulties.
+
+On the Model I there is no way that I know of to synchronize automatically with
+the raster.  The expansion interface interrupt is driven by a 40 Hz timer that
+is independent of the video display.  On the Model III the 30 Hz interrupt
+comes exactly every 2 video frames (or 25 Hz on a 50 Hz machine) so
+synchronization is possible.  In any case, different code is needed on the
+Model I to use the 40 Hz interrupt so Model III code for it's 30 Hz interrupt
+won't work on the Model I.
+
+To avoid tearing the 30 Hz interrupt on the Model III is perfect as it occurs
+just after the last line of the display has finished.  There are two ways you
+can do it.  One is to run with interrupts disabled and poll the interrupt bit.
+Something like this should do:
+
+; One time setup to turn on the 30 Hz interrupt
+    di
+    ld    a,4
+    out    ($e0),a
+
+main:
+; Wait for interrupt to go off
+wait:
+    in    a,($e0)
+    and    4
+    jr    nz,wait
+    in    a,($ec)    ; clear 30 Hz interrupt
+; ... do the fast buffer copy to the screen.
+; ... and have all the program logic here
+    jp    main
+
+That will only work well if you guarantee that the buffer copy and program
+logic all run for less than 1/30th of a second.  If longer than sync will be
+lost because the interrupt will have long gone off before getting to main.  To
+counter this you could put a "in a,($ec)" at main: to clear the interrupt.
+That means that if you overrun then the code will wait until the next
+interrupt.  It at least will be in sync though it will round up to the nearest
+multiple of 1/30th of a second.
+
+Or you can have the Z-80 take the interrupt and do the buffer copy on the
+interrupt. This will require some coordination with the main loop.  The code in
+"beamhack2.html" actually does hook into the interrupt.  All you'd need to do
+is change that "jr z,sync1clock" to go to your buffer copy.  Though the routine
+there must clear the interrupt with "in a,($ec)" and also end with "pop af; jp
+sync1chain".  And it must preserve any other registers you use.
+
+                                                                -- George
+
+George, attached is my toy code, a cas and lst and a 7z of the sources. (I'm
+sure it is noob-ish)
+
+I did have a bug: address of memory versus contents of memory bug. So I fixed
+that up, and the emulator and hardware aligned. That said, the Model 1
+displayed '@' rather than ' ' until I figured out I had to fill memory with
+0x20 not 0 (0 works on the Model 3 but not the Model1)
+
+My little bouncing line animation works, but with lots of artifacts (esp on the
+Model 1) now I can play with the syncs you pointed out to me.
+
+From your email, have you ever considered adjusting the "wait" before copying
+the double-buffer to screen memory on the model 1 (to match sync) manually
+(with keys to adjust up and down)? if the logic was deterministic in time (my
+little code isn't, due to calc of line offset, but seems possible to get it so)
+it seems like you could "tune" the wait to match up with the sync and get nice
+animation.
+-- Tim
+
+Allowing the user to manually tune the beam sync on the Model I is something
+I've thought about.  I wrote a program to do so which was functional but wasn't
+very easy to use.  I did end up doing something like it with TRSVID.  On the
+Model I it displays the preview image using an exact 33,792 cycle loop so that
+all the video memory accesses will occur at the same point on the display.  If
+you're lucky then none of them will be on screen.  If not, I made it so
+pressing the left or right arrow would change the duration of the loop slightly
+so that the beam interference would occur at a different spot.  I had quite a
+debate with myself as to whether I should do that or just make the loop cycle
+at a slightly different rate so that the beam interference would roll past.
+
+Your code looks fine to me.  I have a few suggestions that might make things a
+bit easier.
+
+You can use a label on "END" so say "END MAIN".  Then you don't need the "JP
+MAIN" at the start.  Though I know it can be handy in trs80gp to use "-b 4a00"
+to stop at the start of the program.  But you can even avoid that if you load
+the ".bds" format.  Then you can use "-b MAIN".
+
+You probably want to use EQU for 'dash':
+
+dash    equ    0x8c
+...
+        ld    d,dash
+
+If you're just checking for zero you can use "OR A" instead of "CP 0".
+                                        -- George
+
+Yes, OR A is one byte instead of two and also 4 T-States instead of 7 for CP 0.
+
+There isn't too much in the way of unit test support.  Not really anything that
+can be automated without changes to the code.
+
+What I'll usually do is run with -batch and -ee and then have conditionally
+compiled code to which outputs to port $F8 (the printer port).  The "-batch"
+means it will create the output file without prompting.  And -ee is just to so
+the Z-80 code can exit the emulator when the test completes or fails.  The
+various emulator extension functions are described here:
+
+    http://48k.ca/trs80gp.html#ee
+
+To exit it should just be a matter of:
+
+        LD       A,$80
+        OUT    ($47),A
+
+BTW, if you're like me and sometimes end up with code that crashes and trashes
+memory so that you can't tell what's going on the emulator extensions that add
+memory protection can be a huge help.  Usually just write protecting the code
+will do it, or sometimes taking away execute permission from everything but my
+code catches the problem.
+
+I've attached the subroutine I use to detect between Model I, III and 4. The
+detection may not work on all emulators.
+
+The interrupt I use on the Model III is just the standard "Real Time Clock"
+interrupt which is really just every second vblank.  I'm sure it must be well
+documented.  For the beam effects I need to turn off wait states on video
+access and that feature is more obscure.  It is documented in the technical
+reference manual but it a bit vague on what it does (bit 5 of port $EC).
+
+I use winvi for editing my code: http://www.winvi.de/en/ But it has no syntax
+colouring or anything like that.  I've heard of Z-80 highlighting modes for
+VS-Code and I'm sure other editors but I don't have particular links.
+
+Oh, thanks for the offer of bringing a TRS-80.  Peter and I won't be setting up
+a table this year mostly due to my spare time being dedicated to the Z-80
+course.  But if you're going next year I'm sure I can do something interesting
+with a real TRS-80.  If nothing else I wouldn't mind setting up a Model 4 to
+demonstrate TRSVID.  The 4P I brought one year is fine but the internal speaker
+is way too low volume to hear in the room which is a real shame because I think
+it adds a lot.  With a real Model 4 I can crank up the amplifier volume.  At
+least until everyone nearby gets tired of hearing it :-)
+                                        -- George
+
+I was listening to TrashTalk back episode 21 and they noted this paper:
+https://link.springer.com/content/pdf/10.3758%2FBF03203418.pdf
+
+Which for the Model 1 implies that port 250 can be monitored for v sync on the
+Model 1. Is this correct? or bunk?
+
+I'm planning to try it out, but you had said "On the Model I there is no way
+that I know of to synchronize automatically with the raster." and I'm guessing
+you know about this (TrashTalk not being obscure!). So I figured I'd ask.
+
+Thoughts?
+-- Tim
+
+I'm pretty sure the sync signal on port 250 is due to a hardware modification.
+The paper is hardly clear about that and buries that part of the hardware setup
+in Note 5.  You may wish to follow the references there just to be sure changes
+were made.
+                                        -- George
+
+Looking at the schematic I think VDRV would be the correct signal for VSYNC.
+On a Model I I'd be tempted to hook it up to one of the unused bits when
+reading port $FF.
+                                        -- George
+
+Upps the prior email was Z30 pin 8 (HDRV), correctly putting the scope on pin 9
+(VDRV) we see IMG_20190903_230600.jpg With my crappy calibration I see each
+cycle very roughly 40 MS about 25 cycles per second. Indeed you are correct.
+
+This also shows that the bit stays up for about 10 MS 1/4 of the cycle which
+seems long -- but would be enough to sync it in software if one could wire the
+bit into the port.
+-- Tim
+
+It should be about 16.666 ms per cycle or 60 cycles per second.
+
+The quarter of a cycle is about right for VBLANK.  The display is 264 lines of
+which 72 of them are the vertical blanking interval which is about 27.3 %.
+
+Port $FF input only provides D6 and D7 from Z44 (a buffer, I think).  There are
+a number of spare gates and buffers so I imagine VDRV could be put onto bit 0
+of port $FF through a spare buffer outputting to D0 and activated by INSIG*
+(the port $FF decoding logic is at the bottom of the 4th panel of Sheet 2 of
+the schematics I have.
+                                    -- George
+
+If I get this wired up how could I test it?
+-- Tim
+
+The signal is one of the standard ones when doing TV or monitor video.  You
+need VBLANK to indicate that the beam is to be turned off has it scans back up
+to the top of the display.  There's also usually a VSYNC which triggers the
+scan back to the stop.  I think it tends to trigger at the same time as VBLANK
+but is a shorter pulse.  Similarly there is HBLANK to turn off the beam as it
+scans to the start of the next line and HSYNC to trigger that movement.
+
+Perhaps the simplest software test would be to fill the screen with character
+191 and then go into a loop where you wait for the port $FF bit to go high and
+then access the screen for just under the length of the VBLANK interval.  If
+the signal comes at the right time there will be no screen "hashing".
+
+The VBLANK interval is 72 lines at 112 T-States per line.  Polling for the bit
+will take well under 112 T-States so we just need some screen access to happen
+for 71 lines to stay within VBLANK.  Here's something that should do:
+
+   org $8000
+start:
+   ld hl,$3c00
+   ld de,$3c00+1
+   ld bc,$400-1
+   ld (hl),191
+   ldir
+wt0:
+  in a,($FF)
+  bit 0,A  ; or whatever bit it is
+  jr nz,wt0
+loop:
+  in a,($FF)
+  bit 0,A  ; or whatever bit it is
+  jr z,loop  ; assuming active high
+  ld hl,15360
+  ld bc,71*112/33
+hash:
+  ld a,(hl)  ; 7
+  dec bc  ; 6
+  ld a,b ; 4
+  or c ; 4
+  jr nz,hash ; 12
+  jr wt0
+  end start
+
+                                                -- George
