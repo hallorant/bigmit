@@ -1,6 +1,6 @@
 %{
 // GWP - keep track of version via hand-maintained date stamp.
-#define VERSION "25aug2020"
+#define VERSION "17mar2021"
 
 /*
  *  zmac -- macro cross-assembler for the Zilog Z80 microprocessor
@@ -17,7 +17,7 @@
  *	5.  Error report
  *	6.  Elimination of sequential searching
  *	7.  Commenting of source
- *	8.  Facilities for system definiton files
+ *	8.  Facilities for system definition files
  *
  * Revision History:
  *
@@ -216,7 +216,10 @@
  * tjh 9-5-20	Add -Dsym to allow definition of symbols on the command line.
  *		ZMAC_ARGS environment variable added to command line.
  *
- * gwp 25-8-20	Fix crash in "out (c),0"
+ * gwp 25-8-20	Fix crash in "out (c),0".  Make "in f,(c)" work.
+ *
+ * gwp 17-3-21	Stop line buffer overflow when too many "dc" or "incbin" lines
+ *		appear contiguously.  --fcal option and Z-180 instructions.
  */
 
 #if defined(__GNUC__)
@@ -445,6 +448,7 @@ int	separator;	// Character that separates multiple statements.
 int	firstcol;
 int	logcol;
 int	coloncnt;
+int first_always_label;
 int	full_exprs;	// expression parsing mode allowing almost any identifier
 struct item *label, pristine_label; // 
 int	list_dollarsign;// flag used to change list output for some operations
@@ -479,7 +483,7 @@ int	now_in ;
 #define jflag	10	/* JP could be JR */
 #define rflag	11	/* expression not relocatable */
 #define gflag	12	/* incorrect register */
-#define zflag	13	/* Z-80 instruction */
+#define zflag	13	/* invalid instruction */
 
 #define FIRSTWARN	warn_hex
 #define	warn_hex	14
@@ -505,7 +509,7 @@ char	*errname[FLAGS]={
 	"Use JR",
 	"Not relocatable",
 	"Register usage",
-	"Z-80 instruction in 8080 mode",
+	"Invalid instruction",
 	"$hex constant interpreted as symbol",
 	"Not implemented",
 	"General"
@@ -810,14 +814,7 @@ void addtoline(int ac)
 
 int get_tstates(unsigned char *inst, int *low, int *high, int *fetch)
 {
-	int len;
-
-	if (z80)
-		len = zi_tstates(inst, low, high, fetch, 0, 0);
-	else
-		len = zi_tstates(inst, 0, 0, fetch, low, high);
-
-	return len;
+	return zi_tstates(inst, z80, low, high, fetch);
 }
 
 /*
@@ -890,27 +887,45 @@ void emit(int bytes, int desc, struct expr *data, ...)
 	{
 		int eaddr = emit_addr, low, fetch, addr_after;
 
-		// emitbuf is OK since this only happens with single emits
+		get_tstates(emitbuf, &low, 0, &fetch);
 
-		if (!z80) {
-			// Check for invalid 8080 instructions.
-			int op = emitbuf[0] & 0xff;
+		// emitbuf is OK since this only happens with single emits
+		int op = emitbuf[0] & 0xff;
+
+		switch (z80) {
+		case 0:
+			// 8080 mode, error if Z-80 instructions.
 			if (op == 0x08 || op == 0x10 || op == 0x18 ||
 			    op == 0x20 || op == 0x28 || op == 0x30 ||
 			    op == 0x38 || op == 0xCB || op == 0xD9 ||
 			    op == 0xDD || op == 0xED || op == 0xFD)
 			{
-				err[zflag]++;
+				errwarn(zflag, "Invalid 8080 instruction");
 			}
-		}
-
-		get_tstates(emitbuf, &low, 0, &fetch);
-
-		// Sanity check
-		if (low <= 0)
-		{
-			fprintf(stderr, "undefined instruction on %02x %02x (assembler or diassembler broken)\n",
-				emitbuf[0], emitbuf[1]);
+			break;
+		case 1: // Z-80 mode, error if Z-180 instructions
+			if (op == 0xED && (
+			    (emitbuf[1] & 0xC6) == 0 || // IN0, OUT0
+			    (emitbuf[1] & 0xC7) == 4 || // TST r
+			    (emitbuf[1] & 0xCF) == 0x4C || // MLT rr
+			    emitbuf[1] == 0x64 || // TST m
+			    emitbuf[1] == 0x74 || // TSTIO (m)
+			    emitbuf[1] == 0x83 || // OTIM
+			    emitbuf[1] == 0x93 || // OTIMR
+			    emitbuf[1] == 0x8B || // OTDM
+			    emitbuf[1] == 0x9B || // OTDMR
+			    emitbuf[1] == 0x76)) // SLP
+			{
+				errwarn(zflag, "Invalid Z-80 instruction");
+			}
+			break;
+		case 2:
+			// Z-180 mode, error if undocumented Z-80 instructions
+			// So many undocumented Z-80 instructions that I lean
+			// on get_states() to answer.
+			if (low <= 0)
+				errwarn(zflag, "Invalid Z-180 instruction");
+			break;
 		}
 
 		// Special case to catch promotion of djnz to DEC B JP NZ
@@ -926,6 +941,14 @@ void emit(int bytes, int desc, struct expr *data, ...)
 			low = 10;
 			// still 1 fetch
 		}
+
+		// Sanity check
+		if (low <= 0 && !err[zflag])
+		{
+			fprintf(stderr, "undefined instruction on %02x %02x (assembler or disassembler broken)\n",
+				emitbuf[0], emitbuf[1]);
+		}
+
 
 		// Double setting of both sides of tstatesum[] seems like too
 		// much, but must be done in the isolated instruction case:
@@ -1849,6 +1872,7 @@ void do_defl(struct item *sym, struct expr *val, int call_list);
 %token <itemptr> HL
 %token <itemptr> INDEX
 %token <itemptr> AF
+%token <itemptr> TK_F
 %token AFp
 %token <itemptr> SP
 %token <itemptr> MISCREG
@@ -1925,9 +1949,10 @@ void do_defl(struct item *sym, struct expr *val, int call_list);
 %token REPT IRPC IRP EXITM
 %token NUL
 %token <itemptr> MPARM
+%token <itemptr> TK_IN0 TK_OUT0 MLT TST TSTIO
 
 %type <itemptr> label.part symbol
-%type <ival> allreg reg evenreg ixylhreg realreg mem memxy pushable bcdesp bcdehlsp mar condition
+%type <ival> allreg reg evenreg ixylhreg realreg mem memxy pushable bcdesp bcdehl bcdehlsp mar condition
 %type <ival> spcondition
 %type <exprptr> noparenexpr parenexpr expression
 %type <ival> maybecolon maybeocto
@@ -2973,6 +2998,9 @@ operation:
 	XOR expression
 		{ emit1(0306 | ($1->i_value & 070), 0, $2, ET_BYTE); }
 |
+	TST expression
+		{ emit(2, E_CODE8, $2, 0xED, 0x60 | $1->i_value); }
+|
 	LOGICAL ACC ',' expression	/* -cdk */
 		{ emit1(0306 | ($1->i_value & 070), 0, $4, ET_BYTE); }
 |
@@ -3017,6 +3045,9 @@ operation:
 |
 	XOR allreg
 		{ emit1($1->i_value + ($2 & 0377), $2, 0, ET_NOARG_DISP); }
+|
+	TST reg
+		{ emit1($1->i_value + ($2 << 3), $2, 0, ET_NOARG_DISP); }
 |
 	LOGICAL ACC ',' allreg		/* -cdk */
 		{ emit1($1->i_value + ($4 & 0377), $4, 0, ET_NOARG_DISP); }
@@ -3095,6 +3126,9 @@ operation:
 		{ emit1((($1->i_value & 1) << 3) + ($2 & 0377) + 3, $2, 0, ET_NOARG); }
 |
 	INXDCX evenreg8
+		{ emit1($1->i_value + ($2 & 0377), $2, 0, ET_NOARG); }
+|
+	MLT bcdehl
 		{ emit1($1->i_value + ($2 & 0377), $2, 0, ET_NOARG); }
 |
 	PUSHPOP pushable
@@ -3401,6 +3435,22 @@ operation:
 			}
 		}
 |
+	TK_IN0 realreg ',' parenexpr
+		{
+			if ($4->e_value < 0 || $4->e_value > 255)
+				err[vflag]++;
+			emit(2, E_CODE8, $4, $1->i_value >> 8,
+				$1->i_value | ($2 << 3));
+		}
+|
+	TK_IN0 parenexpr
+		{
+			if ($2->e_value < 0 || $2->e_value > 255)
+				err[vflag]++;
+			emit(2, E_CODE8, $2, $1->i_value >> 8,
+				$1->i_value | (6 << 3));
+		}
+|
 	TK_IN expression
 		{
 			if ($2->e_value < 0 || $2->e_value > 255)
@@ -3414,7 +3464,7 @@ operation:
 	INP realreg
 		{ emit(2, E_CODE, 0, 0355, 0100 + ($2 << 3)); }
 |
-	TK_IN 'F' ',' '(' TK_C ')'
+	TK_IN TK_F ',' '(' TK_C ')'
 		{ emit(2, E_CODE, 0, 0355, 0160); }
 |
 	TK_IN '(' TK_C ')'
@@ -3425,6 +3475,14 @@ operation:
 			if ($2->e_value < 0 || $2->e_value > 255)
 				err[vflag]++;
 			emit(1, E_CODE8, $2, $1->i_value);
+		}
+|
+	TK_OUT0 parenexpr ',' realreg
+		{
+			if ($2->e_value < 0 || $2->e_value > 255)
+				err[vflag]++;
+			emit(2, E_CODE8, $2, $1->i_value >> 8,
+				$1->i_value | ($4 << 3));
 		}
 |
 	TK_OUT expression
@@ -3450,6 +3508,14 @@ operation:
 			expr_free($6);
 
 			emit(2, E_CODE, 0, 0355, 0101 + (6 << 3));
+		}
+|
+	TSTIO parenexpr
+		{
+			if ($2->e_value < 0 || $2->e_value > 255)
+				err[vflag]++;
+
+			emit(2, E_CODE8, $2, $1->i_value >> 8, $1->i_value);
 		}
 |
 	IM expression
@@ -3774,6 +3840,17 @@ bcdesp:
 ;
 bcdehlsp:
 	bcdesp
+|
+	HL
+		{
+			$$ = $1->i_value;
+		}
+;
+bcdehl:
+	RP
+		{
+			$$ = $1->i_value;
+		}
 |
 	HL
 		{
@@ -4275,6 +4352,7 @@ char	numpart[] = {
 #define ZNONSTD	(32)	/* non-standard Z-80 mnemonic (probably TDL or DRI) */
 #define COL0	(64)	/* will always be recognized in logical column 0 */
 #define MRASOP	(128)	/* dig operator out of identifiers */
+#define Z180	(256)	/* used in Z180 (HD64180) instructions */
 
 struct	item	keytab[] = {
 	{"*include",	PSINC,	ARGPSEUDO,	VERB | COL0 },
@@ -4391,6 +4469,7 @@ struct	item	keytab[] = {
 	{".extern",	0,	EXTRN,		VERB },
 	{".extrn",	0,	EXTRN,		VERB },
 	{"exx",		0331,	NOOPERAND,	VERB | Z80 },
+	{"f",		0,	TK_F,		Z80 },
 	{".flist",	4,	LIST,		VERB },
 	{"ge",		0,	GE,		0 },
 	{".ge.",	0,	MROP_GE,	TERM | MRASOP },
@@ -4414,6 +4493,7 @@ struct	item	keytab[] = {
 	{"im2",		0xed5e,	NOOPERAND,	VERB | Z80 | ZNONSTD },
 	{".import",	PSIMPORT,ARGPSEUDO,	VERB | COL0 },
 	{"in",		0333,	TK_IN,		VERB | I8080 | Z80 },
+	{"in0",		0xED00,	TK_IN0,		VERB | Z180 },
 	{"inc",		4,	INCDEC,		VERB | Z80 },
 	{".incbin", 	0, 	INCBIN,		VERB },
 	{".include",	PSINC,	ARGPSEUDO,	VERB | COL0 },	// COL0 only needed for MRAS mode
@@ -4487,6 +4567,7 @@ struct	item	keytab[] = {
 	{".max",	1,	MINMAX,		VERB },
 	{".min",	0,	MINMAX,		VERB },
 	{".mlist",	6,	LIST,		VERB },
+	{"mlt",		0xED4C,	MLT,		VERB | Z180 },
 	{"mod",		0,	'%',		0 },
 	{".mod.",	0,	MROP_MOD,	TERM | MRASOP },
 	{"mov",		0x40,	MOV,		VERB | I8080 },
@@ -4513,9 +4594,14 @@ struct	item	keytab[] = {
 	{"ori",		0366,	ALUI8,		VERB | I8080 },
 	{"orx",		0xddb6,	ALU_XY,		VERB | Z80 | ZNONSTD },
 	{"ory",		0xfdb6,	ALU_XY,		VERB | Z80 | ZNONSTD },
+	{"otdm",	0xED8B,	NOOPERAND,	VERB | Z180 },
+	{"otdmr",	0xED9B,	NOOPERAND,	VERB | Z180 },
 	{"otdr",	0166673,NOOPERAND,	VERB | Z80 },
+	{"otim",	0xED83,	NOOPERAND,	VERB | Z180 },
+	{"otimr",	0xED93,	NOOPERAND,	VERB | Z180 },
 	{"otir",	0166663,NOOPERAND,	VERB | Z80 },
 	{"out",		0323,	TK_OUT,		VERB | I8080 | Z80 },
+	{"out0",	0xED01,	TK_OUT0,	VERB | Z180 },
 	{"outd",	0166653,NOOPERAND,	VERB | Z80 },
 	{"outdr",	0166673,NOOPERAND,	VERB | Z80 | ZNONSTD },
 	{"outi",	0166643,NOOPERAND,	VERB | Z80 },
@@ -4611,6 +4697,7 @@ struct	item	keytab[] = {
 	{"slax",	0xddcb0026,SHIFT_XY,	VERB | Z80 | ZNONSTD },
 	{"slay",	0xfdcb0026,SHIFT_XY,	VERB | Z80 | ZNONSTD },
 	{"sll",		0xCB30,	SHIFT,		VERB | Z80 },
+	{"slp",		0xED76,	NOOPERAND,	VERB | Z180 },
 	{"sp",		060,	SP,		I8080 | Z80 },
 	{".space",	2,	LIST,		VERB },
 	{"sphl",	0371,	NOOPERAND,	VERB | I8080 },
@@ -4642,7 +4729,9 @@ struct	item	keytab[] = {
 	{"tihi",	0,	TIHI,		0 },
 	{"tilo",	0,	TILO,		0 },
 	{".title",	SPTITL,	SPECIAL,	VERB | COL0},
+	{"tst",		0xED04,	TST,		VERB | Z180 },
 	{".tstate",	0,	TSTATE,		VERB },
+	{"tstio",	0xED74,	TSTIO,		VERB | Z180 },
 	{"v",		050,	COND,		Z80 },
 	{".word",	0,	DEFW,		VERB },
 	{".wsym",	PSWSYM,	ARGPSEUDO,	VERB },
@@ -4657,6 +4746,7 @@ struct	item	keytab[] = {
 	{"xtix",	0xdde3,	NOOPERAND,	VERB | Z80 | ZNONSTD },
 	{"xtiy",	0xfde3,	NOOPERAND,	VERB | Z80 | ZNONSTD },
 	{"z",		010,	SPCOND,		Z80 },
+	{".z180",	2,	INSTSET,	VERB },
 	{".z80",	1,	INSTSET,	VERB },
 };
 
@@ -4972,6 +5062,9 @@ int lex()
 			// Arguments allow mnemonics and psuedo-ops
 			exclude = VERB;
 			include = TERM;
+		}
+		else if (logcol == 0 && first_always_label) {
+			exclude = ~TERM;
 		}
 		else if (logcol <= 1 && c == ':') {
 			exclude = ~TERM;
@@ -5311,8 +5404,12 @@ int check_keytab()
 		// Uncomment to liat all 8080 verbs to assist documentation.
 		//if ((keytab[i].i_uses & (VERB | I8080)) == (VERB | I8080))
 		//	printf("\tdb\t%s\n", keytab[i].i_string);
-		// Uncomment to liat all Z-80 verbs to assist documentation.
+		// Uncomment to list all Z-80 verbs to assist documentation.
 		//if ((keytab[i].i_uses & (VERB | Z80)) == (VERB | Z80))
+		//	printf("%-6s   $%X\n", keytab[i].i_string,
+		//		item_value(keytab + i));
+		// Uncomment to list all Z-180 verbs to assist documentation.
+		//if ((keytab[i].i_uses & (VERB | Z180)) == (VERB | Z180))
 		//	printf("%-6s   $%X\n", keytab[i].i_string,
 		//		item_value(keytab + i));
 	}
@@ -6120,7 +6217,7 @@ void usage(char *msg, char *param)
 	fprintf(stderr, "\n");
 	version();
 	fprintf(stderr, "usage: zmac [-8bcefghijJlLmnopstz] [-I dir] [-Pk=n] [-Dsym] file[.z]\n");
-	fprintf(stderr, "other opts: --rel[7] --mras --zmac --dri --nmnv --dep --help --doc --version\n");
+	fprintf(stderr, "other opts: --rel[7] --mras --zmac --dri --nmnv --z180 --fcal --dep --help --doc --version\n");
 	fprintf(stderr, "  zmac -h for more detail about options.\n");
 	exit(1);
 }
@@ -6158,10 +6255,12 @@ void help()
 	fprintf(stderr, "   --oo\thex,cmd\toutput only listed file suffix types\n");
 	fprintf(stderr, "   --xo\tlst,cas\tdo not output listed file suffix types\n");
 	fprintf(stderr, "   --nmnv\tdo not interpret mnemonics as values in expressions\n");
+	fprintf(stderr, "   --z180\tuse Z-180 timings and extended instructions\n");
 	fprintf(stderr, "   --dep\tlist files included\n");
 	fprintf(stderr, "   --mras\tlimited MRAS/EDAS compatibility\n");
 	fprintf(stderr, "   --rel\toutput .rel file only (--rel7 for 7 character symbol names)\n");
 	fprintf(stderr, "   --zmac\tcompatibility with original zmac\n");
+	fprintf(stderr, "   --fcal\tidentifier in first column is always a label\n");
 	fprintf(stderr, "   --doc\toutput documentation as HTML file\n");
 
 	exit(0);
@@ -6261,6 +6360,11 @@ int main(int argc, char *argv[])
 			continue;
 		}
 
+		if (strcmp(argv[i], "--fcal") == 0) {
+			first_always_label = 1;
+			continue;
+		}
+
 		if (strcmp(argv[i], "--help") == 0) {
 			help();
 			continue;
@@ -6277,6 +6381,11 @@ int main(int argc, char *argv[])
 			version();
 			exit(0);
 			continue; // not reached
+		}
+
+		if (strcmp(argv[i], "--z180") == 0) {
+			/* Equivalent to .z180 */
+			default_z80 = 2;
 		}
 
 		if (strcmp(argv[i], "--od") == 0) {
@@ -8197,8 +8306,8 @@ void incbin(char *filename)
 
 		fputs(linebuf, fout);
 
-		lineptr = linebuf;
 	}
+	lineptr = linebuf;
 }
 
 void dc(int count, int value)
@@ -8260,10 +8369,11 @@ void dc(int count, int value)
 		fputs(linebuf, fout);
 		lsterr2(1);
 
-		lineptr = linebuf;
 	}
 	else
 		lsterr1();
+
+	lineptr = linebuf;
 }
 
 #define OUTREC_SEG(rec)		outbuf[rec]

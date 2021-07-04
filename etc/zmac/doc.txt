@@ -14,7 +14,8 @@ and so on.  For more friendly usage in make files and integrated development
 environments the _-o_, _--oo_, _--xo_ and _--xd_ options may be used to select
 sepcific output file formats and where they are written.
 
-Undocumented@undoc Z-80 instructions are supported as well as 8080 code.
+Undocumented@undoc Z-80 instructions are supported as well as 8080 and
+Z-180 (aka HD64180).
 
 zmac strives to be a powerful assembler with expressions familiar to C
 programmers while providing good backward compatibility with original
@@ -33,6 +34,8 @@ zmac
 [ --rel ]
 [ --rel7 ]
 [ --nmnv ]
+[ --z180 ]
+[ --fcal ]
 [ --doc ]
 [ --zmac ]
 [ -8bcefghijJlLmnopstz ]
@@ -94,6 +97,10 @@ the end of the command line.
   are local to their file thus avoid multiple definition when brought in
   with _include_.
  
+ --z180
+  Use Z-180 timings and extended instructions.  Undocumented Z-80 instructions
+  will generate errors as the Z-180 (or H64810) does not support them.
+ 
  --dep
   Print all files read by _include_, _incbin_ and _import_.
  
@@ -108,6 +115,11 @@ the end of the command line.
  
  -Dsymbol
   Define _symbol_ to be 1 before assembly.
+ 
+ --fcal
+  Always treat an indentifier in the first column as a label.  zmac uses
+  various heuristics in the case of ambiguity when a label does not have
+  a colon.  This option turns heuristics off.
  
  -8
   Accept 8080 mnemonics preferentially and use 8080 instruction timings.
@@ -1229,6 +1241,28 @@ prevents their use in operations.
  _ory      $B6FD          xtiy     $E3FD_
   
  _otdr     $BBED_
+
+Values for Z-180 mnemonics.
+
+ _in0      $00ED_
+  
+ _mlt      $4CED_
+  
+ _otdm     $8BED_
+  
+ _otdmr    $9BED_
+  
+ _otim     $83ED_
+  
+ _otimr    $93ED_
+  
+ _out0     $01ED_
+  
+ _slp      $76ED_
+  
+ _tst      $04ED_
+  
+ _tstio    $74ED_
 
 ---
 .Exit Status
