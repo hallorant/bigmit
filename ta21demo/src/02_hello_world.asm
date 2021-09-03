@@ -1,8 +1,8 @@
 ;
-; 02_hello_world.asm -- Don't calculate: use the assembler ;
+; 02_hello_world.asm -- Don't calculate: use the assembler
 ;
 ; zmac --zmac 02_hello_world.asm
-; trs80gp -m1 ./zout/02_hello_world.bds
+; trs80gp -m1 zout/02_hello_world.bds
   org $5200
 
 screen	equ	$3c00

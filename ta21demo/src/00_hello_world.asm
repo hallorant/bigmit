@@ -1,8 +1,8 @@
 ;
-; 00_hello_world.asm -- One byte at a time ;
+; 00_hello_world.asm -- One byte at a time
 ;
 ; zmac --zmac 00_hello_world.asm
-; trs80gp -m1 ./zout/00_hello_world.bds
+; trs80gp -m1 zout/00_hello_world.bds
   org $5200
 
 text	defb	'Hello, TRS-80 World!'

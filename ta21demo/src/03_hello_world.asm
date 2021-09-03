@@ -1,8 +1,8 @@
 ;
-; 03_hello_world.asm -- Use org to get the text on the screen ;
+; 03_hello_world.asm -- Use org to get the text on the screen
 ;
 ; zmac --zmac 03_hello_world.asm
-; trs80gp -m1 ./zout/03_hello_world.bds
+; trs80gp -m1 zout/03_hello_world.bds
 screen	equ	$3c00
 screen_pos equ screen+64*5
 
