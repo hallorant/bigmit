@@ -5,8 +5,6 @@
 ; trs80gp -m1 zout/00_hello_world.bds
   org $5200
 
-text	defb	'Hello, TRS-80 World!'
-
 main:
   ; Prints the text defined above to the screen. We add no offset, so the text
   ; will appear in the upper-left of the screen.
