@@ -7,6 +7,9 @@ screen	equ	$3c00
 screen_pos equ screen+64*5
 
 ; This is how fancy tape loaders (like Big Five) wrote to the screen.
+  org screen
+  dc 64*16,$20    ; clear the entire screen
+
   org screen+64*5 ; start of the 6th line on the screen
 text	defb	'Hello, TRS-80 World!'
 

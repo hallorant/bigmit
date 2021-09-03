@@ -40,7 +40,7 @@ frame2	defb	10111010b,10111111b,10110101b
 ; ix - frame address
 ; uses: a, bc, hl, ix
 draw_frame:
-  ; Draw the top 3 characters
+  ; Draw the top 3 characters on the screen.
   ld a,(ix)
   ld (hl),a
   inc hl
@@ -52,7 +52,7 @@ draw_frame:
   ; Drop to the next line.
   ld bc,62
   add hl,bc
-  ; Draw the bottom 3 characters
+  ; Draw the bottom 3 characters on the screen.
   ld a,(ix+3)
   ld (hl),a
   inc hl
@@ -61,7 +61,7 @@ draw_frame:
   inc hl
   ld a,(ix+5)
   ld (hl),a
-ret
+  ret
 
 ; Draws a row of invaders on the screen using the passed animation frame.
 ;
