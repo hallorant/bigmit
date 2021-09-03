@@ -1,11 +1,11 @@
 ;
-; 04_hello_world.asm -- Model 1/3 LDOS 5.1
+; hello_ldos5 -- Model 1 or Model 3 running LDOS 5.1
 ;
 ; Reference: LDOS Version 5.1: The TRS-80 Operating System Model I and III
 ;
-; zmac --zmac 04_hello_world.asm
-; trs80gp -m1 -ld zout/04_hello_world.cmd
-; trs80gp -m3 -ld zout/04_hello_world.cmd
+; zmac --zmac hello_ldos5.asm
+; trs80gp -m1 -ld zout/hello_ldos5.cmd
+; trs80gp -m3 -ld zout/hello_ldos5.cmd
   org $7000
 
 ETX	equ	$03

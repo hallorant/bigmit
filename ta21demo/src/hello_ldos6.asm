@@ -1,11 +1,13 @@
 ;
-; 04_hello_world.asm -- Model II / Model 4 LDOS 6
+; hello_ldos6.asm -- Model II,12,16 or Model 4 running LDOS 6
 ;
 ; Reference: The Programmer's Guide to TRSDOS Version 6 (also LDOS Version 6)
 ;
-; zmac --zmac 04_hello_world.asm
-; trs80gp -m2 -ld zout/04_hello_world.cmd
-; trs80gp -m4 -ld zout/04_hello_world.cmd
+; zmac --zmac hello_ldos6.asm
+; trs80gp -m2 -ld zout/hello_ldos6.cmd
+; trs80gp -m12 -ld zout/hello_ldos6.cmd
+; trs80gp -m16 -ld zout/hello_ldos6.cmd
+; trs80gp -m4 -ld zout/hello_ldos6.cmd
   org $7000
 
 ETX	equ	$03
