@@ -11,6 +11,10 @@ you can try this out with a simple clip-on cable attached to your CoCo
 motherboard. The tryout setup has some limitations, but can let you see if you
 really want to proceed with a permanent modification.
 
+## Tandy Assembly 2021 Talk
+
+I did a talk at Tandy Assembly 2021. You can find the slides [here](https://docs.google.com/presentation/d/19PG-rJjY0_h8iO4LEgI_-lZHJsW6ekmSQ-hHDLxJ2CU/edit?usp=sharing).
+
 ## CoCo 2 Rev B motherboard
 
 ### Identification (So many CoCo 2s &mdash; Is mine a Rev B?)
