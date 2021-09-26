@@ -128,7 +128,7 @@ This is the hardest part of this mod. Q1 is part of the creation of 5V DC power
 and generates more heat than anything in the CoCo. To partially power the SALT
 and get the cassette port and bit banger working we need to power the SALT
 except for the creation of 5V DC power.  There are several ways to do this but
-after consulting Terry Trappe (who is working on a SALT replacement) I choose
+after consulting Terry Trapp (who is working on a SALT replacement) I choose
 to remove Q1. We describe the options and our rationale below.
 
 * (NOPE) Bend up pins on the SALT. I dismissed this immediately despite this
