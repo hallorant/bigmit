@@ -80,7 +80,7 @@ note.
   Q1 power transistor which are two very large heat sources inside a CoCo.
 * The CoCo transformer is not always on. On any CoCo it is a good idea to use a
   power strip and turn the power strip off when the computer is not in use.
-  Why? This is because the transfomer is always on, even when the computer is
+  Why? This is because the transformer is always on, even when the computer is
   powered off. If you noted that the left-hand-side of the CoCo is slightly
   warm even after the CoCo is off for a long time, this is why that occurs.
 * If you have a quality USB power strip the 5V DC power is probably better than
