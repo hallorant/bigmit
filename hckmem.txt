@@ -1,26 +1,4 @@
 --------------------------------------------------------------------
-- VIDEO RECORDING WINDOWS 10
-- CAS FILE FORMAT
-- T-STATE COUNTING
-- COCO OS9
-- COCO VGA
-- COCO DISK USE
-- COCO DRIVEWIRE & CASSETTE
-- Z80 MHZ
-- GIT STUFF
-- ORG LOCATIONS
-- K CHART IN HEX
-- TRS80GP TESTING
-- RUNNING CMD ON TRS80GP (MY MACRO BUG)
-- LOADING PROGRAMS ON A MODEL II
-- ZMAC TEMP/LOCAL LABELS WITH --zmac
-- MEMORY MAPS
-- CASE OF THE BAD ENDING
-- THE QUEST FOR TEAR-FREE DRAWING
-- FUZZ OUT ON SCROLLING MODEL 1
-- EDTASM FILE FIX IN VI
-- CRTs
---------------------------------------------------------------------
 - BASIC
 high memory peeks/pokes
 
@@ -33,7 +11,38 @@ high memory peeks/pokes
  hallorant: Hmm, IFPEEK(45226-65536)
 [10:03 PM] hallorant: These are negative numbers, this one is -20310
 [10:03 PM] hallorant: Some odd basic trick to get to higher memory?
-[10:04 PM] gp2000: Yes.  Peek only takes signed integer values.  So anything above 32767 has to be expressed in the -ve.  32768 is peek(-32768) and upward from there down to peek(-1) for 65535.
+[10:04 PM] gp2000: Yes.  Peek only takes signed integer values.  So anything
+above 32767 has to be expressed in the -ve.  32768 is peek(-32768) and upward
+from there down to peek(-1) for 65535.
+
+ON TRS80GP SUPPORT FOR CAS (note this is old!)
+CSAVE to .wav doesn't always work on trs80gp.  I've heard its broken in Model I
+mode.  But the automatic capture to ".cas" is reliable so better that you
+recommend that.
+
+To close the loop on development you can also simply LLIST the program and save
+the printer output.
+
+trld should build on a mac and certainly my intent is that all the source code
+for it is in the download.
+
+You may want to describe the pathways for disk BASIC.  If you SAVE the BASIC
+program as in "ASCII" format then trsread (or trstools) will pull out something
+you can edit directly.  Unless you use notepad which won't understand having
+only <CR> as the end of line.  And trswrite can put it back.
+
+There are some unfortunately limitations in trs80gp when it comes to BASIC.  It
+only understands Level I and II BASIC on the Model 1 and 3.  It knows nothing
+about BASIC on the Model II nor anything about BASIC for TRSDOS-6 (or LSDOS 6)
+on the Model 4.  It also may or may not work for the many extended BASICs for
+the Model 1+3 like graphics basic.  Never mind anything outside of TRS-DOS like
+CP/M.
+
+Maybe that's best covered by quickly noting the limitations.  As least for
+Model 2 and Model 4 disk BASIC there's the "paste" and "llist" development
+loop.
+
+                                                            -- George
 --------------------------------------------------------------------
 - PI
 pi raspberry (default user)
@@ -49,24 +58,8 @@ sudo rpi-update (firmware)
 
 add to Windows 10 hosts: C:\Windows\System32\drivers\etc\hosts
 --------------------------------------------------------------------
-- CRTs
-
-Ian Mavric
-badge icon
-Gina from the Georgia VDC branch can still order them for you
- email: gstuddard@mindspring.com
-  The order code I use is VDC1208DP31BE
-That's the same code for the tube that I just bought. I didn't know about VDC
-and Gina or I would have ordered from her.  I got mine from the company below.
-It was $95 and well packaged. Just putting this out for information that's all.
-They currently have white and green tubes and sadly, no amber.
- Scott Dansky | President
- Lexel Imaging Systems, Inc. | 510 Henry Clay Blvd | Lexington, KY 40505
- t: (859) 721-1600 ext. 153 | c: (859) 221-2153
- e: sdansky@lexelimaging.com
---------------------------------------------------------------------
-
 - MODEL 1 TRSIO
+
 2.4GHz network -- configure little google in dual band.
 SMB share, raspberry pi
 SMB only allows one component
