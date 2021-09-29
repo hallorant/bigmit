@@ -1,4 +1,5 @@
 ; business_ldos6.asm
+;   The TRS-80 lets the user know it supports business TRS-80s
 ; Reference doc:
 ;   The Programmer's Guide to TRSDOS Version 6 (also LDOS Version 6)
 ;

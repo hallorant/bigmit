@@ -1,4 +1,5 @@
 ; name_ldos5
+;   The TRS-80 says hello, asks the users name, and then prints it
 ; Reference Document:
 ;   LDOS Version 5.1: The TRS-80 Operating System Model I and III
 ;

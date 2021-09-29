@@ -1,4 +1,5 @@
 ; hello_ldos5
+;   The TRS-80 says hello using the screen
 ; Reference Document:
 ;   LDOS Version 5.1: The TRS-80 Operating System Model I and III
 ;

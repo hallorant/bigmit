@@ -1,8 +1,8 @@
-;
 ; space_invaders.asm
+;   Animated space invaders-like alien invade the TRS-80 screen
 ;
-; zmac --zmac space_invaders.asm
-; trs80gp -m1 zout/space_invaders.bds
+; zmac space_invaders.asm
+; trs80gp zout/space_invaders.bds
 screen	equ	$3c00
 
 ; Clears the screen at startup
