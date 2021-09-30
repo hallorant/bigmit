@@ -1,5 +1,5 @@
 ; gp_keydraw.asm
-;   Draws while you press a key (George Phillips)
+;   Draws while you press a key (by George Phillips, I added "equ"s)
 ;
 ; zmac gp_keydraw.asm
 ; trs80gp zout/gp_keydraw.bds
