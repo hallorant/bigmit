@@ -94,11 +94,12 @@ wait_loop: djnz wait_loop
 ; Our main progam that loops doing the animation until reboot.
 main:
   call clear_screen
+animation_loop:
   ld ix,frame1
   call draw_screen
   call wait
   ld ix,frame2
   call draw_screen
   call wait
-  jr main
+  jr animation_loop
   end main
