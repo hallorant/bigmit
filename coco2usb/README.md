@@ -70,6 +70,23 @@ and wall-plug power. Say you need to use the cassette for a bit. The only rule
 is __use one or the other__. Don't plug them both in at once! I ran this setup
 for several months.
 
+## How to make your own "tryout cable"
+
+You can contact me to get a tryout cable, however it is easy to make one. The
+image below shows how to solder one up.
+
+!["CoCo 2 Tryout Cable"](../etc/images/coco2_tryout_cable.jpg?raw=true "CoCo 2 Tryout Cable")
+
+A few words of caution.
+
+* Before you hook this up to your CoCo 2, please check with your multimeter
+  that red to black is +5V. In particular, ensure it is not -5V, which
+  indicates you wired power and ground backwards.
+* Don't reuse a USB-A data cable, you want the wire guage to be decent. I'm
+  using AWG 22. A USB-A power cable capable of 2.5A should be fine to use. In
+  general, if you reuse a USB cable and the wires are really tiny the tryout
+  cable will not work or be unreliable.
+
 # Identifying compatible systems for the permanent USB power modification
 
 Computers that should work are
