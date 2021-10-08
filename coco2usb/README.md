@@ -82,14 +82,14 @@ A few words of caution.
 * Before you hook this up to your CoCo 2, please check with your multimeter
   that red to black is +5V. In particular, ensure it is not -5V, which
   indicates you wired power and ground backwards.
-* Don't reuse a USB-A data cable, you want the wire guage to be decent. I'm
-  using AWG 22. A USB-A power cable capable of 2.5A should be fine to use. In
-  general, if you reuse a USB cable and the wires are really tiny the tryout
-  cable will not work or be unreliable.
+* Don't reuse a USB-A data cable. You want the wire guage to be thick enough to
+  let power flow. I'm using AWG 22. A USB-A power cable capable of 2.5A should
+  be fine to reuse. In general, if you reuse a USB cable and the wires are
+  really thin then the tryout cable will not work or be unreliable.
 
 # Identifying compatible systems for the permanent USB power modification
 
-Computers that should work are
+CoCo 2 computers that I own that work are
 
 * Color Computer 2 with a Rev B Motherboard
 * Korean-made Color Computer 2
