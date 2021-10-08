@@ -1,56 +1,26 @@
-# CoCo USB Power Mod - Running your COCO from a USB powerstrip
+# Color Computer 2 USB Power Mod - Running your CoCo from a USB powerstrip
 
 This modification can be useful if your power supply is bad. However, my
 primary motivation was how hot my CoCo 2 ran. This modification changes your
 CoCo from running on AC power to operating on DC power.
 
 The permanent modification requires some hardware skill to accomplish.
-Removing the transformer (easy) and the Q1 power transistor (much harder) take
-a bit of skill as well as soldering connections to the motherboard.  However,
-you can try this out with a simple clip-on cable attached to your CoCo
-motherboard. The tryout setup has some limitations, but can let you see if you
-really want to proceed with a permanent modification.
+Removing the transformer (easy) and the Q1 power transistor (harder) take a bit
+of skill as well as soldering connections to the motherboard.  However, you can
+try this out with a simple clip-on cable attached to your CoCo motherboard. The
+tryout setup has some limitations, but can let you see if you really want to
+proceed with a permanent modification.
 
 ## Tandy Assembly 2021 Talk
 
 I did a talk at Tandy Assembly 2021. You can find the slides [here](https://docs.google.com/presentation/d/19PG-rJjY0_h8iO4LEgI_-lZHJsW6ekmSQ-hHDLxJ2CU/edit?usp=sharing).
 
-## CoCo 2 Rev B motherboard
+# Trying out the USB mod with the "tryout cable"
 
-### Identification (So many CoCo 2s &mdash; Is mine a Rev B?)
-
-Outside, this has the tall tuner with the channel selector above the video
-output connection. But you want to open up your CoCo 2 and look at the left
-side of the motherboard (just below the transformer). If you have a Rev B
-you'll see an identification as shown in the picture below.
-
-!["CoCo 2 Rev B Motherboard Identification"](../etc/images/coco2_rev_b_board_id.jpg?raw=true "CoCo 2 Rev B Motherboard Identification")
-
-### How to spot an incompatible modification
-
-With this mod installed your whole CoCo will run via DC power, however
-modifications exist that use AC power. Especially the (unregulated) 12VAC
-entering the bridge rectifier.  This is easy to spot, however, and you can
-decide to continue or not based on your need for the AC-using modification.
-
-Look for any wires attached to the AC side of the bridge rectifier. If we
-consider "top" as toward the back of the machine. Look for any wire attached to
-the top of CR1 or CR2 or any wire attached to the bottom of CR3 or CR4. The
-image below has the USB mod installed, but it circles the AC side of the bridge
-rectifier. If any mod to your CoCo is attached here the USB mod is incompatible
-with it.
-
-!["CoCo 2 Rev B Finding Incompatible Mods"](../etc/images/coco2_rev_b_incompatible_mods.jpg?raw=true "CoCo 2 Rev B Finding Incompatible Mods")
-
-The only incompatible mod I am aware of for the Rev B CoCo 2 is a composite
-video modification. It attaches to the bottom of CR3 or CR4. Beware, there may
-be others! So please check your Coco.
-
-### Trying out the USB mod with the "tryout cable"
-
-This is a simple way to try running your CoCo 2 on USB power. First, unplug
-your CoCo2 from the wall socket (or power strip). Do not plug in the USB plug
-yet. Attach the tryout cable clips to the top (red) and bottom (black) of C28.
+This is a simple way to try running your CoCo 2 on USB power. This should work
+with any CoCo 3. First, unplug your CoCo2 from the wall socket (or power
+strip). Do not plug in the USB plug yet. Attach the tryout cable clips to the
+top (red) and bottom (black) of C28.
 
 !["CoCo 2 Rev B Tryout Diagram"](../etc/images/coco2_rev_b_tryout_diagram.jpg?raw=true "CoCo 2 Rev B Tryout Diagram")
 
@@ -91,6 +61,75 @@ It is safe to switch back and forth between using the tryout-cable-USB power
 and wall-plug power. Say you need to use the cassette for a bit. The only rule
 is __use one or the other__. Don't plug them both in at once! I ran this setup
 for several months.
+
+# Identifying compatible systems for the permanent CoCo 2 USB power modification
+
+Computers that should work are
+
+* Color Computer 2 with a Rev B Motherboard
+* Korean-made Color Computer 2
+
+Other CoCo 2's should work, please reach out to me if you have one that is odd.
+Perhaps it can be supported.
+
+## CoCo 2 Rev B motherboard
+
+### Identification (Is my CoCo 2 a Rev B?)
+
+Outside, this has the tall tuner with the channel selector above the video
+output connection. But you want to open up your CoCo 2 and look at the left
+side of the motherboard (just below the transformer). If you have a Rev B
+you'll see an identification as shown in the picture below.
+
+!["CoCo 2 Rev B Motherboard Identification"](../etc/images/coco2_rev_b_board_id.jpg?raw=true "CoCo 2 Rev B Motherboard Identification")
+
+### How to spot an incompatible modification
+
+With this mod installed your whole CoCo will run via DC power, however
+modifications exist that use AC power. Especially the (unregulated) 12VAC
+entering the bridge rectifier.  This is easy to spot, however, and you can
+decide to continue or not based on your need for the AC-using modification.
+
+Look for any wires attached to the AC side of the bridge rectifier. If we
+consider "top" as toward the back of the machine. Look for any wire attached to
+the top of CR1 or CR2 or any wire attached to the bottom of CR3 or CR4. The
+image below has the USB mod installed, but it circles the AC side of the bridge
+rectifier. If any mod to your CoCo is attached here the USB mod is incompatible
+with it.
+
+!["CoCo 2 Rev B Finding Incompatible Mods"](../etc/images/coco2_rev_b_incompatible_mods.jpg?raw=true "CoCo 2 Rev B Finding Incompatible Mods")
+
+The only incompatible mod I am aware of for the Rev B CoCo 2 is a composite
+video modification. It attaches to the bottom of CR3 or CR4. Beware, there may
+be others! So please check your Coco.
+
+## Korean-Made CoCo 2 Identification
+
+### Identification (Is my CoCo 2 Korean-Made?)
+
+A Korean-made CoCo 2 can be identified from the outside by the channel select
+switch beside the TV output and a horizontally mounted modulator (metal box)
+which can be seen through the top grille, to the left of center. It likely says
+"Product of KOREA" on the bottom.
+
+!["CoCo 2 Korean-Made Identification"](../etc/images/coco2_korean_board_id.jpg?raw=true "CoCo 2 Korean-Made Identification")
+
+### How to spot an incompatible modification
+
+With this mod installed your whole CoCo will run via DC power, however
+modifications exist that use AC power. Especially the (unregulated) 12VAC
+entering the bridge rectifier.  This is easy to spot, however, and you can
+decide to continue or not based on your need for the AC-using modification.
+
+Look for any wires attached to the AC side of the bridge rectifier. If we
+consider "top" as toward the back of the machine. Look for any wire attached to
+the top of D8, D9, D10, or D11. The image below circles the AC side of the
+bridge rectifier. If any mod to your CoCo is attached here the USB mod is
+incompatible with it.
+
+!["CoCo 2 Korean-Made Finding Incompatible Mods"](../etc/images/coco2_korean_incompatible_mods.jpg?raw=true "CoCo 2 Korean-Made Finding Incompatible Mods")
+
+
 
 ### Permanent USB power modification
 
