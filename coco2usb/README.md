@@ -1,4 +1,4 @@
-# Color Computer 2 USB Power Mod - Running your CoCo from a USB powerstrip
+# Color Computer 2 USB Power Mod - Running your Color Computer 2 from a USB powerstrip
 
 This modification can be useful if your power supply is bad. However, my
 primary motivation was how hot my CoCo 2 ran. This modification changes your
@@ -13,20 +13,27 @@ proceed with a permanent modification.
 
 ## Tandy Assembly 2021 Talk
 
-I did a talk at Tandy Assembly 2021. You can find the slides [here](https://docs.google.com/presentation/d/19PG-rJjY0_h8iO4LEgI_-lZHJsW6ekmSQ-hHDLxJ2CU/edit?usp=sharing).
+I did a talk at Tandy Assembly 2021. You can find the slides
+[here](https://docs.google.com/presentation/d/19PG-rJjY0_h8iO4LEgI_-lZHJsW6ekmSQ-hHDLxJ2CU/edit?usp=sharing).
+Please beware as the content might be out of date.
 
 # Trying out the USB mod with the "tryout cable"
 
 This is a simple way to try running your CoCo 2 on USB power. This should work
-with any CoCo 3. First, unplug your CoCo2 from the wall socket (or power
+with any CoCo 2. First, unplug your CoCo 2 from the wall socket (or power
 strip). Do not plug in the USB plug yet. Attach the tryout cable clips to the
-top (red) and bottom (black) of C28.
+wires running from the motherboard to the cartridge slot: red clip goes to pin
+9 (+5V) the black clip goes to pin 33 (GND).
 
-!["CoCo 2 Rev B Tryout Diagram"](../etc/images/coco2_rev_b_tryout_diagram.jpg?raw=true "CoCo 2 Rev B Tryout Diagram")
+!["CoCo 2 Tryout Diagram"](../etc/images/coco2_tryout_diagram.jpg?raw=true "CoCo 2 Tryout Diagram")
 
 This is what the attachment of the tryout cable looks like inside the computer.
+Note that the wires to the cartridge outside are odd and the inside are even.
+If we consider "top" as toward the back of the machine.  The red wire is
+attached to the 5th from the top, the black to the 4th from the bottom. The
+image below is from a Korean-made CoCo 2 but all CoCo 2s should attach the same.
 
-!["CoCo 2 Rev B Tryout Attachments"](../etc/images/coco2_rev_b_tryout_attach.jpg?raw=true "CoCo 2 Rev B Tryout Attachments")
+!["CoCo 2 Tryout Attachments"](../etc/images/coco2_tryout_attach.jpg?raw=true "CoCo 2 Tryout Attachments")
 
 Next string the cable out the back (anywhere) and put the top on without
 screws. Double check that you __do not__ have the power cable plugged into AC
@@ -37,7 +44,8 @@ This setup has several limitations (solved by the permanent mod).
 * The power switch doesn't work (reset does work).
   On/off is accomplished by plugging in (on) and unplugging (off) the USB
   connection.
-* The serial connection (bit banger) doesn't work. Can't use drivewire.
+* The serial connection (bit banger) doesn't work. You can't use drivewire (but
+  CoCo SDC will work fine).
 * The cassette input, e.g., CLOAD or CLOADM, doesn't work (output does).
 
 To overcome these limtations you have to do the permanent USB power
@@ -62,7 +70,7 @@ and wall-plug power. Say you need to use the cassette for a bit. The only rule
 is __use one or the other__. Don't plug them both in at once! I ran this setup
 for several months.
 
-# Identifying compatible systems for the permanent CoCo 2 USB power modification
+# Identifying compatible systems for the permanent USB power modification
 
 Computers that should work are
 
