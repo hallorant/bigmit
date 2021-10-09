@@ -377,10 +377,13 @@ The image below shows this in my CoCo 2.
 Depending on your CoCo it might be possible to put the barrel jack in the lower
 part of the case. The one above is a Rev 2 motherboard. I found this very
 difficult to do. I had to glue the case and then dremel out plastic in the
-bottom of the case to fit the nut to attach the jack.
+bottom of the case to fit the nut to attach the jack. If you get this to work
+it is very nice if you often work on the insides of the CoCo 2 (which I do). If
+you do not, I strongly suggest placement in the upper shell.
 
-I suggest placement in the upper shell. Be sure you have room to put in the nut
-and that the jack barrel will clear the plastic that holds the transformer.
+To place the jack barrel in the upper shell. Be sure you have room to put in
+the nut and that the jack barrel will clear the plastic that holds the
+transformer.
 
 Start with a small hole (e.g., 1/8") then do the larger drill hole. I did 3/8"
 and used sandpaper on a screwdriver barrel to expand the opening to the proper
