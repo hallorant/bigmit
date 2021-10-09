@@ -342,10 +342,10 @@ There are two options
 * Use a mono 1/8" (3.5mm) jack.
 * Use a 5.5mm x 2.1mm barrel jack.
 
-The barrel jack is harder to install but you can buy [commercial
-cables](https://www.amazon.com/dp/B01MZ0FWSK) that work with it.  The concern
-with the mono 3.5mm jack is that it can short (if you plug it in to USB power
-and it is not plugged-in to a CoCo).
+The [barrel jack](https://www.amazon.com/dp/B091PS6XQ4) is harder to install
+but you can buy [commercial cables](https://www.amazon.com/dp/B01MZ0FWSK) that
+work with it.  The concern with the mono 3.5mm jack is that it can short (if
+you plug it in to USB power and it is not plugged-in to a CoCo).
 
 I recommend doing one of these case mods. I found the USB cable annoying when
 hanging out like the original power cord. But it can safely be skipped.
