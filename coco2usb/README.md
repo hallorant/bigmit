@@ -118,9 +118,9 @@ decide to continue or not based on your need for the AC-using modification.
 Look for any wires attached to the AC side of the bridge rectifier. If we
 consider "top" as toward the back of the machine. Look for any wire attached to
 the top of CR1 or CR2 or any wire attached to the bottom of CR3 or CR4. The
-image below has the USB mod installed, but it circles the AC side of the bridge
-rectifier. If any mod to your CoCo is attached here the USB mod is incompatible
-with it.
+image below has the USB mod installed, but it boxes the AC side of the bridge
+rectifier. If any mod to your CoCo is attached to the AC/boxed side of the
+bridge rectifier then the USB mod is incompatible with it.
 
 !["CoCo 2 Rev B Finding Incompatible Mods"](../etc/images/coco2_rev_b_incompatible_mods.jpg?raw=true "CoCo 2 Rev B Finding Incompatible Mods")
 
@@ -128,16 +128,16 @@ The only incompatible mod I am aware of for the Rev B CoCo 2 is a composite
 video modification. It attaches to the bottom of CR3 or CR4. Beware, there may
 be others! So please check your Coco.
 
-## Korean-Made CoCo 2 Identification
+## Korean-made CoCo 2 Identification
 
-### Identification (Is my CoCo 2 Korean-Made?)
+### Identification (Is my CoCo 2 Korean-made?)
 
 A Korean-made CoCo 2 can be identified from the outside by the channel select
 switch beside the TV output and a horizontally mounted modulator (metal box)
 which can be seen through the top grille, to the left of center. It likely says
 "Product of KOREA" on the bottom.
 
-!["CoCo 2 Korean-Made Identification"](../etc/images/coco2_korean_board_id.jpg?raw=true "CoCo 2 Korean-Made Identification")
+!["CoCo 2 Korean-made Identification"](../etc/images/coco2_korean_board_id.jpg?raw=true "CoCo 2 Korean-made Identification")
 
 ### How to spot an incompatible modification
 
@@ -148,19 +148,17 @@ decide to continue or not based on your need for the AC-using modification.
 
 Look for any wires attached to the AC side of the bridge rectifier. If we
 consider "top" as toward the back of the machine. Look for any wire attached to
-the top of D8, D9, D10, or D11. The image below circles the AC side of the
-bridge rectifier. If any mod to your CoCo is attached here the USB mod is
-incompatible with it.
+the top of D8, D9, D10, or D11. The image below boxes the AC side of the bridge
+rectifier. If any mod to your CoCo is attached to the AC/boxed side of the
+bridge rectifier then the USB mod is incompatible with it.
 
-!["CoCo 2 Korean-Made Finding Incompatible Mods"](../etc/images/coco2_korean_incompatible_mods.jpg?raw=true "CoCo 2 Korean-Made Finding Incompatible Mods")
+!["CoCo 2 Korean-made Finding Incompatible Mods"](../etc/images/coco2_korean_incompatible_mods.jpg?raw=true "CoCo 2 Korean-made Finding Incompatible Mods")
 
-
-
-### Permanent USB power modification
+# Permanent USB power modification
 
 The permanent USB power modification overcomes all the shortcomings of the
-tryout cable. Except for where you plug in the CoCo its operation is
-indistinguishable from the original plug.
+tryout cable. Except for how you plug in the CoCo (a USB cable) its operation
+is indistinguishable from the original plug.
 
 * The computer runs cool.
 * You can leave it pluged into the USB power strip. The CoCo's power switch
@@ -169,12 +167,37 @@ indistinguishable from the original plug.
   dangling cable.
 
 The permanent mod has a cable that plugs into USB and the CoCo and a cable that
-is soldered onto points on the CoCo motherboard.  A diagram of what you are
-going to do is below.
+is soldered onto points on the CoCo motherboard.
+
+## CoCo 2 Rev B motherboard
+
+A diagram of what you are going to do is below. This is the older kit that used
+a 1/8 audio jack (newer ones use a barrel jack).
 
 !["CoCo 2 Rev B Permanent Modification Diagram"](../etc/images/coco2_rev_b_permanent_usb_diagram.jpg?raw=true "CoCo 2 Rev B Permanent Modification Diagram")
 
-Put the USB cable away for a bit. We need to install the internal cable.
+A few notes
+
+* You can connect to the bottom of CR1 or CR2, it doesn't matter which.
+* You can connect to the top of CR3 or CR4, it doesn't matter which.
+* The GND pin is E1 (it is down near Q1 below the transformer).
+* It doesn't matter which side of the power switch you solder too, but be
+  consistent. Both connections must be on the right or the left.
+
+## Korean-made CoCo 2
+
+A diagram of what you are going to do is below. This is the newer kit that uses
+a barrel jack (and a commercial USB power cord).
+
+!["CoCo 2 Korean-made Permanent Modification Diagram"](../etc/images/coco2_korean_permanent_usb_diagram.jpg?raw=true "CoCo 2 Korean-made Permanent Modification Diagram")
+
+A few notes
+
+* You can connect to the bottom of D8 or D9, it doesn't matter which.
+* You can connect to the bottom of D10 or D11, it doesn't matter which.
+* The GND pin is A3 (it is the bottom pin to the right of the transformer).
+* It doesn't matter which side of the power switch you solder too, but be
+  consistent. Both connections must be on the right or the left.
 
 #### Remove the transformer
 
