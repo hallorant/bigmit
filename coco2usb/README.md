@@ -184,7 +184,7 @@ Perhaps it can be supported.
 You can make your own modification. What you need is listed below.
 
 * Wire that can carry power in a few colors.  Don't use too thin of wire. I use
-  [22AWG silicon wire](https://www.amazon.com/gp/product/B01LH1FR6M)
+  [22AWG silicone wire](https://www.amazon.com/gp/product/B01LH1FR6M)
 * I suggest a [barrel jack](https://www.amazon.com/dp/B091PS6XQ4) because you
   can buy [commercial USB power cables](https://www.amazon.com/dp/B01MZ0FWSK).
 * A DC step-up boost converter at +/-9V. I used [this
@@ -194,6 +194,12 @@ You can make your own modification. What you need is listed below.
 You can use all the pictures below to create one. The yellow wire is +9V and
 the blue wire is -9V in my kits. The black wires are GND and the red wires are
 +5V.
+
+You need a good soldering iron and a multimeter. Before putting your cable in a
+CoCo, ensure you plug it in and test voltages. Connect the two red cables (with
+alligator clips) as if the power switch is on. Check that you see 5V, 9V, and
+-9V on the correct wires. If not, double check what you did and fix the problem
+before moving on to put the kit into a CoCo 2.
 
 # CoCo 2 Rev B motherboard permanent USB power modification
 
