@@ -169,7 +169,17 @@ is indistinguishable from the original plug.
 The permanent mod has a cable that plugs into USB and the CoCo and a cable that
 is soldered onto points on the CoCo motherboard.
 
-## CoCo 2 Rev B motherboard
+## Supported CoCo 2s
+
+CoCo 2 computers that I own that work are
+
+* Color Computer 2 with a Rev B Motherboard
+* Korean-made Color Computer 2
+
+Other CoCo 2's should work, please reach out to me if you have one that is odd.
+Perhaps it can be supported.
+
+# CoCo 2 Rev B motherboard
 
 A diagram of what you are going to do is below. This is the older kit that used
 a 1/8 audio jack (newer ones use a barrel jack).
@@ -184,22 +194,7 @@ A few notes
 * It doesn't matter which side of the power switch you solder too, but be
   consistent. Both connections must be on the right or the left.
 
-## Korean-made CoCo 2
-
-A diagram of what you are going to do is below. This is the newer kit that uses
-a barrel jack (and a commercial USB power cord).
-
-!["CoCo 2 Korean-made Permanent Modification Diagram"](../etc/images/coco2_korean_permanent_usb_diagram.jpg?raw=true "CoCo 2 Korean-made Permanent Modification Diagram")
-
-A few notes
-
-* You can connect to the bottom of D8 or D9, it doesn't matter which.
-* You can connect to the bottom of D10 or D11, it doesn't matter which.
-* The GND pin is A3 (it is the bottom pin to the right of the transformer).
-* It doesn't matter which side of the power switch you solder too, but be
-  consistent. Both connections must be on the right or the left.
-
-#### Remove the transformer
+## Remove the transformer
 
 Make sure your CoCo is unplugged. Pull loose the three connectors for the
 transformer. Unscrew it (two screws) and remove it from the CoCo. You'll want
@@ -209,7 +204,7 @@ transformer out of the machine.
 
 !["CoCo 2 Rev B Removed Transformer"](../etc/images/coco2_rev_b_transformer.jpg?raw=true "CoCo 2 Rev B Removed Transformer")
 
-#### Remove the Q1 transistor, a.k.a, Heat Mizer
+## Remove the Q1 transistor, a.k.a, Heat Mizer
 
 This is the hardest part of this mod. Q1 is part of the creation of 5V DC power
 and generates more heat than anything in the CoCo. To partially power the SALT
@@ -252,39 +247,7 @@ part of this modification so take your time and get help if you need it.
 
 !["CoCo 2 Rev B Q1 Transistor Removed"](../etc/images/coco2_rev_b_q1.jpg?raw=true "CoCo 2 Rev B Q1 Transistor Removed")
 
-#### Case mod for the 1/8" jack
-
-I recommend doing this case mod. I found the USB cable annoying when hanging
-out like the original power cord. But it can safely be skipped.
-
-__No case mod:__ Plug in the 1/8" mono jack and run the USB cable out the
-destraining pegs just like the original power cord ran. I recommend you use
-electrical tape to tape around the mono jack and plug (avoids a short).
-
-__Case mod:__ Drill a hole in the lower case such that the 1/8" jack plug
-connector fits through the hole. This may be anywhere on the case but I show
-where I put it in the picture below (circled in green). Use care and ensure the
-jack fits behind the plastic (about half way up seems to work okay). I also
-recommend drilling a little hole then using that to guide the bigger one.
-
-!["CoCo 2 Rev B Case Mod"](../etc/images/coco2_rev_b_case_mod.jpg?raw=true "CoCo 2 Rev B Case Mod")
-
-I selected the 1/8" mono plug because it is much easier to do a case mod that
-is circular with a drill. Actually adding a USB plug would be very hard to cut
-into the case. I also like to put these mods on the lower half of the case
-because when you remove the top you do not need to detatch them or risk
-damaging the wire connections. You can see I put the CoCoVGA sound mod over to
-the left. That mod is another 1/8" mono plug that I don't need to remove
-everytime I take the top shell off my CoCo.
-
-You might ask why we don't run the 1/8" mono plug out the hole the power cord
-went out? This seems reasonable until you look inside the case. The strain
-relief posts are right behind this opening (you can clearly seen the posts in
-the next image below) and you cannot fit the 1/8" plug in that space without
-cutting those posts out. A small hole seemed less scary to me than cutting out
-the posts.
-
-#### Attach the DC-DC Step-up Boost Converter Dual Output Power Supply
+## Attach the DC-DC Step-up Boost Converter Dual Output Power Supply
 
 Attach the little board to the back screw hole of the original power supply. Do
 not crank this down, just snug it. The screw is insolated so it doesn't short
@@ -308,7 +271,7 @@ rectifier. The initial mods use ±9V. The current (amps) is extremely low
 because this is only used for the bit banger (serial) and cassette input
 zero-volt-crossing detection capabilties on the motherboard.
 
-#### Attach the ground plug
+## Attach the ground plug
 
 Take on the black wire plug and push it onto the ground attachment, E1, used by
 the transformer. E1 is a single little post toward the front-left of the
@@ -319,7 +282,7 @@ machine on the motherboard as shown in the picture below.
 Now all you have to do is solder several attachments to the motherboard. The
 diagram at the top of this section is useful to reference what we are doing.
 
-####  Solder the 5V DC wires
+##  Solder the 5V DC wires
 
 * Solder the red wire from the 1/8" jack to a middle peg (right or left)
   on the power switch.
@@ -335,7 +298,7 @@ of the ground plug attached above.
 
 !["CoCo 2 Rev B Solder 5V DC Wires"](../etc/images/coco2_rev_b_5v.jpg?raw=true "CoCo 2 Rev B Solder 5V DC Wires")
 
-####  Solder the ±9V DC wires to the DC side of the bridge rectifier
+##  Solder the ±9V DC wires to the DC side of the bridge rectifier
 
 * Solder the blue wire (-9V DC) to the side of CR1 or CR2 toward the front of
   the machine.
@@ -349,10 +312,80 @@ connection to C28 is also shown.
 
 The permanent mod is complete.
 
-### Finishing up
+## Finishing up
 
 Its a good idea to pull at all the solder connections to be sure they are solid
 and test connections with a multimeter (beep test). Before you screw on the
 top, power up the machine and make sure everything works okay. The heat sink Q1
 was inside of won't heat up so if your keyboard fits you don't need to bend it
 back like it was (just hand bend it so your keyboard fits in okay).
+
+# Korean-made CoCo 2
+
+A diagram of what you are going to do is below. This is the newer kit that uses
+a barrel jack (and a commercial USB power cord).
+
+!["CoCo 2 Korean-made Permanent Modification Diagram"](../etc/images/coco2_korean_permanent_usb_diagram.jpg?raw=true "CoCo 2 Korean-made Permanent Modification Diagram")
+
+A few notes
+
+* You can connect to the bottom of D8 or D9, it doesn't matter which.
+* You can connect to the bottom of D10 or D11, it doesn't matter which.
+* The GND pin is A3 (it is the bottom pin to the right of the transformer).
+* It doesn't matter which side of the power switch you solder too, but be
+  consistent. Both connections must be on the right or the left.
+
+# Optional case modification
+
+There are two options
+
+* Use a mono 1/8" (3.5mm) jack.
+* Use a 5.5mm x 2.1mm barrel jack.
+
+The barrel jack is harder to install but you can buy [commercial
+cables](https://www.amazon.com/dp/B01MZ0FWSK) that work with it.  The concern
+with the mono 3.5mm jack is that it can short (if you plug it in to USB power
+and it is not plugged-in to a CoCo).
+
+I recommend doing one of these case mods. I found the USB cable annoying when
+hanging out like the original power cord. But it can safely be skipped.
+
+## What to do if you don't want to mod your case
+
+If you do not do a case mod, plug in whatever jack you have and wrap it with
+tape (so it doesn't short anything). Tape it (e.g., with electrical tape) into
+the empty transformer location with the DC boost transformer. If you are
+building the kit yourself.
+
+## Case mod for the mono 1/8" (3.5mm) jack
+
+Drill a hole in the lower case such that the 1/8" jack plug
+connector fits through the hole. This may be anywhere on the case but I show
+where I put it in the picture below (circled in green). Use care and ensure the
+jack fits behind the plastic (about half way up seems to work okay). I also
+recommend drilling a little hole then using that to guide the bigger one.
+
+!["CoCo 2 Mono Jack Case Mod"](../etc/images/mono_jack_case_mod.jpg?raw=true "CoCo 2 Mono Jack Case Mod")
+
+## Case mod for the 5.5mm x 2.1mm barrel jack
+
+This is probably the better option but it is harder to add to the computer.
+The image below shows this in my CoCo 2.
+
+!["CoCo 2 Barrel Jack Case Mod"](../etc/images/barrel_jack_case_mod.jpg?raw=true "CoCo 2 Barrel Jack Case Mod")
+
+Depending on your CoCo it might be possible to put the barrel jack in the lower
+part of the case. The one above is a Rev 2 motherboard. I found this very
+difficult to do. I had to glue the case and then dremel out plastic in the
+bottom of the case to fit the nut to attach the jack.
+
+I suggest placement in the upper shell. Be sure you have room to put in the nut
+and that the jack barrel will clear the plastic that holds the transformer.
+
+Start with a small hole (e.g., 1/8") then do the larger drill hole. I did 3/8"
+and used sandpaper on a screwdriver barrel to expand the opening to the proper
+size to fit the barrel.
+
+On these kits I add quick connects to the barrel. So that if you need to take
+off the top you can disconnect the parts of the power setup in the upper shell
+from those in the lower shell.
