@@ -179,7 +179,7 @@ CoCo 2 computers that I own that work are
 Other CoCo 2's should work, please reach out to me if you have one that is odd.
 Perhaps it can be supported.
 
-# CoCo 2 Rev B motherboard
+# CoCo 2 Rev B motherboard permanent USB power modification
 
 A diagram of what you are going to do is below. This is the older kit that used
 a 1/8 audio jack (newer ones use a barrel jack).
@@ -320,7 +320,7 @@ top, power up the machine and make sure everything works okay. The heat sink Q1
 was inside of won't heat up so if your keyboard fits you don't need to bend it
 back like it was (just hand bend it so your keyboard fits in okay).
 
-# Korean-made CoCo 2
+# Korean-made CoCo 2 permanent USB power modification
 
 A diagram of what you are going to do is below. This is the newer kit that uses
 a barrel jack (and a commercial USB power cord).
