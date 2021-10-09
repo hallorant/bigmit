@@ -187,13 +187,16 @@ You can make your own modification. What you need is listed below.
   [22AWG silicone wire](https://www.amazon.com/gp/product/B01LH1FR6M)
 * I suggest a [barrel jack](https://www.amazon.com/dp/B091PS6XQ4) because you
   can buy [commercial USB power cables](https://www.amazon.com/dp/B01MZ0FWSK).
-* A DC step-up boost converter at +/-9V. I used [this
+* A DC step-up boost converter at ±9V. I used [this
   one](https://www.ebay.com/itm/124193492824?var=425041936660). Ensure ground
   in is the same as ground out.
 
 You can use all the pictures below to create one. The yellow wire is +9V and
 the blue wire is -9V in my kits. The black wires are GND and the red wires are
 +5V.
+
+Be sure that you tin all the wire tips you are going to attach to the
+motherboard.
 
 You need a good soldering iron and a multimeter. Before putting your cable in a
 CoCo, ensure you plug it in and test voltages. Connect the two red cables (with
@@ -215,6 +218,13 @@ A few notes
 * The GND pin is E1 (it is down near Q1 below the transformer).
 * It doesn't matter which side of the power switch you solder too, but be
   consistent. Both connections must be on the right or the left.
+* In the picture above I put two wires onto the power switch. Check your power
+  switch. On some of them there is plenty of room to do this. But on others
+  there is very little space. If yours has limited space then splice together 3
+  red wires so that only a single wire needs to be attached to the power switch
+  rail.
+* In the picture above I have a quick release for the GND connection. You can
+  also just solder this connection.
 
 ## Remove the transformer
 
@@ -231,35 +241,19 @@ transformer out of the machine.
 This is the hardest part of this mod. Q1 is part of the creation of 5V DC power
 and generates more heat than anything in the CoCo. To partially power the SALT
 and get the cassette port and bit banger working we need to power the SALT
-except for the creation of 5V DC power.  There are several ways to do this but
-after consulting Terry Trapp (who is working on a SALT replacement) I choose
-to remove Q1. We describe the options and our rationale below.
+except for the creation of 5V DC power.
 
-* (NOPE) Bend up pins on the SALT. I dismissed this immediately despite this
-  option being simple to do (the SALT is socketed in my CoCo). The SALT is not
-  a replaceable chip. It is also not clear this would "turn off" Q1 completely.
-  It might still generate significant heat.
-* (NOPE) Trace cut the connections to Q1. This would be fine but is harder to
-  undo. But is a reasonable approach.
-
-* (CHOSEN) Desolder and remove the Q1 transistor from the CoCo. This stops the
-  SALT from creating 5V DC power but allows all its other functions to work.
-  Why this option? The SALT and the motherboard are not replaceable but Q1 is
-  a 2N6569 transistor (Parts list says SJ5812) which you can get a new one
-  for a few bucks. It is easily to replace, further, removing it is unlikely
-  to actually damage it.
-
-Start by removing the motherboard and its backing. Q1 has a heat sync around
-it. Part of this heat sync is bent in so it does not touch and melt the
-keyboard plastic. Carefully hand bend this straight. Use needlenose pliers or a
-driver to loosen the bolts and carefully remove them.
+To desolder and remove the Q1 transistor from the CoCo.  Start by removing the
+motherboard and its backing. Q1 has a heat sync around it. Part of this heat
+sync is bent in so it does not touch and melt the keyboard plastic. Carefully
+hand bend this straight. Use needlenose pliers or a driver to loosen the bolts
+and carefully remove them.
 
 Desolder the two connections (between the screws) on the underside of the
-motherboard and remove Q1. I used a solder sucker and sort of gently pulled at
-it with the neadlenose pliers to get it free. The white stuff conducts heat
-from the transistor to the heat sync and can stick a little. I did some minor
-damage to the traces (right near the transistor attachment) but this would be
-much easier to fix than a trace cut.
+motherboard and remove Q1. I used a solder sucker (with 1.4mm hole) and sort of
+gently pulled at it with the neadlenose pliers to get it free. The white stuff
+conducts heat from the transistor to the heat sync and can stick a little. I
+did some minor damage to the traces (right near the transistor attachment).
 
 Once you have the transistor out. I suggest you put the heat sink and bolts
 back on. You could even tape the transistor into the cage to save it inside the
@@ -269,21 +263,15 @@ part of this modification so take your time and get help if you need it.
 
 !["CoCo 2 Rev B Q1 Transistor Removed"](../etc/images/coco2_rev_b_q1.jpg?raw=true "CoCo 2 Rev B Q1 Transistor Removed")
 
+You could alternatively cut the traces to Q1. This is easier but not
+reversible.
+
 ## Attach the DC-DC Step-up Boost Converter Dual Output Power Supply
 
-Attach the little board to the back screw hole of the original power supply. Do
-not crank this down, just snug it. The screw is insolated so it doesn't short
-out the little board. The image below shows what this looks like (when the mod
-is complete). Reminder, do not crank the screw, just snug it so the board
-doesn't flop around.
-
-You might have a small notch in the boost converter and a normal screw. To
-attach this start the screw and slide the notch into the gap. Snug the srew so
-the board holds.
-
-If you have no screw the back of your boost converter has two sided tape.
-remove the backing and push to attach the boost coverter to the bottom of the
-power supply square.
+I suggest you use double-sided tape to tape the boost converter into the old
+transformer location. In early kits (and the picture below) I used a screw but
+this depends upon extra board space on the boost converter which most do not
+have.
 
 !["CoCo 2 Rev B Attach DC to DC board"](../etc/images/coco2_rev_b_dc_to_dc.jpg?raw=true "CoCo 2 Rev B Attach DC to DC board")
 
@@ -295,7 +283,7 @@ zero-volt-crossing detection capabilties on the motherboard.
 
 ## Attach the ground plug
 
-Take on the black wire plug and push it onto the ground attachment, E1, used by
+Take the black wire plug and push it onto the ground attachment, E1, used by
 the transformer. E1 is a single little post toward the front-left of the
 machine on the motherboard as shown in the picture below.
 
@@ -356,6 +344,48 @@ A few notes
 * The GND pin is A3 (it is the bottom pin to the right of the transformer).
 * It doesn't matter which side of the power switch you solder too, but be
   consistent. Both connections must be on the right or the left.
+
+## Attach the ground plug
+
+Take on the black wire plug and solder it onto the ground attachment pin, A3, used by
+the transformer. The position of A3 is shown in the image below.
+
+!["Korean-made CoCo 2 Attach the Ground Plug"](../etc/images/coco2_korean_ground.jpg?raw=true "Korean-made CoCo 2 Attach the Ground Plug")
+
+##  Solder the 5V DC wires
+
+* Solder the red wire from the 1/8" jack to a middle peg (right or left)
+  on the power switch.
+* Solder the middle of the long red red wire from the DC to DC step-up boost
+  converter to the front peg (choose same the same side as above) on the
+  power switch.
+* Solder the end of the red wire to the right side C9 (marked with a +) toward
+  the back of the machine.
+
+The switch connections are exactly the same as the Rev B motherboard so please
+refer to that image above.  The last connection, C9 (+), is shown in the image
+below. We don't need the ground side because of the ground plug attached above.
+
+!["Korean-made CoCo 2 Solder 5V DC Wire"](../etc/images/coco2_korean_5v.jpg?raw=true "Korean-made CoCo 2 Solder 5V DC Wire")
+
+Note that if I sent you a kit, hopefully the red wire reaches. If it is too
+short splice on more wire to make the connection.
+
+##  Solder the ±9V DC wires to the DC side of the bridge rectifier
+
+* Solder the blue wire (-9V DC) to the side of D8 or D9 toward the front of
+  the machine.
+* Solder the yellow wire (9V DC) to the side of D10 or D11 toward the front of
+  the machine
+
+These connections are shown in the image below.
+
+!["Korean-made CoCo 2 Solder SALT Power"](../etc/images/coco2_korean_salt_power.jpg?raw=true "Korean-made CoCo 2 Solder SALT Power")
+
+Use some double-sided tape to attach the DC boost converter to the bottom of
+the old transformer location.
+
+The permanent mod is complete.
 
 # Optional case modification
 
