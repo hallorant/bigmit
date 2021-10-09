@@ -179,6 +179,22 @@ CoCo 2 computers that I own that work are
 Other CoCo 2's should work, please reach out to me if you have one that is odd.
 Perhaps it can be supported.
 
+## Making your own permanent USB power modification kit
+
+You can make your own modification. What you need is listed below.
+
+* Wire that can carry power in a few colors.  Don't use too thin of wire. I use
+  [22AWG silicon wire](https://www.amazon.com/gp/product/B01LH1FR6M)
+* I suggest a [barrel jack](https://www.amazon.com/dp/B091PS6XQ4) because you
+  can buy [commercial USB power cables](https://www.amazon.com/dp/B01MZ0FWSK).
+* A DC step-up boost converter at +/-9V. I used [this
+  one](https://www.ebay.com/itm/124193492824?var=425041936660). Ensure ground
+  in is the same as ground out.
+
+You can use all the pictures below to create one. The yellow wire is +9V and
+the blue wire is -9V in my kits. The black wires are GND and the red wires are
++5V.
+
 # CoCo 2 Rev B motherboard permanent USB power modification
 
 A diagram of what you are going to do is below. This is the older kit that used
