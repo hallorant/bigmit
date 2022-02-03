@@ -948,4 +948,21 @@ hash:
   jr wt0
   end start
 
+--
+
+Mav advice:
+
+On Junk on screen scrolling up & Another with text scrolling to the left:
+Both of those machines below seem to have the video sync problem. The one with
+the full screen of garbage probably only has a horizontal sync problem and the
+other a vertical sync problem or maybe both H and V.  As a minimum I would
+change Z5 on both and see if things change.  When I am feeling lazy and can't
+be bothered firing up the oscilloscope I just replace Z5, Z6 and Z57 which
+usually sorts out the sync probs.
+
+On junk on the screen scrolling up:
+The first one I would start with Ram and CPU, you get that sort of garbage
+screen with bad Ram or failed CPU.  The other one, lets try and work it out
+once the screen stops moving around.
+
                                                 -- George
