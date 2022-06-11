@@ -1,0 +1,1566 @@
+   1:				; VHDUTL - Utility for the Vecoven Hard Drive Emulator
+   2:				; MultiDOS Version - Tim Halloran (2022) - migrated from LDOS code
+   3:				
+   4:				; TRS-80 IO Port Definitions
+   5:				
+   6:     -	00C2          	DATA2       EQU     0C2H
+   7:     -	00C3          	SIZE2       EQU     0C3H
+   8:     -	00C4          	COMMAND2    EQU     0C4H
+   9:     -	00C5          	ERROR2      EQU     0C5H
+  10:     -	00CF          	STATUS      EQU     0CFH
+  11:				
+  12:				; Assembler Control Flags
+  13:				
+  14:     -	0000          	CPM         EQU     0
+  15:     -	0001          	TRSDOS      EQU     1
+  16:				
+  17:				; MultiDOS addresses
+  18:     -	4467          	@DSPLY      EQU     4467h ; MultiDOS @VOD
+  19:     -	0033          	@DSP        EQU     0033h ; MultiDOS @PUTVO
+  20:     -	4454          	@PARAM      EQU     4454h
+  21:				
+  22:     -	5200          	            ORG     5200H
+  23:				            
+  24:				; MultiDOS jump table
+  25:				
+  26:    0+17	5200  CD6744  	DSPLY       CALL    @DSPLY
+  27:   17+10	5203  C9      	            RET
+  28:   27+10	5204  211A42  	DATE        LD      HL,421Ah
+  29:   37+10	5207  C9      	            RET
+  30:   47+10	5208  211742  	TIME        LD      HL,4217h        ; MultiDOS Time Storage: ssmmhhyyddmm
+  31:   57+10	520B  C9      	            RET
+  32:   67+16	520C  2A0E5D  	PARAM       LD      HL,(PARM)       ; Use internal parameter parsing for compability
+  33:   83+6	520F  2B      	            DEC     HL              ; with non-LDOS Model III operating systems
+  34:   89+17	5210  CDCC5A  	            CALL    PARAM0
+  35:  106+10	5213  C9      	            RET
+  36:  116+4	5214  00      	DSP         NOP
+  37:  120+17	5215  CD3300  	            CALL    @DSP
+  38:  137+10	5218  C9      	            RET
+  39:  147+10	5219  216558  	SETCOLS     LD      HL,DIRCOLS
+  40:  157+10	521C  3604    	            LD      (HL),4
+  41:  167+10	521E  C9      	            RET
+  42:     -	521F          	DSPBUFFEREND
+  43:  177+10	521F  215358  	            LD      HL,DSPBUFFER+63
+  44:  187+10	5222  C9      	            RET
+  45:  197+10	5223  C9      	SETUP       RET
+  46:  207+10	5224  C9      	DEPART	    RET
+  47:				
+  48:     -	5225          	VHDUTL
+  49:  217+11	5225  E5      	            PUSH    HL              ; Keep the INBUF pointer
+  50:  228+16	5226  220E5D  	            LD      (PARM),HL
+  51:  244+17	5229  CD2352  	VHDINIT     CALL    SETUP           ; Hardware configuration
+  52:				
+  53:				            INCLUDE utlcore.z80
+**** utlcore.z80 ****
+   1:				; VHDUTL - Core - Shared by Versions for all OS's
+   2:				
+   3:				; Misc Constants
+   4:				
+   5:     -	000D          	CR          EQU     0DH
+   6:     -	000A          	LF          EQU     0AH
+   7:     -	0003          	ETX         EQU     03H
+   8:     -	0020          	SPC         EQU     20H
+   9:				
+  10:				; Directory Attributes
+  11:				
+  12:     -	0001          	AM_RDO      EQU     001H    	    ; Read only
+  13:     -	0002          	AM_HID      EQU     002H            ; Hidden
+  14:     -	0004          	AM_SYS      EQU     004H            ; System
+  15:     -	0008          	AM_VOL      EQU     008H            ; Volume label
+  16:     -	000F          	AM_LFN      EQU     00FH            ; LFN entry
+  17:     -	0010          	AM_DIR      EQU     010H            ; Directory
+  18:     -	0020          	AM_ARC      EQU     020H            ; Archive
+  19:				
+  20:				; Vecoven Interface Commands
+  21:				
+  22:     -	0000          	GETVER      EQU     0
+  23:     -	0001          	GETTIME     EQU     1
+  24:     -	0002          	SETTIME     EQU     2
+  25:     -	0008          	OPENDIR     EQU     8
+  26:     -	0009          	READDIR     EQU     9
+  27:     -	000A          	MOUNTDRIVE  EQU     0AH
+  28:     -	000C          	DRIVEINFO   EQU     0CH
+  29:				
+  30:				; Other Vecoven Interface Constants
+  31:				
+  32:     -	0006          	RTCMSGSIZE  EQU     6
+  33:     -	0013          	DRVINFOSIZE	EQU		19
+  34:     -	0051          	DSPBUFFERLEN    EQU          81
+  35:				
+  36:     -	522C          	START       
+  37:  261+17	522C  CD0956  	            CALL    FREHDTST        ; Check interface is installed
+  38:  278+10	522F  E1      	            POP     HL              ; Restore INBUF$ pointer
+  39:  288+7	5230  FE00    	            CP      0               ; No?
+  40:  295+10	5232  CA2455  	            JP      Z,DONE          ; Then done
+  41:				
+  42:  305+10	5235  114055  	            LD      DE,PRMTABLE     ; Pointer to parameter table
+  43:  315+17	5238  CD0C52  	            CALL    PARAM
+  44:  332+10	523B  C22755  	            JP      NZ,PRMERROR
+  45:				
+  46:     -	0001          	            IF TRSDOS
+  47:  342+13	523E  3ABA55  	CHKSET      LD      A,(SPARM+1)     ; Set Parameter?
+  48:  355+7	5241  FEFF    	            CP      0FFH
+  49:  362+7+5	5243  2003    	            JR      NZ,CHKGET       ; No
+  50:  369+17	5245  CD1E55  	            CALL    SETRTC
+  51:  386+13	5248  3ABD55  	CHKGET      LD      A,(GPARM+1)     ; Get Parameter?
+  52:  399+7	524B  FEFF    	            CP      0FFH
+  53:  406+10	524D  C25352  	            JP      NZ,CHKDIR       ; No
+  54:  416+17	5250  CD1655  	            CALL    GETRTC
+  55:				            ENDIF
+  56:  433+13	5253  3AC355  	CHKDIR      LD      A,(DPARM+1)     ; Get Directory
+  57:  446+7	5256  FEFF    	            CP      0FFH
+  58:  453+10	5258  C25E52  	            JP      NZ,CHKMNT       ; No
+  59:  463+17	525B  CD9254  	            CALL    GETDIR
+  60:  480+13	525E  3AC655  	CHKMNT      LD      A,(MPARM+1)     ; Drive mount functions
+  61:  493+7	5261  FEFF    	            CP      0FFH
+  62:  500+10	5263  C26952  	            JP      NZ,CHKVER       ; No
+  63:  510+17	5266  CD7752  	            CALL    MNT
+  64:  527+13	5269  3AC055  	CHKVER      LD      A,(VPARM+1)     ; Get Firmware Version?
+  65:  540+7	526C  FEFF    	            CP      0FFH
+  66:  547+10	526E  C22755  	            JP      NZ,PRMERROR     ; No
+  67:  557+17	5271  CD0B54  	            CALL    GETVERSION
+  68:  574+10	5274  C32455  	            JP      DONE
+  69:				
+  70:  584+13	5277  3AC955  	MNT         LD      A,(APARM+1)     ; Unit specified?
+  71:  597+7	527A  FE00    	            CP      0
+  72:  604+10	527C  CA2953  	            JP      Z,MNTDISP       ; No so display current config
+  73:  614+16	527F  2AD955  	            LD      HL,(VHPARM+2)   ; Yes... is VHD File specified?
+  74:  630+13	5282  3AD855  	            LD      A,(VHPARM+1)
+  75:  643+7	5285  B6      	            OR      (HL)                  
+  76:  650+7+5	5286  2001    	            JR      NZ,MNT1
+  77:  657+10	5288  C9      	            RET
+  78:				
+  79:  667+7	5289  3E00    	MNT1        LD      A,0             ; Configure mount flags
+  80:  674+13	528B  326758  	            LD      (MNTFLAGS),A
+  81:  687+13	528E  3ACF55  	            LD      A,(WPARM+1)     ; Write Protected?
+  82:  700+7	5291  FEFF    	            CP      0FFH
+  83:  707+7+5	5293  2008    	            JR      NZ,MNT2
+  84:  714+13	5295  3A6758  	            LD      A,(MNTFLAGS)
+  85:  727+7	5298  F604    	            OR      4
+  86:  734+13	529A  326758  	            LD      (MNTFLAGS),A        
+  87:  747+13	529D  3AD555  	MNT2        LD      A,(NPARM+1)     ; No Fast Seek?
+  88:  760+7	52A0  FEFF    	            CP      0FFH
+  89:  767+7+5	52A2  2008    	            JR      NZ,MNT3
+  90:  774+13	52A4  3A6758  	            LD      A,(MNTFLAGS)
+  91:  787+7	52A7  F601    	            OR      1
+  92:  794+13	52A9  326758  	            LD      (MNTFLAGS),A
+  93:  807+13	52AC  3AD255  	MNT3        LD      A,(CPARM+1)     ; Create?
+  94:  820+7	52AF  FEFF    	            CP      0FFH
+  95:  827+7+5	52B1  2008    	            JR      NZ,MNT4
+  96:  834+13	52B3  3A6758  	            LD      A,(MNTFLAGS)
+  97:  847+7	52B6  F602    	            OR      2
+  98:  854+13	52B8  326758  	            LD      (MNTFLAGS),A
+  99:  867+17	52BB  CDB756  	MNT4        CALL    DONESTUFF
+ 100:  884+17	52BE  CDD755  	            CALL    VHPARM          ; Clean up the filename
+ 101:  901+13	52C1  3A6658  	            LD      A,(TEMP)       
+ 102:  914+7	52C4  FE00    	            CP      0               ; Invalid... likely too long
+ 103:  921+7+5	52C6  2001    	            JR      NZ,MNT6
+ 104:  928+10	52C8  C9      	            RET
+ 105:  938+13	52C9  3A6658  	MNT6        LD      A,(TEMP)        ; Get filename size
+ 106:  951+7	52CC  C602    	            ADD     A,2             ; Request size is filename + terminator + 2 bytes
+ 107:  958+11	52CE  D3C3    	            OUT     (SIZE2),A
+ 108:  969+7	52D0  3E0A    	            LD      A,MOUNTDRIVE
+ 109:  976+11	52D2  D3C4    	            OUT     (COMMAND2),A
+ 110:  987+17	52D4  CD5956  	            CALL    WAIT
+ 111: 1004+13	52D7  3AC955  	            LD      A,(APARM+1)     ; Get Drive Number
+ 112: 1017+4	52DA  3D      	            DEC     A               ; Change to 0 offset
+ 113: 1021+11	52DB  D3C2    	            OUT     (DATA2),A
+ 114: 1032+13	52DD  3A6758  	            LD      A,(MNTFLAGS)    ; Get Mount Flags
+ 115: 1045+11	52E0  D3C2    	            OUT     (DATA2),A
+ 116: 1056+16	52E2  2AD855  	            LD      HL,(VHPARM+1)   ; Get filename address
+ 117: 1072+7	52E5  0EC2    	            LD      C,DATA2
+ 118: 1079+13	52E7  3A6658  	            LD      A,(TEMP)        ; Length of filename
+ 119: 1092+4	52EA  47      	            LD      B,A
+ 120: 1096+16+5	52EB  EDB3    	            OTIR
+ 121: 1112+17	52ED  CD5956  	            CALL    WAIT
+ 122: 1129+11	52F0  DBCF    	            IN      A,(STATUS)
+ 123: 1140+7	52F2  E601    	            AND     01h             ; Check if TRS_HARD_ERR set?
+ 124: 1147+7+5	52F4  280A    	            JR      Z,MNT7          ; No all good otherwise tell the user
+ 125: 1154+10	52F6  217257  	            LD      HL,MSGMNTFAIL
+ 126: 1164+17	52F9  CD0052  	            CALL    DSPLY
+ 127: 1181+17	52FC  CD6858  	            CALL    UERROR          ; Report the error
+ 128: 1198+10	52FF  C9      	            RET                     
+ 129:				            
+ 130: 1208+17	5300  CD6C56  	MNT7        CALL    CLRDSPBUFFER
+ 131: 1225+10	5303  215857  	            LD      HL,MSGMNTOK+2   ; Messaging skipping over the length
+ 132: 1235+10	5306  111458  	            LD      DE,DSPBUFFER
+ 133: 1245+20	5309  ED4B5657	            LD      BC,(MSGMNTOK)
+ 134: 1265+16+5	530D  EDB0    	            LDIR
+ 135: 1281+13	530F  3ACC55  	            LD      A,(HPARM+1)     ; Halt after change requested?
+ 136: 1294+7	5312  FEFF    	            CP      0FFH
+ 137: 1301+7+5	5314  200F    	            JR      NZ,MNTNOHLT     ; No so just report mount successfull
+ 138: 1308+10	5316  216557  	MNTHLT      LD      HL,MSGMNTHLT+2    ; Yes... so report mount successfull
+ 139: 1318+20	5319  ED4B6357	            LD      BC,(MSGMNTHLT)
+ 140: 1338+16+5	531D  EDB0    	            LDIR
+ 141: 1354+17	531F  CD7F56  	            CALL    DSPDSPBUFFER
+ 142: 1371+12	5322  18FE    	MNTHLT2     JR      MNTHLT2         ; ... and Halt
+ 143: 1383+10	5324  C9      	            RET
+ 144: 1393+17	5325  CD7F56  	MNTNOHLT    CALL    DSPDSPBUFFER
+ 145: 1410+10	5328  C9      	            RET
+ 146: 1420+7	5329  3E0C    	MNTDISP     LD      A,DRIVEINFO	    ; Request Drive Info
+ 147: 1427+11	532B  D3C4    	            OUT     (COMMAND2),A
+ 148: 1438+17	532D  CD5956  	            CALL    WAIT
+ 149: 1455+11	5330  DBC3    	            IN      A,(SIZE2)       ; Read the DRIVEINFO structure
+ 150: 1466+4	5332  47      	            LD      B,A
+ 151: 1470+7	5333  0EC2    	            LD      C,DATA2
+ 152: 1477+10	5335  21C457  	            LD      HL,BUFFER
+ 153: 1487+16+5	5338  EDB2    	            INIR
+ 154: 1503+17	533A  CD6C56  	            CALL    CLRDSPBUFFER
+ 155: 1520+10	533D  219757  	            LD      HL,MNTTITLE
+ 156: 1530+17	5340  CD0052  	            CALL    DSPLY
+ 157: 1547+7	5343  3E2D    	            LD      A,'-'
+ 158: 1554+17	5345  CD6556  	            CALL    LDDSPBUFFER		; Header
+ 159: 1571+17	5348  CD7F56  	            CALL    DSPDSPBUFFER
+ 160: 1588+14	534B  DD21C457	            LD		IX,BUFFER
+ 161: 1602+7	534F  3E01    	            LD      A,1             ; Unit Counter
+ 162: 1609+13	5351  326658  	            LD      (TEMP),A
+ 163: 1622+11	5354  DBC3    	            IN      A,(SIZE2)
+ 164: 1633+11	5356  F5      	MNTDSP2     PUSH	AF              ; Process the DRIVEINFO structure
+ 165: 1644+19	5357  DD7E00  	            LD		A,(IX+0)        ; Available?
+ 166: 1663+7	535A  FE00    	            CP		0
+ 167: 1670+10	535C  CAFA53  	            JP		Z,MNTDSP4       ; No
+ 168: 1680+17	535F  CD6C56  	            CALL    CLRDSPBUFFER
+ 169: 1697+10	5362  212858  	            LD		HL,DSPBUFFER+20 ; Indicate Write Protected
+ 170: 1707+10	5365  364E    	            LD		(HL),'N'        ; Default No
+ 171: 1717+19	5367  DD7E01  	            LD      A,(IX+1)        ; Write Protect (=1)
+ 172: 1736+7	536A  FE01    	            CP		1
+ 173: 1743+7+5	536C  2002    	            JR		NZ,MNTDSP21
+ 174: 1750+10	536E  3659    	            LD		(HL),'Y'
+ 175: 1760+10	5370  213C58  	MNTDSP21    LD      HL,DSPBUFFER+40 ; Indicate Fast Mode
+ 176: 1770+10	5373  3659    	            LD      (HL),'Y'        ; Default Yes
+ 177: 1780+19	5375  DD7E00  	            LD      A,(IX+0)        ; Fast Seek?
+ 178: 1799+7	5378  FE01    	            CP      1               ; No (=1)
+ 179: 1806+7+5	537A  2002    	            JR      NZ,MNTDSP22
+ 180: 1813+10	537C  364E    	            LD      (HL),'N'        ; No
+ 181: 1823+19	537E  DD7E02  	MNTDSP22    LD		A,(IX+2)        ; Cylinders MSB
+ 182: 1842+4	5381  67      	            LD		H,A
+ 183: 1846+19	5382  DD7E03  	            LD		A,(IX+3)        ; Cylinders LSB
+ 184: 1865+4	5385  6F      	            LD		L,A
+ 185: 1869+10	5386  110458  	            LD		DE,NUMBUFFER    ; Convert to string
+ 186: 1879+17	5389  CD9156  	            CALL	NUM2DEC
+ 187: 1896+10	538C  210458  	            LD		HL,NUMBUFFER    ; Clear leading 2 zeros
+ 188: 1906+10	538F  010002  	            LD		BC,2 << 8
+ 189: 1916+17	5392  CD8656  	            CALL	CLRLEADZERO
+ 190: 1933+10	5395  210458  	            LD		HL,NUMBUFFER    ; Insert into display buffer
+ 191: 1943+10	5398  112F58  	            LD		DE,DSPBUFFER+27
+ 192: 1953+10	539B  010500  	            LD		BC,5
+ 193: 1963+16+5	539E  EDB0    	            LDIR
+ 194: 1979+19	53A0  DD7E04  	            LD		A,(IX+4)        ; Heads
+ 195: 1998+7	53A3  2600    	            LD		H,0
+ 196: 2005+4	53A5  6F      	            LD      L,A
+ 197: 2009+10	53A6  110458  	            LD		DE,NUMBUFFER
+ 198: 2019+17	53A9  CD9156  	            CALL	NUM2DEC
+ 199: 2036+10	53AC  210458  	            LD		HL,NUMBUFFER    ; Clear leading 4 zeros
+ 200: 2046+10	53AF  010004  	            LD		BC,4 << 8
+ 201: 2056+17	53B2  CD8656  	            CALL	CLRLEADZERO	    
+ 202: 2073+10	53B5  210758  	            LD		HL,NUMBUFFER+3  ; Insert last 2 digits into display buffer
+ 203: 2083+10	53B8  113958  	            LD		DE,DSPBUFFER+37
+ 204: 2093+10	53BB  010200  	            LD		BC,2
+ 205: 2103+16+5	53BE  EDB0    	            LDIR
+ 206: 2119+13	53C0  3A6658  	            LD      A,(TEMP)        ; Unit counter
+ 207: 2132+10	53C3  210000  	            LD      HL,0
+ 208: 2142+4	53C6  6F      	            LD      L,A
+ 209: 2146+10	53C7  110458  	            LD      DE,NUMBUFFER
+ 210: 2156+17	53CA  CD9156  	            CALL    NUM2DEC
+ 211: 2173+10	53CD  210858  	            LD      HL,NUMBUFFER+4  ; Insert single digit into display buffer
+ 212: 2183+10	53D0  111758  	            LD      DE,DSPBUFFER+3
+ 213: 2193+10	53D3  010100  	            LD      BC,1
+ 214: 2203+16+5	53D6  EDB0    	            LDIR
+ 215: 2219+15	53D8  DDE5    	            PUSH    IX
+ 216: 2234+10	53DA  E1      	            POP     HL
+ 217: 2244+10	53DB  010600  	            LD      BC,6
+ 218: 2254+11	53DE  09      	            ADD     HL,BC
+ 219: 2265+11	53DF  E5      	            PUSH    HL
+ 220: 2276+10	53E0  010000  	            LD		BC,0
+ 221: 2286+7	53E3  7E      	MNTDSP2A    LD      A,(HL)          ; Find first 00h to know length of the name    
+ 222: 2293+7	53E4  FE00    	            CP      0
+ 223: 2300+7+5	53E6  2804    	            JR      Z,MNTDSP2B      ; First 00h found
+ 224: 2307+6	53E8  23      	            INC     HL
+ 225: 2313+6	53E9  03      	            INC	    BC
+ 226: 2319+12	53EA  18F7    	            JR      MNTDSP2A
+ 227: 2331+10	53EC  E1      	MNTDSP2B    POP     HL      	    ; Name into display buffer
+ 228: 2341+10	53ED  111A58  	            LD      DE,DSPBUFFER+6
+ 229: 2351+16+5	53F0  EDB0    	            LDIR
+ 230: 2367+17	53F2  CD7F56  	            CALL    DSPDSPBUFFER    ; Display line
+ 231: 2384+10	53F5  011300  	            LD      BC,DRVINFOSIZE  ; Move index to next entry
+ 232: 2394+15	53F8  DD09    	            ADD     IX,BC
+ 233: 2409+13	53FA  3A6658  	MNTDSP4     LD      A,(TEMP)
+ 234: 2422+4	53FD  3C      	            INC     A
+ 235: 2426+13	53FE  326658  	            LD      (TEMP),A
+ 236: 2439+10	5401  F1      	            POP	    AF
+ 237: 2449+7	5402  D613    	            SUB     DRVINFOSIZE     ; Check if more drives to process
+ 238: 2456+10	5404  C25653  	            JP      NZ,MNTDSP2		; No zero so back for another drive
+ 239: 2466+17	5407  CDB756  	            CALL    DONESTUFF
+ 240: 2483+10	540A  C9      	            RET
+ 241:				
+ 242: 2493+17	540B  CDB756  	GETVERSION 	CALL    DONESTUFF
+ 243:				
+ 244:							INCLUDE	GETVERSION.Z80
+**** GETVERSION.Z80 ****
+   1: 2510+7	540E  3E00    	            LD      A,GETVER
+   2: 2517+11	5410  D3C4    	            OUT     (COMMAND2),A
+   3: 2528+17	5412  CD5956  	            CALL    WAIT
+   4: 2545+10	5415  217754  	            LD      HL,MSGVER       ; Version Label
+   5: 2555+17	5418  CD0052  	            CALL    DSPLY
+   6: 2572+17	541B  CD2854  	            CALL    GETVERSION2     ; Display Details
+   7: 2589+10	541E  218254  	            LD      HL,MSGBVER      ; Boot Loader Version Label
+   8: 2599+17	5421  CD0052  	            CALL    DSPLY
+   9: 2616+17	5424  CD2854  	            CALL    GETVERSION2     ; Display Details
+  10: 2633+10	5427  C9      	            RET
+  11:				            
+  12: 2643+11	5428  DBC2    	GETVERSION2 IN		A,(DATA2)		; Major Version Number
+  13: 2654+17	542A  CD3954  	            CALL	DSVERSION
+  14: 2671+7	542D  3E2E    	            LD		A,'.'
+  15: 2678+4	542F  4F      	            LD		C,A
+  16: 2682+17	5430  CD1452  	            CALL	DSP
+  17: 2699+11	5433  DBC2    	            IN		A,(DATA2)		; Minor Version Number
+  18: 2710+17	5435  CD4354  	            CALL	DSVERSION2
+  19: 2727+10	5438  C9      	            RET
+  20:							
+  21: 2737+17	5439  CD6054  	DSVERSION   CALL	BIN2BCD			; Enter here to mask the leading 0
+  22: 2754+11	543C  F5      	            PUSH	AF
+  23: 2765+7	543D  E6F0    	            AND		0F0H			; Mask out the lower digit
+  24: 2772+7+5	543F  2815    	            JR		Z,DSVERSION4
+  25: 2779+12	5441  1806    	            JR		DSVERSION3
+  26:				
+  27: 2791+17	5443  CD6054  	DSVERSION2  CALL	BIN2BCD			; Enter here to keep the leading 0
+  28: 2808+11	5446  F5      	            PUSH	AF
+  29: 2819+7	5447  E6F0    	            AND		0F0H
+  30: 2826+8	5449  CB3F    	DSVERSION3  SRL		A
+  31: 2834+8	544B  CB3F    	            SRL		A
+  32: 2842+8	544D  CB3F    	            SRL		A
+  33: 2850+8	544F  CB3F    	            SRL		A
+  34: 2858+7	5451  C630    	            ADD		A,30H			; To ASCII
+  35: 2865+17	5453  CD1452  	            CALL	DSP             ; LDOS 6 wants in C, LDOS 5 in A - DSP handles this
+  36: 2882+10	5456  F1      	DSVERSION4  POP		AF
+  37: 2892+7	5457  E60F    	            AND		00FH			; Mask out the upper digit
+  38: 2899+7	5459  C630    	            ADD		A,30H			; To ASCII
+  39: 2906+4	545B  4F      	            LD		C,A
+  40: 2910+17	545C  CD1452  	            CALL	DSP
+  41: 2927+10	545F  C9      	            RET
+  42:				
+  43: 2937+10	5460  010000  	BIN2BCD     LD		BC,0
+  44: 2947+7	5463  D60A    	BIN2BCD1    SUB		10				; Count number of 10's deducted into B
+  45: 2954+10	5465  FA6B54  	            JP		M,BIN2BCD2
+  46: 2964+4	5468  04      	            INC		B
+  47: 2968+12	5469  18F8    	            JR		BIN2BCD1
+  48: 2980+7	546B  C60A    	BIN2BCD2    ADD		A,10			; Add back the last 10
+  49: 2987+8	546D  CB20    	            SLA		B				; Move the 10's into the top 4 bits
+  50: 2995+8	546F  CB20    	            SLA		B
+  51: 3003+8	5471  CB20    	            SLA		B
+  52: 3011+8	5473  CB20    	            SLA		B
+  53: 3019+4	5475  B0      	            OR		B				; Merge in the 10's
+  54: 3023+10	5476  C9      	            RET
+  55:				
+  56:     -	5477  4669726D	MSGVER      DB      'Firmware: ',ETX
+	              77617265
+	              3A2003
+  57:     -	5482  2020426F	MSGBVER     DB      '  Boot Loader: ',ETX
+	              6F74204C
+	              6F616465
+	              723A2003
+**** utlcore.z80 ****
+ 245:							
+ 246: 3033+17	5492  CDB756  	GETDIR      CALL    DONESTUFF
+ 247: 3050+17	5495  CD1952  	            CALL    SETCOLS         ; Setup column count
+ 248: 3067+7	5498  3E02    	            LD      A,2             ; Default to the "current" directory
+ 249: 3074+11	549A  D3C3    	            OUT     (SIZE2),A
+ 250: 3085+7	549C  3E08    	            LD      A,OPENDIR
+ 251: 3092+11	549E  D3C4    	            OUT     (COMMAND2),A
+ 252: 3103+17	54A0  CD5956  	            CALL    WAIT
+ 253: 3120+7	54A3  3E2F    	            LD      A,"/"
+ 254: 3127+11	54A5  D3C2    	            OUT     (DATA2),A
+ 255: 3138+7	54A7  3E00    	            LD      A,00H
+ 256: 3145+11	54A9  D3C2    	            OUT     (DATA2),A
+ 257: 3156+17	54AB  CD5956  	            CALL    WAIT
+ 258: 3173+11	54AE  DBCF    	            IN      A,(STATUS)      ; Check for HARD_ERR indicating open failed
+ 259: 3184+7	54B0  E601    	            AND     01h
+ 260: 3191+7+5	54B2  2054    	            JR      NZ,GETDIRX      ; Open failed
+ 261: 3198+7	54B4  3E09    	GETDIR2     LD      A,READDIR       ; Request directory entry
+ 262: 3205+11	54B6  D3C4    	            OUT     (COMMAND2),A
+ 263: 3216+17	54B8  CD5956  	            CALL    WAIT
+ 264: 3233+11	54BB  DBCF    	            IN      A,(STATUS)      ; Check for Error
+ 265: 3244+7	54BD  E601    	            AND     01h
+ 266: 3251+7+5	54BF  2051    	            JR      NZ,GETDIRERROR
+ 267: 3258+11	54C1  DBCF    	            IN      A,(STATUS)      ; Check for DRQ indicating data available
+ 268: 3269+7	54C3  E608    	            AND     08h
+ 269: 3276+7+5	54C5  2841    	            JR      Z,GETDIRX       ; No DRQ so done
+ 270: 3283+11	54C7  DBC3    	            IN      A,(SIZE2)       ; Otherwise read the FILINFO structure
+ 271: 3294+4	54C9  47      	            LD      B,A
+ 272: 3298+7	54CA  0EC2    	            LD      C,DATA2
+ 273: 3305+10	54CC  21C457  	            LD      HL,BUFFER 
+ 274: 3315+16+5	54CF  EDB2    	            INIR
+ 275: 3331+13	54D1  3ACC57  	            LD      A,(BUFFER+8)    ; Check File attribute for Volume label/hidden/directory
+ 276: 3344+7	54D4  E61A    	            AND     AM_VOL OR AM_HID OR AM_DIR
+ 277: 3351+7+5	54D6  20DC    	            JR      NZ,GETDIR2      ; Yes so ignore this file
+ 278: 3358+10	54D8  21DC57  	            LD      HL,BUFFER+24    ; ETX at the end to make printing easy
+ 279: 3368+10	54DB  3603    	            LD      (HL),ETX        ; This is 4 bytes after the end of the 8.3 filename because we want 16 columns
+ 280: 3378+10	54DD  21CD57  	            LD      HL,BUFFER+9     ; Find first 00h and then make all characters SPC until ETX
+ 281: 3388+7	54E0  7E      	GETDIR3     LD      A,(HL)          
+ 282: 3395+7	54E1  FE00    	            CP      0
+ 283: 3402+7+5	54E3  2803    	            JR      Z,GETDIR4       ; First 00h found
+ 284: 3409+6	54E5  23      	            INC     HL
+ 285: 3415+12	54E6  18F8    	            JR      GETDIR3
+ 286: 3427+10	54E8  3620    	GETDIR4     LD      (HL),SPC        ; Replace with SPC
+ 287: 3437+6	54EA  23      	            INC     HL              ; and keep going until we get to ETX
+ 288: 3443+7	54EB  7E      	            LD      A,(HL)
+ 289: 3450+7	54EC  FE03    	            CP      ETX
+ 290: 3457+7+5	54EE  2802    	            JR      Z,GETDIR5
+ 291: 3464+12	54F0  18F6    	            JR      GETDIR4
+ 292: 3476+10	54F2  216558  	GETDIR5     LD      HL,DIRCOLS      ; Used another column
+ 293: 3486+11	54F5  35      	            DEC     (HL)
+ 294: 3497+7+5	54F6  2008    	            JR      NZ,GETDIR6      ; Last column for the row?
+ 295: 3504+17	54F8  CD1952  	            CALL    SETCOLS         ; Yes so reset and CR at the end of this filename
+ 296: 3521+10	54FB  21DA57  	            LD      HL,BUFFER+22
+ 297: 3531+10	54FE  360D    	            LD      (HL),CR
+ 298: 3541+10	5500  21CD57  	GETDIR6     LD      HL,BUFFER+9     ; Display the filename
+ 299: 3551+17	5503  CD0052  	            CALL    DSPLY
+ 300: 3568+12	5506  18AC    	            JR      GETDIR2         ; Check for more files
+ 301: 3580+10	5508  21C457  	GETDIRX     LD      HL,BUFFER       ; Force a new line at the end
+ 302: 3590+10	550B  360D    	            LD      (HL),CR
+ 303: 3600+17	550D  CD0052  	            CALL    DSPLY
+ 304: 3617+12	5510  1812    				JR		DONE
+ 305: 3629+17	5512  CD6858  	GETDIRERROR CALL    UERROR          ; Report the error
+ 306: 3646+10	5515  C9      	            RET
+ 307:				            
+ 308: 3656+17	5516  CDB756  	GETRTC      CALL    DONESTUFF
+ 309: 3673+17	5519  CD2856  	            CALL    DS1307RD        ; Read DS1307
+ 310: 3690+12	551C  1806    				JR		DONE
+ 311:				
+ 312: 3702+17	551E  CDB756  	SETRTC      CALL    DONESTUFF
+ 313: 3719+17	5521  CD3F56  	            CALL    DS1307WR        ; Write to the interface
+ 314: 3736+10	5524  C32452  	DONE        JP		DEPART			; exit via jump table
+ 315:				
+ 316: 3746+13	5527  3ABC56  	PRMERROR    LD      A,(ACTIONS)     ; Do anything?
+ 317: 3759+7	552A  FE00    	            CP      0
+ 318: 3766+7+5	552C  2803    	            JR      Z,PRMERROR2     ; No so explain usage
+ 319: 3773+10	552E  C32455  	            JP      DONE
+ 320: 3783+10	5531  21C356  	PRMERROR2   LD      HL,MSG          ; Welcome Message
+ 321: 3793+17	5534  CD0052  	            CALL    DSPLY
+ 322: 3810+10	5537  211157  	            LD      HL,MSGUSAGE     ; Explain usage
+ 323: 3820+17	553A  CD0052  	            CALL    DSPLY
+ 324: 3837+10	553D  C32455  	            JP      DONE
+ 325:				
+ 326:     -	5540  53455420	PRMTABLE    DB      'SET   '
+	              2020
+ 327:     -	5546  BA55    	            DW      SPARM+1
+ 328:     -	5548  53202020	            DB      'S     '
+	              2020
+ 329:     -	554E  BA55    	            DW      SPARM+1
+ 330:     -	5550  47455420	            DB      'GET   '
+	              2020
+ 331:     -	5556  BD55    	            DW      GPARM+1
+ 332:     -	5558  47202020	            DB      'G     '
+	              2020
+ 333:     -	555E  BD55    	            DW      GPARM+1
+ 334:     -	5560  56455220	            DB      'VER   '
+	              2020
+ 335:     -	5566  C055    	            DW      VPARM+1
+ 336:     -	5568  56202020	            DB      'V     '
+	              2020
+ 337:     -	556E  C055    	            DW      VPARM+1
+ 338:     -	5570  44495220	            DB      'DIR   '
+	              2020
+ 339:     -	5576  C355    	            DW      DPARM+1
+ 340:     -	5578  44202020	            DB      'D     '
+	              2020
+ 341:     -	557E  C355    	            DW      DPARM+1
+ 342:     -	5580  4D4E5420	            DB      'MNT   '
+	              2020
+ 343:     -	5586  C655    	            DW      MPARM+1
+ 344:     -	5588  41444452	            DB      'ADDR  '
+	              2020
+ 345:     -	558E  C955    	            DW      APARM+1
+ 346:     -	5590  56484420	            DB      'VHD   '
+	              2020
+ 347:     -	5596  D855    	            DW      VHPARM+1
+ 348:     -	5598  48414C54	            DB      'HALT  '
+	              2020
+ 349:     -	559E  CC55    	            DW      HPARM+1
+ 350:     -	55A0  57502020	            DB      'WP    '
+	              2020
+ 351:     -	55A6  CF55    	            DW      WPARM+1
+ 352:     -	55A8  43524541	            DB      'CREATE'
+	              5445
+ 353:     -	55AE  D255    	            DW      CPARM+1
+ 354:     -	55B0  4E465320	            DB      'NFS   '
+	              2020
+ 355:     -	55B6  D555    	            DW      NPARM+1
+ 356: 3847+4	55B8  00      	            NOP
+ 357:				
+ 358: 3851+10	55B9  010000  	SPARM       LD      BC,0
+ 359: 3861+10	55BC  010000  	GPARM       LD      BC,0
+ 360: 3871+10	55BF  010000  	VPARM       LD      BC,0
+ 361: 3881+10	55C2  010000  	DPARM       LD      BC,0
+ 362: 3891+10	55C5  010000  	MPARM       LD      BC,0
+ 363: 3901+10	55C8  010000  	APARM       LD      BC,0
+ 364: 3911+10	55CB  010000  	HPARM       LD      BC,0
+ 365: 3921+10	55CE  010000  	WPARM       LD      BC,0
+ 366: 3931+10	55D1  010000  	CPARM       LD      BC,0
+ 367: 3941+10	55D4  010000  	NPARM       LD      BC,0
+ 368: 3951+10	55D7  210000  	VHPARM      LD      HL,0            ; Address set when parameters are loaded
+ 369: 3961+7	55DA  3E00    	            LD      A,0             ; Length returned in TEMP
+ 370: 3968+13	55DC  326658  	            LD      (TEMP),A
+ 371: 3981+7	55DF  7E      	            LD      A,(HL)          ; Get the first character of the filename
+ 372: 3988+7	55E0  FE2F    	            CP      '/'             ; Leading /
+ 373: 3995+7+5	55E2  2807    	            JR      Z,VHPARM2       ; Yes so check the rest of the filename
+ 374: 4002+6	55E4  2B      	            DEC     HL
+ 375: 4008+7	55E5  3E2F    	            LD      A,'/'
+ 376: 4015+7	55E7  77      	            LD      (HL),A          ; Force / as the first character of the filename
+ 377: 4022+16	55E8  22D855  	            LD      (VHPARM+1),HL
+ 378: 4038+13	55EB  3A6658  	VHPARM2     LD      A,(TEMP)        ; Count characters
+ 379: 4051+4	55EE  3C      	            INC     A
+ 380: 4055+7	55EF  FE0E    	            CP      14              ; Max characters for name + terminator + 1   
+ 381: 4062+7+5	55F1  2810    	            JR      Z,VHPARMFAIL    ; Exceeded so return empty string         
+ 382: 4069+13	55F3  326658  	            LD      (TEMP),A
+ 383: 4082+7	55F6  7E      	            LD      A,(HL)          ;
+ 384: 4089+7	55F7  FE22    	            CP      '"'             ; Quote terminator
+ 385: 4096+7+5	55F9  2804    	            JR      Z,VHPARMDONE    ; Yes... at the end
+ 386: 4103+6	55FB  23      	            INC     HL
+ 387: 4109+10	55FC  C3EB55  	            JP      VHPARM2         ;             
+ 388: 4119+7	55FF  3E00    	VHPARMDONE  LD      A,0             ; Terminate with \0
+ 389: 4126+7	5601  77      	            LD      (HL),A
+ 390: 4133+10	5602  C9      	            RET
+ 391: 4143+7	5603  3E00    	VHPARMFAIL  LD      A,0
+ 392: 4150+13	5605  326658  	            LD      (TEMP),A
+ 393: 4163+10	5608  C9      	            RET
+ 394:				                        
+ 395: 4173+7	5609  3E00    	FREHDTST    LD      A,GETVER        ; Test that the interface exists
+ 396: 4180+11	560B  D3C4    	            OUT     (COMMAND2),A
+ 397: 4191+17	560D  CD5956  	            CALL    WAIT
+ 398: 4208+11	5610  DBC3    	            IN      A,(SIZE2)
+ 399: 4219+7	5612  FE06    	            CP      6
+ 400: 4226+7+5	5614  2003    	            JR      NZ,FREHDTSTX    ; Size of 6 indicates interface exists
+ 401: 4233+7	5616  3E01    	            LD      A,1             ; Return HAS IF
+ 402: 4240+10	5618  C9      	            RET
+ 403: 4250+10	5619  21C356  	FREHDTSTX   LD      HL,MSG          ; Welcome Message
+ 404: 4260+17	561C  CD0052  	            CALL    DSPLY
+ 405: 4277+10	561F  21FD56  	            LD      HL,MSGNOIF
+ 406: 4287+17	5622  CD0052  	            CALL    DSPLY
+ 407: 4304+7	5625  3E00    	            LD      A,0             ; Return NO IF
+ 408: 4311+10	5627  C9      	            RET
+ 409:				            
+ 410: 4321+7	5628  3E01    	DS1307RD    LD      A,GETTIME
+ 411: 4328+11	562A  D3C4    	            OUT     (COMMAND2),A
+ 412: 4339+17	562C  CD5956  	            CALL    WAIT
+ 413: 4356+17	562F  CD0852  	            CALL    TIME            ; LDOS Time Buffer
+ 414: 4373+10	5632  01C203  	            LD      BC,3<<8 OR DATA2
+ 415: 4383+16+5	5635  EDB2    	            INIR
+ 416: 4399+17	5637  CD0452  	            CALL    DATE            ; LDOS Date Buffer
+ 417: 4416+7	563A  0603    	            LD      B,3
+ 418: 4423+16+5	563C  EDB2    	            INIR
+ 419: 4439+10	563E  C9      	            RET
+ 420: 4449+7	563F  3E02    	DS1307WR    LD      A,SETTIME
+ 421: 4456+11	5641  D3C4    	            OUT     (COMMAND2),A
+ 422: 4467+17	5643  CD5956  	            CALL    WAIT
+ 423: 4484+17	5646  CD0852  	            CALL    TIME            ; LDOS Time Buffer
+ 424: 4501+10	5649  01C203  	            LD      BC,3<<8 OR DATA2
+ 425: 4511+16+5	564C  EDB3    	            OTIR
+ 426: 4527+17	564E  CD0452  	            CALL    DATE            ; LDOS Date Buffer
+ 427: 4544+7	5651  0603    	            LD      B,3
+ 428: 4551+16+5	5653  EDB3    	            OTIR
+ 429: 4567+17	5655  CD5956  	            CALL    WAIT
+ 430: 4584+10	5658  C9      	            RET
+ 431:				
+ 432: 4594+19	5659  E3      	WAIT        EX      (SP),HL
+ 433: 4613+19	565A  E3      	            EX      (SP),HL         ; small delay to settle the controller
+ 434: 4632+11	565B  DBCF    	WAIT1       IN      A,(STATUS)
+ 435: 4643+7	565D  FEFF    	            CP      0FFH            ; No interface on the bus
+ 436: 4650+7+5	565F  2803    	            JR      Z,WAIT2         ; .. then drop out and report error
+ 437: 4657+4	5661  07      	            RLCA
+ 438: 4661+7+5	5662  38F7    	            JR      C,WAIT1
+ 439: 4668+10	5664  C9      	WAIT2       RET
+ 440:				
+ 441:				; Clear ro load the display buffer
+ 442:				; Call with HL = Buffer start, A = Insert character
+ 443:				; Uses DE and BC
+ 444:				
+ 445:     -	5665          	LDDSPBUFFER
+ 446: 4678+10	5665  211458  	            LD      HL,DSPBUFFER	; Load buffer with character passed in A
+ 447: 4688+7	5668  77      	            LD      (HL),A
+ 448: 4695+10	5669  C37156  	            JP     CLRDSPBUFFER2
+ 449:     -	566C          	CLRDSPBUFFER
+ 450: 4705+10	566C  211458  	            LD      HL,DSPBUFFER	; Load buffer with spaces
+ 451: 4715+10	566F  3620    	            LD      (HL),SPC
+ 452:     -	5671          	CLRDSPBUFFER2	    
+ 453: 4725+11	5671  E5      	            PUSH    HL
+ 454: 4736+10	5672  D1      	            POP     DE
+ 455: 4746+6	5673  13      	    	    INC     DE
+ 456: 4752+10	5674  015000  		        LD      BC,DSPBUFFERLEN-1
+ 457: 4762+16+5	5677  EDB0    		        LDIR
+ 458: 4778+17	5679  CD1F52  		        CALL    DSPBUFFEREND
+ 459: 4795+10	567C  360D    	            LD      (HL),CR
+ 460: 4805+10	567E  C9      	            RET
+ 461:				
+ 462:     -	567F          	DSPDSPBUFFER
+ 463: 4815+10	567F  211458  	            LD      HL,DSPBUFFER	;
+ 464: 4825+17	5682  CD0052  	            CALL    DSPLY
+ 465: 4842+10	5685  C9      	            RET
+ 466:				
+ 467:				; Clear leading 0's from the number to string buffer
+ 468:				; Call with HL = START, BC = Number of bytes to process
+ 469:				
+ 470:     -	5686          	CLRLEADZERO
+ 471: 4852+7	5686  7E      	            LD      A,(HL)          
+ 472: 4859+7	5687  FE30    	            CP      30h
+ 473: 4866+7+5	5689  2002    	            JR      NZ,CLRLEADZERO2
+ 474: 4873+10	568B  3620    	            LD      (HL),SPC
+ 475:     -	568D          	CLRLEADZERO2
+ 476: 4883+6	568D  23      	            INC     HL
+ 477: 4889+8+5	568E  10F6    	    	    DJNZ    CLRLEADZERO
+ 478: 4897+10	5690  C9      	            RET
+ 479:				
+ 480:				; Number handling routines from http://baze.au.com/misc/z80bits.html
+ 481:				
+ 482: 4907+10	5691  01F0D8  	NUM2DEC     LD	    BC,-10000
+ 483: 4917+17	5694  CDA956  	            CALL    NUM1
+ 484: 4934+10	5697  0118FC  	            LD      BC,-1000
+ 485: 4944+17	569A  CDA956  	            CALL    NUM1
+ 486: 4961+10	569D  019CFF  	            LD  	BC,-100
+ 487: 4971+17	56A0  CDA956  	            CALL	NUM1
+ 488: 4988+7	56A3  0EF6    	            LD      C,-10
+ 489: 4995+17	56A5  CDA956  	            CALL    NUM1
+ 490: 5012+4	56A8  48      	            LD      C,B
+ 491:				
+ 492: 5016+7	56A9  3E2F    	NUM1        LD      A,'0'-1
+ 493: 5023+4	56AB  3C      	NUM2        INC     A
+ 494: 5027+11	56AC  09      	            ADD     HL,BC
+ 495: 5038+7+5	56AD  38FC    	            JR      C,NUM2
+ 496: 5045+15	56AF  ED42    	            SBC     HL,BC
+ 497: 5060+7	56B1  12      	            LD      (DE),A
+ 498: 5067+6	56B2  13      	            INC     DE
+ 499: 5073+7	56B3  3E00    	            LD      A,0
+ 500: 5080+7	56B5  12      	    	    LD	    (DE),A
+ 501: 5087+10	56B6  C9      	            RET
+ 502:				
+ 503: 5097+10	56B7  21BC56  	DONESTUFF   LD      HL,ACTIONS      ; Need to know if we have done anything
+ 504: 5107+11	56BA  34      	            INC     (HL)
+ 505: 5118+10	56BB  C9      	            RET
+ 506:				
+ 507:				                   
+ 508:     -	56BC  00      	ACTIONS     DB      0
+ 509:     -	56BD          	DS1307      DS      6
+ 510:     -	56C3  56484455	MSG         DB      'VHDUTL '
+	              544C20
+ 511:				
+ 512:				            INCLUDE VERSION.Z80
+**** VERSION.Z80 ****
+   1:				; Utilities Common Version number
+   2:				
+   3:     -	56CA  322E3034	            DB      '2.04'
+   4:				
+   5:				; Includes machine name in the version message
+   6:				; Can't find another way of doing this
+   7:				
+   8:     -	0000          	IF CPM
+ 513:				ENDIF
+ 514:				            
+ 515:     -	56CE  202D2055	            DB      ' - Utilities for the FreHD Hard Drive Emulator',CR
+	              74696C69
+	              74696573
+	              20666F72
+	              20746865
+	              20467265
+	              48442048
+	              61726420
+	              44726976
+	              6520456D
+	              756C6174
+	              6F720D
+ 516:     -	56FD  496E7465	MSGNOIF     DB      'Interface not found',CR
+	              72666163
+	              65206E6F
+	              7420666F
+	              756E640D
+ 517:     -	5711  55736167	MSGUSAGE    DB      'Usage: VHDUTL ('
+	              653A2056
+	              48445554
+	              4C2028
+ 518:     -	0001          	            IF TRSDOS
+ 519:     -	5720  4745542C	            DB      'GET,SET,'
+	              5345542C
+ 520:				            ENDIF
+ 521:     -	5728  5645522C	            DB      'VER,DIR,MNT,[ADDR,VHD="",HALT,WP,CREATE,NFS])',CR
+	              4449522C
+	              4D4E542C
+	              5B414444
+	              522C5648
+	              443D2222
+	              2C48414C
+	              542C5750
+	              2C435245
+	              4154452C
+	              4E46535D
+	              290D
+ 522:     -	5756  0B004D6F	MSGMNTOK    DB      11,0,'Mounted OK.'
+	              756E7465
+	              64204F4B
+	              2E
+ 523:     -	5763  0D002020	MSGMNTHLT   DB      13,0,'  Press Reset'
+	              50726573
+	              73205265
+	              736574
+ 524:     -	5772  4D6F756E	MSGMNTFAIL  DB      'Mount Failed',CR
+	              74204661
+	              696C6564
+	              0D
+ 525:     -	577F  4572726F	MSGDIRERROR DB      'Error Reading Directory',CR
+	              72205265
+	              6164696E
+	              67204469
+	              72656374
+	              6F72790D
+ 526:     -	5797  41646472	MNTTITLE    DB      'Addr  Disk File     WP Cylinders  Heads Fast',CR
+	              20204469
+	              736B2046
+	              696C6520
+	              20202020
+	              57502043
+	              796C696E
+	              64657273
+	              20204865
+	              61647320
+	              46617374
+	              0D
+ 527:     -	57C4          	BUFFER      DS      64
+ 528:     -	5804          	NUMBUFFER   DS      16
+ 529:     -	5814          	DSPBUFFER   DS      DSPBUFFERLEN
+ 530:     -	5865  00      	DIRCOLS     DB      0
+ 531:     -	5866  00      	TEMP		DB		0
+ 532:     -	5867  00      	MNTFLAGS    DB      0
+ 533:				
+ 534:							INCLUDE	FATFSERR.Z80
+**** FATFSERR.Z80 ****
+   1: 5128+10	5868  218558  	UERROR:     LD      HL, error_m		; display error prefix
+   2: 5138+17	586B  CD0052  	            CALL    DSPLY
+   3: 5155+11	586E  DBC5    	            IN      A, (ERROR2)		; get error number
+   4: 5166+7	5870  FE15    	            CP      15h			; check error number.
+   5: 5173+7+5	5872  3801    	            JR      C, UERROK
+   6: 5180+4	5874  97      	            SUB     A			; A=0 unknown error 
+   7: 5184+4	5875  6F      	UERROK:     LD      L, A
+   8: 5188+7	5876  2600    	            LD      H, 00h
+   9: 5195+11	5878  29      	            ADD     HL, HL		; pointers are 2 bytes
+  10: 5206+10	5879  11D159  	            LD      DE, error_table
+  11: 5216+11	587C  19      	            ADD     HL, DE		; hl points to the pointer
+  12: 5227+7	587D  7E      	            LD      A, (HL)
+  13: 5234+6	587E  23      	            INC     HL
+  14: 5240+7	587F  66      	            LD      H, (HL)
+  15: 5247+4	5880  6F      	            LD      L, A			; hl points to the string
+  16: 5251+17	5881  CD0052  	            CALL    DSPLY
+  17: 5268+10	5884  C9      	            RET
+  18:				
+  19:     -	5885  4572726F	error_m: defb 'Error: ', 03h
+	              723A2003
+  20:     -	588D  556E6B6E	fr_unknown: defb 'Unknown error', 0dh			; 0
+	              6F776E20
+	              6572726F
+	              720D
+  21:     -	589B  4469736B	fr_disk_err: defb 'Disk error', 0dh			; 1
+	              20657272
+	              6F720D
+  22:     -	58A6  496E7465	fr_int_err: defb 'Internal error', 0dh			; 2
+	              726E616C
+	              20657272
+	              6F720D
+  23:     -	58B5  44726976	fr_not_ready: defb 'Drive not ready', 0dh 		; 3
+	              65206E6F
+	              74207265
+	              6164790D
+  24:     -	58C5  46696C65	fr_no_file: defb 'File not found', 0dh	  		; 4
+	              206E6F74
+	              20666F75
+	              6E640D
+  25:     -	58D4  50617468	fr_no_path: defb 'Path not found', 0dh	  		; 5
+	              206E6F74
+	              20666F75
+	              6E640D
+  26:     -	58E3  496E7661	fr_invalid_name: defb 'Invalid pathname', 0dh		; 6
+	              6C696420
+	              70617468
+	              6E616D65
+	              0D
+  27:     -	58F4  41636365	fr_denied: defb 'Access denied', 0dh			; 7
+	              73732064
+	              656E6965
+	              640D
+  28:     -	5902  46696C65	fr_exist: defb 'File exists', 0dh			; 8
+	              20657869
+	              7374730D
+  29:     -	590E  46696C65	fr_invalid_obj:	defb 'File/dir object invalid', 0dh	; 9
+	              2F646972
+	              206F626A
+	              65637420
+	              696E7661
+	              6C69640D
+  30:     -	5926  57726974	fr_write_protected: defb 'Write protected', 0dh		; 10
+	              65207072
+	              6F746563
+	              7465640D
+  31:     -	5936  496E7661	fr_invalid_drive: defb 'Invalid drive', 0dh		; 11
+	              6C696420
+	              64726976
+	              650D
+  32:     -	5944  566F6C75	fr_not_enabled:	defb 'Volume not mounted', 0dh		; 12
+	              6D65206E
+	              6F74206D
+	              6F756E74
+	              65640D
+  33:     -	5957  4E6F2046	fr_no_fs: defb 'No FAT fs found', 0dh			; 13
+	              41542066
+	              7320666F
+	              756E640D
+  34:     -	5967  6D6B6673	fr_mkfs_aborted: defb 'mkfs aborted', 0dh		; 14
+	              2061626F
+	              72746564
+	              0D
+  35:     -	5974  54696D65	fr_timeout: defb 'Timeout detected', 0dh		; 15
+	              6F757420
+	              64657465
+	              63746564
+	              0D
+  36:     -	5985  46696C65	fr_locked: defb 'File locked', 0dh			; 16
+	              206C6F63
+	              6B65640D
+  37:     -	5991  4E6F7420	fr_not_enough_core: defb 'Not enough core', 0dh		; 17
+	              656E6F75
+	              67682063
+	              6F72650D
+  38:     -	59A1  546F6F20	fr_too_many_open_files:	defb 'Too many open files', 0dh ; 18
+	              6D616E79
+	              206F7065
+	              6E206669
+	              6C65730D
+  39:     -	59B5  496E7661	fr_invalid_param: defb 'Invalid parameter', 0dh		; 19
+	              6C696420
+	              70617261
+	              6D657465
+	              720D
+  40:     -	59C7  4469736B	fr_disk_full: defb 'Disk full', 0dh			; 20
+	              2066756C
+	              6C0D
+  41:     -	59D1  8D589B58	error_table: defw fr_unknown ,fr_disk_err, fr_int_err, fr_not_ready, fr_no_file
+	              A658B558
+	              C558
+  42:     -	59DB  D458E358		defw fr_no_path, fr_invalid_name, fr_denied, fr_exist, fr_invalid_obj
+	              F4580259
+	              0E59
+  43:     -	59E5  26593659		defw fr_write_protected, fr_invalid_drive, fr_not_enabled
+	              4459
+  44:     -	59EB  57596759		defw fr_no_fs, fr_mkfs_aborted, fr_timeout, fr_locked
+	              74598559
+  45:     -	59F3  9159A159		defw fr_not_enough_core, fr_too_many_open_files, fr_invalid_param
+	              B559
+  46:     -	59F9  C759    		defw fr_disk_full	
+**** utlcore.z80 ****
+**** vhdutl_multidos.z80 ****
+  54:				
+  55:				            INCLUDE param.z80
+**** param.z80 ****
+   1:				; LDOS 6.2 Parameter parsing functions
+   2:				; From http://http://nemesis.lonestar.org/computers/tandy/software/os/logical_systems/lsdos6/src631
+   3:				
+   4:     -	0001          	@BLD631 EQU 1
+   5:				;PARAM/ASM - LS-DOS 6.2
+   6:				;
+   7:				;	Parse a field
+   8:				;	(HL) => command line
+   9:				;	(DE) => FCB area
+  10:				;	(HL) <= 1st byte past non-<A-Z, a-z, 0-9>
+  11:				;		except 13, 3, "("
+  12:				;	Z    <= found valid field
+  13:				;	NZ   <= found invalid field
+  14:				;
+  15: 5278+7	59FB  0608    	@PARSER	LD	B,8		;Set length
+  16:				
+  17: 5285+4	59FD  78      	@PAR1	LD	A,B
+  18: 5289+13	59FE  323B5A  		LD	(PAR6+1),A	;Stuff length for test
+  19: 5302+4	5A01  04      		INC	B
+  20: 5306+7	5A02  7E      	PAR2	LD	A,(HL)
+  21: 5313+7	5A03  FE03    		CP	3		;ETX?
+  22: 5320+7+5	5A05  2826    		JR	Z,PAR5
+  23: 5327+7	5A07  FE0D    		CP	CR		;<ENTER>?
+  24: 5334+7+5	5A09  2822    		JR	Z,PAR5
+  25: 5341+7	5A0B  FE28    		CP	'('		;Begin of parm?
+  26: 5348+7+5	5A0D  281E    		JR	Z,PAR5
+  27: 5355+6	5A0F  23      		INC	HL		;Bump pointer to next
+  28: 5361+17	5A10  CD3F5A  		CALL	TST09AZ		;Test if 0-9,A-Z
+  29: 5378+7+5	5A13  300A    		JR	NC,PAR3		;Go if one of the above
+  30: 5385+7	5A15  FE61    		CP	'a'		;Check on lower case
+  31: 5392+7+5	5A17  3814    		JR	C,PAR5		;Jump on non-alpha
+  32: 5399+7	5A19  FE7B    		CP	'z'+1		;Is it a-z?
+  33: 5406+7+5	5A1B  3010    		JR	NC,PAR5		;Jump on non-alpha
+  34: 5413+8	5A1D  CBAF    		RES	5,A		;Convert lower to upper
+  35: 5421+4	5A1F  05      	PAR3	DEC	B		;Count down
+  36: 5425+7+5	5A20  2808    		JR	Z,PAR4
+  37: 5432+7	5A22  12      		LD	(DE),A		;Xfer the char
+  38: 5439+4	5A23  AF      		XOR	A		;Show at least 1 valid
+  39: 5443+13	5A24  323B5A  		LD	(PAR6+1),A	;Char was detected
+  40: 5456+6	5A27  13      		INC	DE		;Bump FCB pointer
+  41: 5462+12	5A28  18D8    		JR	PAR2		;Loop
+  42: 5474+4	5A2A  04      	PAR4	INC	B		;Here on max chars ck'd
+  43: 5478+12	5A2B  18D5    		JR	PAR2
+  44: 5490+4	5A2D  4F      	PAR5	LD	C,A		;Save separator
+  45:     -	0001          		IF	@BLD631
+  46: 5494+7	5A2E  FE20    		CP	' '		;<631>
+  47: 5501+7+5	5A30  2005    		JR	NZ,PAR5A	;<631>
+  48:     -	5A32  FE      		DB	0FEH		;<631>Single byte skip
+  49: 5508+6	5A33  23      	PAR5B:	INC	HL		;<631>
+  50: 5514+7	5A34  BE      		CP	(HL)		;<631>
+  51: 5521+7+5	5A35  28FC    		JR	Z,PAR5B		;<631>
+  52: 5528+7	5A37  3E03    	PAR5A:	LD	A,3		;<631>
+  53: 5535+7	5A39  12      		LD	(DE),A		;<631>
+  54:					ELSE
+  67:					ENDIF
+  68:				;
+  69:				;	Return status of field validity
+  70:				;
+  71: 5542+7	5A3A  3E00    	PAR6	LD	A,0		;Set Z-flag if at least
+  72: 5549+4	5A3C  B7      		OR	A		;  1 valid char detected
+  73: 5553+4	5A3D  79      		LD	A,C		;Recover separator char
+  74: 5557+10	5A3E  C9      		RET
+  75:				;
+  76:				;	Test if 0-9 or A-Z
+  77:				;
+  78: 5567+7	5A3F  FE30    	TST09AZ	CP	'0'		;Special character?
+  79: 5574+5+6	5A41  D8      		RET	C		;Go if not in range
+  80: 5579+7	5A42  FE3A    		CP	'9'+1		;Jump on digit 0-9
+  81: 5586+7+5	5A44  3805    		JR	C,EXITC		;Go if 0-9 & make NC
+  82: 5593+7	5A46  FE41    		CP	'A'		;Jump on spec char
+  83: 5600+5+6	5A48  D8      		RET	C		;Go if 3B-40
+  84: 5605+7	5A49  FE5B    		CP	'Z'+1		;Jump on A-Z
+  85: 5612+4	5A4B  3F      	EXITC	CCF			;Switch flag of result
+  86: 5616+10	5A4C  C9      		RET
+  87:				;
+  88:				;	Find parameter in table
+  89:				;	(HL) => pointer to line
+  90:				;	(DE) => pointer to buffer area
+  91:				;	(BC) => pointer to parameter table
+  92:				;	(BC) <= pointer to possible response byte
+  93:				;	(DE) <= parm vector address
+  94:				;	  Z <= set if found
+  95:				;	 NZ <= if not found in table
+  96:				;
+  97: 5626+11	5A4D  E5      	@FNDPRM	PUSH	HL
+  98: 5637+4	5A4E  60      		LD	H,B		;Xfer table addr
+  99: 5641+4	5A4F  69      		LD	L,C
+ 100: 5645+7	5A50  7E      		LD	A,(HL)		;P/u 1st byte of table
+ 101: 5652+4	5A51  07      		RLCA			;  & test for enhanced
+ 102: 5656+11	5A52  F5      		PUSH	AF		;  table format
+ 103: 5667+7+5	5A53  3001    		JR	NC,FND1
+ 104: 5674+6	5A55  23      		INC	HL		;Bump past indicator
+ 105: 5680+10	5A56  F1      	FND1	POP	AF		;Old or enhanced format?
+ 106: 5690+11	5A57  F5      		PUSH	AF
+ 107: 5701+7	5A58  3E05    		LD	A,5		;Init for old lengths
+ 108: 5708+10	5A5A  010201  		LD	BC,1<<8 OR 2
+ 109: 5718+7+5	5A5D  3006    		JR	NC,FND1A	;Branch if old format
+ 110: 5725+7	5A5F  7E      		LD	A,(HL)		;  else get parm length
+ 111: 5732+7	5A60  E60F    		AND	0FH		;Strip flags
+ 112: 5739+4	5A62  3D      		DEC	A		;Adjust for length-1
+ 113: 5743+4	5A63  04      		INC	B		;Update offset to address
+ 114: 5747+6	5A64  23      		INC	HL		;Bump past TYPE byte
+ 115: 5753+13	5A65  32935A  	FND1A	LD	(FND3A+1),A	;Stuff the lengths
+ 116: 5766+4	5A68  80      		ADD	A,B
+ 117: 5770+13	5A69  32AD5A  		LD	(FND5A+1),A
+ 118: 5783+4	5A6C  81      		ADD	A,C
+ 119: 5787+13	5A6D  32755A  		LD	(FND2+1),A
+ 120: 5800+7	5A70  1A      		LD	A,(DE)		;P/u command line byte
+ 121: 5807+7	5A71  BE      		CP	(HL)		;Match 1st char of table?
+ 122: 5814+7+5	5A72  280C    		JR	Z,FND3		;Jump if 1st char matches
+ 123: 5821+10	5A74  010800  	FND2	LD	BC,8		;  else bypass that entry
+ 124: 5831+11	5A77  09      		ADD	HL,BC
+ 125: 5842+7	5A78  7E      		LD	A,(HL)		;Test for table end
+ 126: 5849+4	5A79  B7      		OR	A
+ 127: 5853+7+5	5A7A  20DA    		JR	NZ,FND1		;Loop if more
+ 128: 5860+10	5A7C  E1      		POP	HL		;Clean flag from stack
+ 129: 5870+10	5A7D  E1      		POP	HL		;Rcvr saved reg &
+ 130: 5880+4	5A7E  3C      		INC	A		;  set NZ for not found
+ 131: 5884+10	5A7F  C9      		RET
+ 132: 5894+10	5A80  F1      	FND3	POP	AF		;Ck old or new table
+ 133: 5904+11	5A81  F5      		PUSH	AF
+ 134: 5915+7+5	5A82  300E    		JR	NC,FND3A	;Go if old format table
+ 135: 5922+6	5A84  2B      		DEC	HL		;Ck if type byte permits
+ 136: 5928+12	5A85  CB66    		BIT	4,(HL)		;  single-char abbrev
+ 137: 5940+6	5A87  23      		INC	HL
+ 138: 5946+7+5	5A88  2808    		JR	Z,FND3A		;Go on no abbrev
+ 139: 5953+6	5A8A  13      		INC	DE		;Make sure the next char
+ 140: 5959+7	5A8B  1A      		LD	A,(DE)		;  is not in the range
+ 141: 5966+6	5A8C  1B      		DEC	DE		;  <0-9,A-Z> before
+ 142: 5972+17	5A8D  CD3F5A  		CALL	TST09AZ		;  assuming abbrev
+ 143: 5989+7+5	5A90  381A    		JR	C,FND5A		;Go on 1-char abbrevs
+ 144: 5996+7	5A92  0605    	FND3A	LD	B,5		;5 more chars to match
+ 145: 6003+11	5A94  E5      		PUSH	HL
+ 146: 6014+11	5A95  D5      		PUSH	DE
+ 147: 6025+4	5A96  78      		LD	A,B		;Don't if trailing length
+ 148: 6029+4	5A97  B7      		OR	A		;  is zero
+ 149: 6033+7+5	5A98  2810    		JR	Z,FND5
+ 150: 6040+6	5A9A  13      	FND4	INC	DE
+ 151: 6046+6	5A9B  23      		INC	HL
+ 152: 6052+7	5A9C  1A      		LD	A,(DE)
+ 153: 6059+7	5A9D  FE03    		CP	3		;ETX?
+ 154: 6066+7+5	5A9F  2822    		JR	Z,FND7
+ 155: 6073+7	5AA1  FE0D    		CP	CR		;Jump on <ENTER>
+ 156: 6080+7+5	5AA3  281E    		JR	Z,FND7
+ 157: 6087+7	5AA5  BE      		CP	(HL)		;Match?
+ 158: 6094+7+5	5AA6  2016    		JR	NZ,FND6		;Jump if not
+ 159: 6101+8+5	5AA8  10F0    		DJNZ	FND4		;  else loop
+ 160: 6109+10	5AAA  D1      	FND5	POP	DE		;Parm matched
+ 161: 6119+10	5AAB  E1      		POP	HL		;Recover begin of parm
+ 162: 6129+10	5AAC  010600  	FND5A	LD	BC,6		;Point to address field
+ 163: 6139+11	5AAF  09      		ADD	HL,BC
+ 164: 6150+4	5AB0  4D      		LD	C,L		;Save the response-byte
+ 165: 6154+4	5AB1  44      		LD	B,H		;  pointer in BC
+ 166: 6158+6	5AB2  0B      		DEC	BC
+ 167: 6164+7	5AB3  5E      		LD	E,(HL)		;P/u parm table address
+ 168: 6171+6	5AB4  23      		INC	HL
+ 169: 6177+7	5AB5  56      		LD	D,(HL)
+ 170: 6184+10	5AB6  F1      		POP	AF		;If not enhanced, change
+ 171: 6194+7+5	5AB7  3802    		JR	C,$+4		;  pointer to bucket
+ 172: 6201+7	5AB9  065B    		LD	B,SBUFF$>>8	;  so we don't alter user
+ 173: 6208+10	5ABB  E1      		POP	HL		;Recover line position
+ 174: 6218+4	5ABC  AF      		XOR	A		;Show found
+ 175: 6222+10	5ABD  C9      		RET
+ 176: 6232+17	5ABE  CD3F5A  	FND6	CALL	TST09AZ		;Ck if 0-9, A-Z
+ 177: 6249+7+5	5AC1  3005    		JR	NC,FND8		;Go if in range of above
+ 178: 6256+7	5AC3  7E      	FND7	LD	A,(HL)		;Loop if table has
+ 179: 6263+7	5AC4  FE20    		CP	' '		;  trailing spaces
+ 180: 6270+7+5	5AC6  28E2    		JR	Z,FND5
+ 181: 6277+10	5AC8  D1      	FND8	POP	DE
+ 182: 6287+10	5AC9  E1      		POP	HL
+ 183: 6297+12	5ACA  18A8    		JR	FND2
+ 184:				;
+ 185:				;	PARAM routine
+ 186:				;	 (HL) => param line
+ 187:				;	 (DE) => parm table
+ 188:				;	 (DE) <= table address value
+ 189:				;	    C <= # of parm
+ 190:				;	    Z = OK
+ 191:				;	   NZ = parm error
+ 192:				;
+ 193: 6309+6	5ACC  23      	PARAM0	INC	HL		;Bump the pointer
+ 194: 6315+7	5ACD  7E      	PARAML	LD	A,(HL)		;  and p/u char
+ 195: 6322+7	5ACE  FE0D    		CP	CR
+ 196: 6329+5+6	5AD0  C8      		RET	Z		;Return on enter
+ 197: 6334+7	5AD1  FE20    		CP	' '
+ 198: 6341+7+5	5AD3  28F7    		JR	Z,PARAM0	;Loop on space
+ 199: 6348+7	5AD5  FE28    		CP	'('
+ 200: 6355+7+5	5AD7  205D    		JR	NZ,PARAM5	;Jump if not left paren
+ 201: 6362+7	5AD9  1A      		LD	A,(DE)		;Check if enhanced table
+ 202: 6369+4	5ADA  07      		RLCA
+ 203: 6373+7+5	5ADB  3016    		JR	NC,PARAM1
+ 204: 6380+11	5ADD  D5      		PUSH	DE		;Save pointer to start
+ 205: 6391+6	5ADE  13      		INC	DE		;Point to 1st TYPE byte
+ 206: 6397+11	5ADF  E5      		PUSH	HL		;Save this posn
+ 207:				;
+ 208: 6408+7	5AE0  1A      	PARAML1	LD	A,(DE)		;P/u TYPE byte
+ 209: 6415+7	5AE1  E60F    		AND	0FH
+ 210: 6422+7+5	5AE3  280C    		JR	Z,PARAML2		;Exit on end of table
+ 211: 6429+4	5AE5  6F      		LD	L,A		;Point to response byte
+ 212:     -	0001          		IF	@BLD631
+ 213: 6433+4	5AE6  AF      		XOR	A		;<631>
+ 214: 6437+4	5AE7  67      		LD	H,A		;<631>
+ 215:					ELSE
+ 217:					ENDIF
+ 218: 6441+4	5AE8  2C      		INC	L
+ 219: 6445+11	5AE9  19      		ADD	HL,DE
+ 220:     -	0001          		IF	@BLD631
+ 221: 6456+7	5AEA  77      		LD	(HL),A		;<631>Zero the response
+ 222:					ELSE
+ 224:					ENDIF
+ 225: 6463+6	5AEB  23      		INC	HL		;Bump to the next TYPE
+ 226: 6469+6	5AEC  23      		INC	HL
+ 227: 6475+6	5AED  23      		INC	HL
+ 228: 6481+4	5AEE  EB      		EX	DE,HL		;Table pointer back to DE
+ 229: 6485+12	5AEF  18EF    		JR	PARAML1		;Loop thru all response bytes
+ 230:				;
+ 231: 6497+10	5AF1  E1      	PARAML2	POP	HL		;Rcvr reg
+ 232: 6507+10	5AF2  D1      		POP	DE		;  & start of parm table
+ 233: 6517+11	5AF3  D5      	PARAM1	PUSH	DE
+ 234: 6528+7	5AF4  060F    		LD	B,15		;Max 15-char field
+ 235: 6535+10	5AF6  11ED5B  		LD	DE,SBUFF$	;Point to buffer region
+ 236: 6545+6	5AF9  23      		INC	HL		;Bypass the '('
+ 237: 6551+17	5AFA  CDFD59  		CALL	@PAR1		;Get the field
+ 238: 6568+6	5AFD  2B      		DEC	HL		;Backup to separator
+ 239: 6574+10	5AFE  D1      		POP	DE
+ 240: 6584+7+5	5AFF  2013    		JR	NZ,ERROUT	;Return if bad field
+ 241: 6591+7	5B01  FE0D    		CP	CR		;If separator was a CR,
+ 242: 6598+7+5	5B03  2001    		JR	NZ,$+3		;  we need to counteract
+ 243: 6605+6	5B05  23      		INC	HL		;  the DEC HL above
+ 244: 6611+11	5B06  D5      		PUSH	DE
+ 245: 6622+4	5B07  42      		LD	B,D		;Table pointer to BC
+ 246: 6626+4	5B08  4B      		LD	C,E
+ 247: 6630+10	5B09  11ED5B  		LD	DE,SBUFF$	;Parm in table?
+ 248: 6640+17	5B0C  CD4D5A  		CALL	@FNDPRM
+ 249: 6657+11	5B0F  C5      		PUSH	BC		;Save response pointer
+ 250: 6668+7+5	5B10  2805    		JR	Z,PARAM3	;Jump if found in table
+ 251:				;
+ 252:				;	Parameter not in table - NZ condition
+ 253:				;
+ 254: 6675+10	5B12  D1      	PARAM2	POP	DE		;Pop response pointer
+ 255: 6685+10	5B13  D1      		POP	DE		;Pop parm table pointer
+ 256: 6695+7	5B14  3E2C    	ERROUT	LD	A,44		;Set up PARM ERROR
+ 257: 6702+10	5B16  C9      		RET
+ 258:				;
+ 259:				;	Parameter found in table - parse the value
+ 260:				;
+ 261: 6712+7	5B17  7E      	PARAM3	LD	A,(HL)		;Test for assignment
+ 262: 6719+7	5B18  FE3D    		CP	'='
+ 263:     -	0001          		IF	@BLD631
+ 264: 6726+10	5B1A  010000  		LD	BC,0
+ 265: 6736+7+5	5B1D  2819    		JR	Z,ASSIGN	;<631>Jump if parm=value
+ 266: 6743+6	5B1F  0B      		DEC	BC		;<631>
+ 267:					ELSE
+ 270:					ENDIF
+ 271: 6749+19	5B20  E3      	PARMSW	EX	(SP),HL		;Get response byte
+ 272: 6768+15	5B21  CBF6    		SET	6,(HL)		;Turn on FLAG-SWITCH
+ 273:				;
+ 274:				;	Valid parm argument parsed into reg BC
+ 275:				;
+ 276: 6783+4	5B23  EB      	PARAM4	EX	DE,HL		;Address pointer to HL
+ 277: 6787+7	5B24  71      		LD	(HL),C		;Stuff lo-order value
+ 278: 6794+6	5B25  23      		INC	HL
+ 279: 6800+7	5B26  70      		LD	(HL),B		;Stuff hi-order value
+ 280: 6807+10	5B27  E1      		POP	HL		;Rcvr parm line pointer
+ 281: 6817+10	5B28  D1      		POP	DE		;Rcvr parm table pointer
+ 282: 6827+7	5B29  7E      		LD	A,(HL)
+ 283: 6834+7	5B2A  FE2C    		CP	','		;Comma separator?
+ 284: 6841+7+5	5B2C  28C5    		JR	Z,PARAM1
+ 285: 6848+7	5B2E  FE0D    		CP	CR
+ 286:     -	0001          		IF	@BLD631
+ 287: 6855+5+6	5B30  C8      		RET	Z		;<631>
+ 288:					ELSE
+ 290:					ENDIF
+ 291: 6860+7	5B31  FE29    		CP	')'		;Closing paren?
+ 292: 6867+7+5	5B33  20DF    		JR	NZ,ERROUT	;Leave with ERROR
+ 293: 6874+6	5B35  23      		INC	HL		;Bump line pointer
+ 294: 6880+4	5B36  AF      	PARAM5	XOR	A		;Show all OK
+ 295: 6884+10	5B37  C9      		RET
+ 296:				;
+ 297:				;	Parameter assignment statement
+ 298:				;
+ 299: 6894+6	5B38  23      	ASSIGN	INC	HL		;Advance token past '='
+ 300: 6900+7	5B39  7E      		LD	A,(HL)
+ 301: 6907+7	5B3A  FE22    		CP	'"'		;Double quote string?
+ 302: 6914+7+5	5B3C  282A    		JR	Z,STRING
+ 303: 6921+7	5B3E  FE41    		CP	'A'		;Ck on digit or
+ 304: 6928+7+5	5B40  3815    		JR	C,ASS3		;  special character
+ 305: 6935+8	5B42  CBAF    		RES	5,A		;Strip l/c if present
+ 306: 6943+7	5B44  FE58    		CP	'X'		;Hexadecimal?
+ 307: 6950+7+5	5B46  2807    		JR	Z,ASS1
+ 308: 6957+17	5B48  CD865B  		CALL	ONOFF		;Ck on Y, N, ON, OFF
+ 309: 6974+7+5	5B4B  28D3    		JR	Z,PARMSW	;Set FLAG-SWITCH if OK
+ 310: 6981+12	5B4D  18C3    		JR	PARAM2		;  else error exit
+ 311: 6993+6	5B4F  23      	ASS1	INC	HL
+ 312: 6999+17	5B50  CDA95B  		CALL	HEXVAL		;Ck on hex format
+ 313: 7016+7+5	5B53  20BD    		JR	NZ,PARAM2	;Error if bad format
+ 314: 7023+12	5B55  1807    		JR	ASS3A		;  else bypass & set resp
+ 315:				;
+ 316:				;	Is the parameter numeric or flag ?
+ 317:				;
+ 318: 7035+7	5B57  FE30    	ASS3	CP	'0'		;Parameter=number ?
+ 319: 7042+11	5B59  F5      		PUSH	AF		;CF = 0 if number
+ 320: 7053+17	5B5A  CDD35B  		CALL	@DECHEX		;Cvt # @ HL to bin in DE
+ 321: 7070+10	5B5D  F1      		POP	AF
+ 322: 7080+19	5B5E  E3      	ASS3A	EX	(SP),HL		;Get response pointer
+ 323: 7099+7+5	5B5F  3003    		JR	NC,ASS4		;Show numeric if CF=0
+ 324: 7106+15	5B61  CBF6    		SET	6,(HL)		;  otherwise show switch
+ 325:     -	5B63  3A      		DB	03AH		;Skip next instruction
+ 326: 7121+15	5B64  CBFE    	ASS4	SET	7,(HL)		;Set Numeric response bit
+ 327: 7136+12	5B66  18BB    		JR	PARAM4
+ 328:				;
+ 329:				;	Parameter string entry
+ 330:				;
+ 331: 7148+6	5B68  23      	STRING	INC	HL		;Bypass '"'
+ 332: 7154+4	5B69  44      		LD	B,H		;Save starting address
+ 333: 7158+4	5B6A  4D      		LD	C,L
+ 334: 7162+7	5B6B  7E      	STR1	LD	A,(HL)		;P/u a char
+ 335: 7169+7	5B6C  FE20    		CP	20H
+ 336: 7176+7+5	5B6E  38A2    		JR	C,PARAM2	;Exit on control char
+ 337: 7183+6	5B70  23      		INC	HL		;Bump pointer
+ 338: 7189+7	5B71  FE22    		CP	'"'		;Closing double quote
+ 339: 7196+7+5	5B73  20F6    		JR	NZ,STR1
+ 340: 7203+11	5B75  E5      		PUSH	HL		;Save current pointer
+ 341: 7214+15	5B76  ED42    		SBC	HL,BC		;Calc length of string
+ 342: 7229+4	5B78  7D      		LD	A,L
+ 343: 7233+4	5B79  3D      		DEC	A		;Adjust for INC HL
+ 344: 7237+7	5B7A  FE20    		CP	32		;If len > 31, set to 0
+ 345: 7244+7+5	5B7C  3801    		JR	C,$+3
+ 346: 7251+4	5B7E  AF      		XOR	A
+ 347: 7255+10	5B7F  E1      		POP	HL		;Rcvr pointer
+ 348: 7265+19	5B80  E3      		EX	(SP),HL		;Get response byte
+ 349: 7284+7	5B81  F620    		OR	20H		;Set FLAG-STRING
+ 350: 7291+7	5B83  77      		LD	(HL),A
+ 351: 7298+12	5B84  189D    		JR	PARAM4
+ 352:				;
+ 353:				;	Check for Yes, No, On, Off
+ 354:				;
+ 355:     -	0001          		IF	@BLD631
+ 356:     -	5B86          	ONOFF:				;<631>
+ 357:					ELSE
+ 359:					ENDIF
+ 360: 7310+7	5B86  D659    		SUB	'Y'		;Is it Yes?
+ 361: 7317+7+5	5B88  2811    		JR	Z,ONO1		;Jump on yes
+ 362: 7324+7	5B8A  C60B    		ADD	A,'Y'-'N'	;Is it No?
+ 363: 7331+7+5	5B8C  280E    		JR	Z,ONO2		;Jump on no
+ 364: 7338+4	5B8E  3D      		DEC	A		;Is it 'O'n or 'O'ff?
+ 365: 7342+5+6	5B8F  C0      		RET	NZ		;Return if not on/off
+ 366: 7347+6	5B90  23      		INC	HL		;Bump pointer to next
+ 367: 7353+7	5B91  7E      		LD	A,(HL)		;  character & p/u
+ 368: 7360+8	5B92  CBAF    		RES	5,A		;Set lower to upper
+ 369: 7368+7	5B94  FE46    		CP	'F'
+ 370: 7375+7+5	5B96  2804    		JR	Z,ONO2		;Jump on off
+ 371: 7382+7	5B98  FE4E    		CP	'N'
+ 372: 7389+5+6	5B9A  C0      		RET	NZ		;Return if not on
+ 373:     -	0001          		IF	@BLD631
+ 374: 7394+6	5B9B  0B      	ONO1	DEC	BC		;<631>Init to true
+ 375:					ELSE
+ 377:					ENDIF
+ 378: 7400+6	5B9C  23      	ONO2	INC	HL		;Ignore trailing part
+ 379: 7406+7	5B9D  7E      		LD	A,(HL)		;  of word until closing
+ 380: 7413+7	5B9E  FE29    		CP	')'		;  ")" or comma separator
+ 381: 7420+5+6	5BA0  C8      		RET	Z		;  or CR
+ 382: 7425+7	5BA1  FE0D    		CP	CR
+ 383: 7432+5+6	5BA3  C8      		RET	Z
+ 384: 7437+7	5BA4  FE2C    		CP	','
+ 385: 7444+5+6	5BA6  C8      		RET	Z
+ 386: 7449+12	5BA7  18F3    		JR	ONO2		;Loop
+ 387:				;
+ 388:				;	Process hexadecimal assignment
+ 389:				;
+ 390:     -	0001          		IF	@BLD631
+ 391:     -	5BA9          	HEXVAL:				;<631>
+ 392:					ELSE
+ 394:					ENDIF
+ 395: 7461+7	5BA9  7E      		LD	A,(HL)		;P/u a char
+ 396: 7468+7	5BAA  FE27    		CP	27H		;Must be single quote
+ 397: 7475+5+6	5BAC  C0      		RET	NZ		;Ret if not
+ 398: 7480+6	5BAD  23      	HEX1	INC	HL		;Bump past it
+ 399: 7486+7	5BAE  7E      		LD	A,(HL)		;P/u possible hex digit
+ 400: 7493+7	5BAF  D630    		SUB	30H		;Begin conversion
+ 401: 7500+7+5	5BB1  380C    		JR	C,HEX2		;Jump if < "0"
+ 402: 7507+7	5BB3  FE0A    		CP	10		;Ck for 0-9
+ 403: 7514+7+5	5BB5  3810    		JR	C,HEX3		;Jump if digit is 0-9
+ 404: 7521+8	5BB7  CBAF    		RES	5,A		;Strip l/c if present
+ 405: 7529+7	5BB9  D607    		SUB	7		;  else ck A-F
+ 406: 7536+7	5BBB  FE10    		CP	16
+ 407: 7543+7+5	5BBD  3808    		JR	C,HEX3		;Jump if A-F
+ 408: 7550+7	5BBF  7E      	HEX2	LD	A,(HL)		;Test for closing quote
+ 409: 7557+7	5BC0  FE27    		CP	27H
+ 410: 7564+6	5BC2  23      		INC	HL		;Bump pointer
+ 411: 7570+5+6	5BC3  C8      		RET	Z		;Ret if closing quote
+ 412: 7575+6	5BC4  2B      		DEC	HL		;  else backup, set OK,
+ 413: 7581+4	5BC5  AF      		XOR	A		;  then return
+ 414: 7585+10	5BC6  C9      		RET
+ 415: 7595+11	5BC7  C5      	HEX3	PUSH	BC		;Exchange BC & HL
+ 416: 7606+19	5BC8  E3      		EX	(SP),HL		;  and save HL
+ 417: 7625+11	5BC9  29      		ADD	HL,HL		;Multiply by 16
+ 418: 7636+11	5BCA  29      		ADD	HL,HL
+ 419: 7647+11	5BCB  29      		ADD	HL,HL
+ 420: 7658+11	5BCC  29      		ADD	HL,HL
+ 421: 7669+4	5BCD  44      		LD	B,H		;Merge new digit
+ 422: 7673+4	5BCE  85      		ADD	A,L
+ 423: 7677+4	5BCF  4F      		LD	C,A
+ 424: 7681+10	5BD0  E1      		POP	HL		;Recover pointer
+ 425: 7691+12	5BD1  18DA    		JR	HEX1		;Loop
+ 426:				;
+ 427:				;	Process decimal assignment
+ 428:				;
+ 429: 7703+10	5BD3  010000  	@DECHEX	LD	BC,0		;Init value to zero
+ 430: 7713+7	5BD6  7E      	DEC1	LD	A,(HL)		;P/u a char
+ 431: 7720+7	5BD7  D630    		SUB	30H		;Cvrt to binary
+ 432: 7727+5+6	5BD9  D8      		RET	C		;Return if < "0"
+ 433: 7732+7	5BDA  FE0A    		CP	10		;Ck for bad decimal
+ 434: 7739+5+6	5BDC  D0      		RET	NC		;Ret if not 0-9
+ 435: 7744+11	5BDD  C5      		PUSH	BC		;Exchange BC & HL
+ 436: 7755+19	5BDE  E3      		EX	(SP),HL		;  & save HL on stack
+ 437: 7774+11	5BDF  29      		ADD	HL,HL		;Multiply by 10
+ 438: 7785+11	5BE0  29      		ADD	HL,HL
+ 439: 7796+11	5BE1  09      		ADD	HL,BC
+ 440: 7807+11	5BE2  29      		ADD	HL,HL
+ 441: 7818+7	5BE3  0600    		LD	B,0		;Merge in new digit
+ 442: 7825+4	5BE5  4F      		LD	C,A		;New digit to C
+ 443: 7829+11	5BE6  09      		ADD	HL,BC		;  & add it in
+ 444: 7840+4	5BE7  44      		LD	B,H		;Current value to BC
+ 445: 7844+4	5BE8  4D      		LD	C,L
+ 446: 7848+10	5BE9  E1      		POP	HL		;Recover HL pointer
+ 447: 7858+6	5BEA  23      		INC	HL
+ 448: 7864+12	5BEB  18E9    		JR	DEC1		;Loop
+ 449:						
+ 450:     -	5BED          	SBUFF$  DS  0FFh
+ 451:				
+**** vhdutl_multidos.z80 ****
+  56:				
+  57:				            INCLUDE trsident.z80
+**** trsident.z80 ****
+   1:				; TRS-80 Model and OS Version Identification
+   2:				;
+   3:				; Identify TRS-80 Model Version
+   4:				;
+   5:				; Returns identified version in A
+   6:				;   0 = Unknown
+   7:				;   1 = Model 1 with Level II Basic
+   8:				;   3 = Model 3 or Model 4 running in Model 3 Mode
+   9:				;   4 = Model 4
+  10:				
+  11:				; 0x0125 = Basic Version Message in Level II/Model 3 ROM
+  12:				;   0x20 = Model 1 with Level II Basic
+  13:				;   0x49 = Model 3 or Model 4 running in Model 3 Mode
+  14:				;   0x14 = Model 4 running LS-DOS
+  15:				;
+  16:				
+  17: 7876+13	5CEC  3A2501  	WHATVER     LD      A, (0125h)
+  18: 7889+7	5CEF  FE20    	            CP      20h             ; Model 1 with Level II Basic?
+  19: 7896+7+5	5CF1  2804    	            JR      Z, WHATVER1     ; No
+  20: 7903+7	5CF3  FEA3    	            CP      0A3h            ; Model 1 with Level II Basic 1.3 ROM?
+  21: 7910+7+5	5CF5  2004    	            JR      NZ,WHATVER3
+  22: 7917+7	5CF7  3E01    	WHATVER1    LD      A,1             ; Yes
+  23: 7924+12	5CF9  1812    	            JR      WHATVEROK
+  24: 7936+7	5CFB  FE49    	WHATVER3    CP      49h             ; Model 3 or Model 4 running in Model 3 Mode?
+  25: 7943+7+5	5CFD  2004    	            JR      NZ, WHATVER4    ; No
+  26: 7950+7	5CFF  3E03    	            LD      A,3             ; Yes
+  27: 7957+12	5D01  180A    	            JR      WHATVEROK
+  28: 7969+7	5D03  FE14    	WHATVER4    CP      14h             ; Model 4
+  29: 7976+7+5	5D05  2004    	            JR      NZ, WHATVERX    ; No... Unknown Model then
+  30: 7983+7	5D07  3E04    	            LD      A,4             ; Yes
+  31: 7990+12	5D09  1802    	            JR      WHATVEROK
+  32: 8002+7	5D0B  3E00    	WHATVERX    LD      A,0             ; Unknown Model
+  33: 8009+10	5D0D  C9      	WHATVEROK   RET
+**** vhdutl_multidos.z80 ****
+  58:				         
+  59:     -	5D0E          	PARM        DS      2
+  60:				               
+  61:     -	5225          	            END     VHDUTL
+
+
+
+Statistics:
+
+     4	passes
+     0	jr promotions
+   221	symbols
+  2408	bytes
+
+
+
+Symbol Table:
+
+@BLD631        =01        1
+@DECHEX         5BD3      23507
+@DSP           =33        51
+@DSPLY         =4467      17511
+@FNDPRM         5A4D      23117
+@PAR1           59FD      23037
+@PARAM         =4454      17492
+@PARSER         59FB      23035
+ACTIONS         56BC      22204
+AM_ARC         =20        32
+AM_DIR         =10        16
+AM_HID         =02        2
+AM_LFN         =0F        15
+AM_RDO         =01        1
+AM_SYS         =04        4
+AM_VOL         =08        8
+APARM           55C8      21960
+ASS1            5B4F      23375
+ASS3            5B57      23383
+ASS3A           5B5E      23390
+ASS4            5B64      23396
+ASSIGN          5B38      23352
+BIN2BCD         5460      21600
+BIN2BCD1        5463      21603
+BIN2BCD2        546B      21611
+BUFFER          57C4      22468
+CHKDIR          5253      21075
+CHKGET          5248      21064
+CHKMNT          525E      21086
+CHKSET          523E      21054
+CHKVER          5269      21097
+CLRDSPBUFFER    566C      22124
+CLRDSPBUFFER2   5671      22129
+CLRLEADZERO     5686      22150
+CLRLEADZERO2    568D      22157
+COMMAND2       =C4        196
+CPARM           55D1      21969
+CPM            =00        0
+CR             =0D        13
+DATA2          =C2        194
+DATE            5204      20996
+DEC1            5BD6      23510
+DEPART          5224      21028
+DIRCOLS         5865      22629
+DONE            5524      21796
+DONESTUFF       56B7      22199
+DPARM           55C2      21954
+DRIVEINFO      =0C        12
+DRVINFOSIZE    =13        19
+DS1307          56BD      22205
+DS1307RD        5628      22056
+DS1307WR        563F      22079
+DSP             5214      21012
+DSPBUFFER       5814      22548
+DSPBUFFEREND    521F      21023
+DSPBUFFERLEN   =51        81
+DSPDSPBUFFER    567F      22143
+DSPLY           5200      20992
+DSVERSION       5439      21561
+DSVERSION2      5443      21571
+DSVERSION3      5449      21577
+DSVERSION4      5456      21590
+ERROR2         =C5        197
+ERROUT          5B14      23316
+ETX            =03        3
+EXITC           5A4B      23115
+FND1            5A56      23126
+FND1A           5A65      23141
+FND2            5A74      23156
+FND3            5A80      23168
+FND3A           5A92      23186
+FND4            5A9A      23194
+FND5            5AAA      23210
+FND5A           5AAC      23212
+FND6            5ABE      23230
+FND7            5AC3      23235
+FND8            5AC8      23240
+FREHDTST        5609      22025
+FREHDTSTX       5619      22041
+GETDIR          5492      21650
+GETDIR2         54B4      21684
+GETDIR3         54E0      21728
+GETDIR4         54E8      21736
+GETDIR5         54F2      21746
+GETDIR6         5500      21760
+GETDIRERROR     5512      21778
+GETDIRX         5508      21768
+GETRTC          5516      21782
+GETTIME        =01        1
+GETVER         =00        0
+GETVERSION      540B      21515
+GETVERSION2     5428      21544
+GPARM           55BC      21948
+HEX1            5BAD      23469
+HEX2            5BBF      23487
+HEX3            5BC7      23495
+HEXVAL          5BA9      23465
+HPARM           55CB      21963
+LDDSPBUFFER     5665      22117
+LF             =0A        10
+MNT             5277      21111
+MNT1            5289      21129
+MNT2            529D      21149
+MNT3            52AC      21164
+MNT4            52BB      21179
+MNT6            52C9      21193
+MNT7            5300      21248
+MNTDISP         5329      21289
+MNTDSP2         5356      21334
+MNTDSP21        5370      21360
+MNTDSP22        537E      21374
+MNTDSP2A        53E3      21475
+MNTDSP2B        53EC      21484
+MNTDSP4         53FA      21498
+MNTFLAGS        5867      22631
+MNTHLT          5316      21270
+MNTHLT2         5322      21282
+MNTNOHLT        5325      21285
+MNTTITLE        5797      22423
+MOUNTDRIVE     =0A        10
+MPARM           55C5      21957
+MSG             56C3      22211
+MSGBVER         5482      21634
+MSGDIRERROR     577F      22399
+MSGMNTFAIL      5772      22386
+MSGMNTHLT       5763      22371
+MSGMNTOK        5756      22358
+MSGNOIF         56FD      22269
+MSGUSAGE        5711      22289
+MSGVER          5477      21623
+NPARM           55D4      21972
+NUM1            56A9      22185
+NUM2            56AB      22187
+NUM2DEC         5691      22161
+NUMBUFFER       5804      22532
+ONO1            5B9B      23451
+ONO2            5B9C      23452
+ONOFF           5B86      23430
+OPENDIR        =08        8
+PAR2            5A02      23042
+PAR3            5A1F      23071
+PAR4            5A2A      23082
+PAR5            5A2D      23085
+PAR5A           5A37      23095
+PAR5B           5A33      23091
+PAR6            5A3A      23098
+PARAM           520C      21004
+PARAM0          5ACC      23244
+PARAM1          5AF3      23283
+PARAM2          5B12      23314
+PARAM3          5B17      23319
+PARAM4          5B23      23331
+PARAM5          5B36      23350
+PARAML          5ACD      23245
+PARAML1         5AE0      23264
+PARAML2         5AF1      23281
+PARM            5D0E      23822
+PARMSW          5B20      23328
+PRMERROR        5527      21799
+PRMERROR2       5531      21809
+PRMTABLE        5540      21824
+READDIR        =09        9
+RTCMSGSIZE     =06        6
+SBUFF$          5BED      23533
+SETCOLS         5219      21017
+SETRTC          551E      21790
+SETTIME        =02        2
+SETUP           5223      21027
+SIZE2          =C3        195
+SPARM           55B9      21945
+SPC            =20        32
+START           522C      21036
+STATUS         =CF        207
+STR1            5B6B      23403
+STRING          5B68      23400
+TEMP            5866      22630
+TIME            5208      21000
+TRSDOS         =01        1
+TST09AZ         5A3F      23103
+UERROK          5875      22645
+UERROR          5868      22632
+VHDINIT         5229      21033
+VHDUTL          5225      21029
+VHPARM          55D7      21975
+VHPARM2         55EB      21995
+VHPARMDONE      55FF      22015
+VHPARMFAIL      5603      22019
+VPARM           55BF      21951
+WAIT            5659      22105
+WAIT1           565B      22107
+WAIT2           5664      22116
+WHATVER         5CEC      23788
+WHATVER1        5CF7      23799
+WHATVER3        5CFB      23803
+WHATVER4        5D03      23811
+WHATVEROK       5D0D      23821
+WHATVERX        5D0B      23819
+WPARM           55CE      21966
+error_m         5885      22661
+error_table     59D1      22993
+fr_denied       58F4      22772
+fr_disk_err     589B      22683
+fr_disk_full    59C7      22983
+fr_exist        5902      22786
+fr_int_err      58A6      22694
+fr_invalid_drive 5936      22838
+fr_invalid_name 58E3      22755
+fr_invalid_obj  590E      22798
+fr_invalid_param 59B5      22965
+fr_locked       5985      22917
+fr_mkfs_aborted 5967      22887
+fr_no_file      58C5      22725
+fr_no_fs        5957      22871
+fr_no_path      58D4      22740
+fr_not_enabled  5944      22852
+fr_not_enough_core 5991      22929
+fr_not_ready    58B5      22709
+fr_timeout      5974      22900
+fr_too_many_open_files 59A1      22945
+fr_unknown      588D      22669
+fr_write_protected 5926      22822

@@ -1,0 +1,29 @@
+# Builds MultiDOS versions of the FreHD utilties:
+#  export2.cmd
+#  import2.cmd
+#  vhdutl.cmd
+#  fupdate.cmd
+#
+# Please use zmac from http://48k.ca/zmac.html
+# Assumes Linux or, if on Windows, https://www.msys2.org/ or
+# https://www.cygwin.com/ enviroment is setup.
+
+ZMACFLAGS = --oo cmd,lst --od .
+RM = rm -f
+
+all: export2.cmd import2.cmd vhdutl.cmd fupdate.cmd
+
+export2.cmd: *.z80
+	zmac $(ZMACFLAGS) export2_multidos.z80 -o export2.cmd -o export2.lst
+
+import2.cmd: *.z80
+	zmac $(ZMACFLAGS) import2_multidos.z80 -o import2.cmd -o import2.lst
+
+vhdutl.cmd: *.z80
+	zmac $(ZMACFLAGS) vhdutl_multidos.z80 -o vhdutl.cmd -o vhdutl.lst
+
+fupdate.cmd: *.z80
+	zmac $(ZMACFLAGS) fupdate_multidos.z80 -o fupdate.cmd -o fupdate.lst
+
+clean:
+	$(RM) *.cmd *.lst

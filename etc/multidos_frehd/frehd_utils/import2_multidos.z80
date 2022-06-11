@@ -1,0 +1,104 @@
+; IMPORT2 - Utility for the Vecoven Hard Drive Emulator
+; MultiDOS Version - Tim Halloran (2022) - migrated from LDOS code
+
+; TRS-80 IO Port Definitions
+
+DATA2       EQU     0C2H
+SIZE2       EQU     0C3H
+COMMAND2    EQU     0C4H
+ERROR2      EQU     0C5H
+STATUS      EQU     0CFH
+
+; Assembler Control Flags (expected by import2core.z80)
+
+CPM         EQU     0
+TRSDOS      EQU     1
+
+
+; Model I/III/4 MultiDOS addresses
+
+@DSPLY      EQU     4467h ; MultiDOS @VOD
+@DSP        EQU     0033h ; MultiDOS @PUTVO
+@PARAM      EQU     4454h
+@FSPEC      EQU     441Ch ; MultiDOS @FLIK
+@INIT       EQU     4420h
+@OPEN       EQU     4424h
+@CLOSE      EQU     4428h
+@READ       EQU     4436h
+@WRITE      EQU     4439h
+@ERROR      EQU     4409h
+@EXIT       EQU     402dh ; MultiDOS @TODOS
+@ABORT      EQU     4030h       
+@PUT        EQU     001bh ; MultiDOS @PUTBT
+DODCB$      EQU     401dh ; MultiDOS @VODCB
+
+            ORG     5200H
+            
+; MultiDOS jump table (expected by import2core.z80)
+
+DSPLY       CALL    @DSPLY
+            RET
+DSP         NOP
+            CALL    @DSP
+            RET
+SETUP       RET
+FSPEC       CALL    @FSPEC
+            RET
+INIT        CALL    @INIT
+            RET
+FOPEN       CALL    @OPEN
+            RET
+FCLOSE      CALL    @CLOSE
+            RET
+FREAD       CALL    @READ
+            RET
+FWRITE      LD      (DCB+3), HL
+            CALL    @WRITE
+            RET
+ERROR       CALL    @ERROR
+            RET
+EXIT        CALL    @EXIT
+            RET
+ABORT       CALL    @ABORT
+            RET
+SETERN      CALL    SETERN5
+	    RET
+
+IMPORT2
+            PUSH    HL              ; Save INBUF pointer for import2core.z80
+            
+;; EOF handling differs between TRS-80 DOSes:
+;;  For MultiDOS (also TRSDOS 2.3 and LDOS) word (dcb+12) contains the
+;;  number of 256 byte records in the file, byte (dcb+8) contains the EOF
+;;  offset in the last record (0=256).
+;;  For NEWDOS/80 and TRSDOS 1.3, byte (dcb+8) and word (dcb+12) 
+;;  form a 24 bit number containing the relative byte address of EOF.
+;;  Thus (dcb+12) differs by one if the file length is not a
+;;  multiple of 256 bytes.  DOSPLUS also uses this convention,
+;;  and NEWDOS 2.1 probably does too (not checked).
+            
+SETUPERN    LD      A,0             ; EOF HANDLING
+            LD      (ERNLDOS),A
+
+            INCLUDE import2core.z80
+
+SETERN5     LD      HL, (DCB+10)    ; current record number
+            LD      A, (ERNLDOS)    ; get ERN convention
+            OR      A
+            JR      NZ, NOADJ       ; go if TRSDOS 2.3/LDOS convention
+ADJ         OR      C	            ; length multiple of 256 bytes?
+            JR      Z, NOADJ        ; go if so
+            DEC     HL	            ; no, # of records - 1
+NOADJ       LD      (DCB+12), HL
+            RET	
+
+SETERN6     LD      HL, (DCB+10)
+            LD      (DCB+12), HL
+            RET
+
+PARM        DS      2
+          
+DCB         DEFS    32  ; 32 bytes for MultiDOS
+
+            END     IMPORT2
+            

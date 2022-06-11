@@ -1,0 +1,663 @@
+   1:				;; export2.z80
+   2:				;; MultiDOS Version
+   3:				;;
+   4:				;; Timothy Mann, 8/24/97
+   5:				;; Frederic Vecoven, 4/15/13 : adapted for trs_hard emulator
+   6:				;; Tim Halloran (2022) : migrated from LDOS code
+   7:				;;
+   8:				;;	Copyright (c) 1997, Timothy Mann
+   9:				;;
+  10:				;;	This software may be copied, modified, and used for any
+  11:				;;	purpose without fee, provided that (1) the above copyright
+  12:				;;	notice is retained, and (2) modified versions are clearly
+  13:				;;	marked as having been modified, with the modifier's name and
+  14:				;;	the date included.  
+  15:				;;
+  16:				;; Use hard drive emulator commands to copy a file from TRS-80 to FAT
+  17:				;; Usage: EXPORT2 [-lne] fromfile [unixfile]
+  18:				;; Parameter -l will convert the Unix file to lower case.
+  19:				;;  (Needed for NEWDOS/80.  They insist on uppercasing the command line.)
+  20:				;; If the -n parameter is given, each carriage return ('\r')
+  21:				;;  in the TRS-80 file is converted to a newline ('\n') in the Unix file.
+  22:				;; The program tries to determine what DOS it is running on and use
+  23:				;;  the correct FCB end of file convention, but this works only on
+  24:				;;  TRSDOS, LDOS, and NEWDOS/80.  For other DOSes that use the
+  25:				;;  NEWDOS/80 convention (such as DOSPLUS), give the -e paramter.
+  26:				;; If the unixfile parameter is omitted, the fromfile parameter is used,
+  27:				;;  with '/' changed to '.'.
+  28:				
+  29:				; Assembler Control Flags
+  30:				
+  31:     -	0000          	CPM         EQU     0
+  32:     -	0001          	TRSDOS      EQU     1
+  33:				
+  34:				;; MultiDOS addresses
+  35:     -	441C          	@fspec  equ 441ch ; MultiDOS @FLIK
+  36:     -	4420          	@init   equ 4420h
+  37:     -	4424          	@open   equ 4424h
+  38:     -	4428          	@close  equ 4428h
+  39:     -	4436          	@read   equ 4436h
+  40:     -	4439          	@write  equ 4439h
+  41:     -	4409          	@error  equ 4409h
+  42:     -	402D          	@exit   equ 402dh ; MultiDOS @TODOS
+  43:     -	4030          	@abort  equ 4030h
+  44:     -	001B          	@put	equ 001bh ; MultiDOS @PUTBT
+  45:     -	401D          	dodcb$	equ 401dh ; MultiDOS @VODCB
+  46:				
+  47:				;; Model 4 only: file init or open with wrong LRL.  Can be ignored.
+  48:     -	002A          	lrlerr  equ 42
+  49:				
+  50:     -	5200          		org 5200h
+  51:				
+  52:				;; MultiDOS jump table
+  53:    0+17	5200  CD1C44  	fspec:	call @fspec
+  54:   17+10	5203  C9      		ret
+  55:   27+17	5204  CD2044  	init:	call @init
+  56:   44+10	5207  C9      		ret
+  57:   54+17	5208  CD2444  	open:	call @open
+  58:   71+10	520B  C9      		ret
+  59:   81+17	520C  CD2844  	close:	call @close
+  60:   98+10	520F  C9      		ret
+  61:  108+17	5210  CD3644  	reed:	call @read
+  62:  125+10	5213  C9      		ret
+  63:  135+17	5214  CD3944  	write:	call @write
+  64:  152+10	5217  C9      		ret
+  65:  162+17	5218  CD0944  	error:	call @error
+  66:  179+10	521B  C9      		ret
+  67:  189+17	521C  CD2D40  	exit:	call @exit
+  68:  206+10	521F  C9      		ret
+  69:  216+17	5220  CD3040  	abort:	call @abort
+  70:  233+10	5223  C9      		ret
+  71:  243+17	5224  CD9353  	dsply:	call dsply5
+  72:  260+10	5227  C9      		ret
+  73:  270+17	5228  CDD353  	getern:	call getern5
+  74:  287+10	522B  C9      		ret
+  75:				
+  76:				; Nonzero for LDOS ern convention
+  77:     -	522C  01      	ernldos: db 1
+  78:				
+  79:				;; Interface defines
+  80:     -	00C2          	DATA2	  equ 0c2h
+  81:     -	00C3          	SIZE2     equ 0c3h
+  82:     -	00C4          	COMMAND2  equ 0c4h
+  83:     -	00C5          	ERROR2    equ 0c5h
+  84:     -	00CF          	STATUS    equ 0cfh
+  85:     -	0003          	OPENFILE  equ 03h
+  86:     -	0004          	READFILE  equ 04h
+  87:     -	0005          	WRITEFILE equ 05h
+  88:     -	0006          	CLOSEFILE equ 06h
+  89:				
+  90:				;; FatFS flags
+  91:     -	0000          	FA_OPEN_EXISTING equ 00h
+  92:     -	0001          	FA_READ          equ 01h
+  93:     -	0002          	FA_WRITE         equ 02h
+  94:     -	0004          	FA_CREATE_NEW    equ 04h
+  95:     -	0008          	FA_CREATE_ALWAYS equ 08h
+  96:     -	0010          	FA_OPEN_ALWAYS   equ 10h
+  97:				
+  98:     -	522D          	export:
+  99:  297+7	522D  3E00    	        ld a,0 ; EOF handling
+ 100:  304+13	522F  322C52  	        ld (ernldos), a
+ 101:				
+ 102:  317+7	5232  7E      	flag0:	ld a, (hl)		; look for flags
+ 103:  324+7	5233  FE20    		cp ' '
+ 104:  331+10	5235  DA6553  		jp c, usage		; error if line ends here
+ 105:  341+7+5	5238  2003    		jr nz, flag1
+ 106:  348+6	523A  23      		inc hl
+ 107:  354+12	523B  18F5    		jr flag0
+ 108:  366+7	523D  FE2D    	flag1:	cp '-'
+ 109:  373+7+5	523F  202C    		jr nz, fromf
+ 110:  380+6	5241  23      		inc hl
+ 111:  386+7	5242  7E      		ld a, (hl)
+ 112:  393+7	5243  F620    	flag3:	or 20h			; make the flag character lowercase
+ 113:  400+7	5245  FE65    		cp 'e'
+ 114:  407+7+5	5247  2006    		jr nz, flagl
+ 115:  414+4	5249  97      		sub a
+ 116:  418+13	524A  322C52  		ld (ernldos), a
+ 117:  431+12	524D  1815    		jr flag2
+ 118:  443+7	524F  FE6C    	flagl:	cp 'l'
+ 119:  450+7+5	5251  2007    		jr nz, flagn		; check for next flag
+ 120:  457+7	5253  3E01    		ld a, 1
+ 121:  464+13	5255  32E853  		ld (lflag), a
+ 122:  477+12	5258  180A    		jr flag2
+ 123:  489+7	525A  FE6E    	flagn:	cp 'n'
+ 124:  496+10	525C  C26553  		jp nz, usage		; unknown flag
+ 125:  506+7	525F  3E01    		ld a, 1
+ 126:  513+13	5261  32E953  		ld (nflag), a
+ 127:  526+6	5264  23      	flag2:	inc hl
+ 128:  532+7	5265  7E      		ld a, (hl)
+ 129:  539+7	5266  FE20    		cp ' '
+ 130:  546+7+5	5268  20D9    		jr nz, flag3		; another flag follows
+ 131:  553+6	526A  23      		inc hl
+ 132:  559+12	526B  18C5    		jr flag0
+ 133:				
+ 134:  571+10	526D  11C855  	fromf:	ld de, dcb              ; ready to get LDOS filename from (HL)
+ 135:  581+16	5270  22EA53  		ld (lfname), hl		; save if needed to default Unix name
+ 136:  597+17	5273  CD0052  	        call fspec
+ 137:  614+10	5276  C26553  	        jp nz, usage
+ 138:				
+ 139:  624+7	5279  7E      	unix0:	ld a, (hl)              ; scan over Unix filename
+ 140:  631+7	527A  FE20    	        cp ' '		        ; first skip spaces
+ 141:  638+7+5	527C  3814    		jr c, usetrs            ; if no Unix name, use translated TRS name
+ 142:  645+7+5	527E  2003    	        jr nz, unix1
+ 143:  652+6	5280  23      	        inc hl
+ 144:  658+12	5281  18F6    		jr unix0
+ 145:  670+10	5283  11E955  	unix1:	ld de, iobuf+1		; copy Unix filename
+ 146:  680+7	5286  3E20    		ld a, ' '
+ 147:  687+7	5288  BE      	unix2:	cp (hl)
+ 148:  694+16	5289  EDA0    		ldi
+ 149:  710+7+5	528B  38FB    		jr c, unix2
+ 150:  717+6	528D  1B      		dec de
+ 151:  723+4	528E  97      		sub a
+ 152:  727+7	528F  12      		ld (de), a              ; NUL terminate Unix name
+ 153:  734+12	5290  181C    	        jr gotu
+ 154:				
+ 155:  746+16	5292  2AEA53  	usetrs: ld hl, (lfname)		; translate TRS-80 name to Unix
+ 156:  762+10	5295  11E955  		ld de, iobuf+1
+ 157:  772+7	5298  7E      	ut1:	ld a, (hl)
+ 158:  779+7	5299  FE3A    		cp ':'			; drivespec?
+ 159:  786+7+5	529B  280F    		jr z, utdone		; done if so
+ 160:  793+7	529D  FE21    		cp ' '+1		; end of line?
+ 161:  800+7+5	529F  380B    		jr c, utdone		; done if so
+ 162:  807+7	52A1  FE2F    		cp '/'			; change '/' to '.' for extension
+ 163:  814+7+5	52A3  2002    		jr nz, notsl
+ 164:  821+7	52A5  3E2E    		ld a, '.'
+ 165:  828+7	52A7  12      	notsl:	ld (de), a
+ 166:  835+6	52A8  23      		inc hl
+ 167:  841+6	52A9  13      		inc de
+ 168:  847+12	52AA  18EC    		jr ut1
+ 169:  859+4	52AC  97      	utdone: sub a			; NUL-terminate Unix name
+ 170:  863+7	52AD  12      		ld (de), a
+ 171:				
+ 172:  870+10	52AE  21E855  	gotu:   ld hl, iobuf
+ 173:  880+10	52B1  11C855  	        ld de, dcb
+ 174:  890+7	52B4  0600    	        ld b, 0
+ 175:  897+17	52B6  CD0852  	        call open               ; open the TRS-80 file
+ 176:  914+10	52B9  E1      	        pop hl
+ 177:  924+7+5	52BA  280B    	        jr z, uname
+ 178:  931+7	52BC  FE2A    		cp lrlerr
+ 179:  938+7+5	52BE  2807    		jr z, uname
+ 180:  945+4	52C0  4F      		ld c, a
+ 181:  949+17	52C1  CD1852  	        call error
+ 182:  966+10	52C4  C32052  	        jp abort
+ 183:				
+ 184:				;;; open the file on the interface side
+ 185:				;;; 1) issue command OPENFILE to interface
+ 186:				;;; 2) compute size = flags (1) + strlen(path) + 1 (null terminator)
+ 187:				;;; 3) send size to interface
+ 188:				;;; 4) send the bytes to interface
+ 189:				;;; 5) wait for CIP to clear
+ 190:  976+10	52C7  21E955  	uname:	ld hl, iobuf+1			; path
+ 191:  986+13	52CA  3AE853  		ld a, (lflag)
+ 192:  999+4	52CD  B7      		or a
+ 193: 1003+10+7	52CE  C4A853  		call nz, lcconv			; convert filename to lower case
+ 194:				
+ 195: 1013+7	52D1  0602    		ld b, 2				; length = 2 (flag + null-terminator)
+ 196: 1020+7	52D3  3E00    		ld a, 0				; null-terminator
+ 197: 1027+7	52D5  BE      	stlen1:	cp (hl)
+ 198: 1034+7+5	52D6  2804    		jr z, stlen2
+ 199: 1041+4	52D8  04      		inc b				; found a character
+ 200: 1045+6	52D9  23      		inc hl
+ 201: 1051+12	52DA  18F9    		jr stlen1
+ 202: 1063+7	52DC  3E03    	stlen2:	ld a, OPENFILE
+ 203: 1070+11	52DE  D3C4    		out (COMMAND2), a		; send OPENFILE command
+ 204: 1081+17	52E0  CDC553  		call wait
+ 205: 1098+4	52E3  78      		ld a, b
+ 206: 1102+11	52E4  D3C3    		out (SIZE2), a			; send SIZE2
+ 207: 1113+7	52E6  0EC2    		ld c, DATA2
+ 208: 1120+10	52E8  21E855  		ld hl, iobuf
+ 209: 1130+10	52EB  360A    		ld (hl), FA_CREATE_ALWAYS|FA_WRITE
+ 210: 1140+16+5	52ED  EDB3    		otir
+ 211: 1156+17	52EF  CDC553  		call wait
+ 212:				;; Read
+ 213: 1173+17	52F2  CD2852  	opn2ok:	call getern		; count down records in bc
+ 214:				
+ 215: 1190+10	52F5  11C855  	loop:	ld de, dcb
+ 216: 1200+17	52F8  CD1052  		call reed               ; read 256 bytes from file
+ 217: 1217+7+5	52FB  280B    	        jr z, rdok		; got a full 256 bytes
+ 218: 1224+7	52FD  FE1C    		cp 28			; eof?
+ 219: 1231+7+5	52FF  2848    		jr z, closit		; yes, OK
+ 220: 1238+4	5301  4F      		ld c, a
+ 221: 1242+17	5302  CD1852  	        call error              ; oops, i/o error
+ 222: 1259+10	5305  C32052  	        jp abort
+ 223: 1269+6	5308  0B      	rdok:	dec bc
+ 224:				
+ 225:				;; Translate
+ 226: 1275+11	5309  C5      		push bc			; save record count
+ 227: 1286+13	530A  3AE953  	        ld a, (nflag)		; check for NL feature
+ 228: 1299+4	530D  A7      		and a
+ 229: 1303+7+5	530E  280F    		jr z, nlfals
+ 230: 1310+10	5310  21E855  		ld hl, iobuf
+ 231: 1320+7	5313  3E0D    		ld a, 0dh
+ 232: 1327+10	5315  010A00  		ld bc, 000ah		; b := 0, c := 0ah
+ 233: 1337+7	5318  BE      	tloop:	cp (hl)
+ 234: 1344+7+5	5319  2001    		jr nz, notlf
+ 235: 1351+7	531B  71      		ld (hl), c
+ 236: 1358+6	531C  23      	notlf:	inc hl
+ 237: 1364+8+5	531D  10F9    		djnz tloop
+ 238: 1372+10	531F  C1      	nlfals:	pop bc			; restore record count
+ 239:				
+ 240:				;; Write
+ 241: 1382+4	5320  79      		ld a, c
+ 242: 1386+4	5321  B0      		or b			; last record?
+ 243: 1390+11	5322  C5      		push bc			; save record count
+ 244: 1401+10	5323  010001  		ld bc, 0100h		; byte count
+ 245: 1411+7+5	5326  2007    		jr nz, notlst
+ 246: 1418+4	5328  47      		ld b, a
+ 247: 1422+13	5329  3AD055  		ld a, (dcb+8)
+ 248: 1435+4	532C  4F      		ld c, a
+ 249: 1439+4	532D  0D      		dec c			; EOF offset 0: write 256 bytes
+ 250: 1443+6	532E  03      		inc bc
+ 251:     -	532F          	notlst:
+ 252: 1449+7	532F  3E05    		ld a, WRITEFILE		; send write command
+ 253: 1456+11	5331  D3C4    		out (COMMAND2), a
+ 254: 1467+17	5333  CDC553  		call wait
+ 255: 1484+4	5336  79      		ld a, c			; send size to interface
+ 256: 1488+11	5337  D3C3    		out (SIZE2), a
+ 257: 1499+4	5339  47      		ld b, a
+ 258: 1503+7	533A  0EC2    		ld c, DATA2
+ 259: 1510+10	533C  21E855  		ld hl, iobuf
+ 260: 1520+16+5	533F  EDB3    		otir			; send data
+ 261: 1536+17	5341  CDC553  		call wait		; wait until it's written
+ 262: 1553+10	5344  C1      		pop bc
+ 263: 1563+4	5345  79      	wrok:	ld a, c
+ 264: 1567+4	5346  B0      		or b
+ 265: 1571+7+5	5347  20AC    		jr nz, loop
+ 266:				
+ 267:				;; Close
+ 268: 1578+7	5349  3E06    	closit: ld a, CLOSEFILE		; send close file
+ 269: 1585+11	534B  D3C4    		out (COMMAND2), a
+ 270: 1596+17	534D  CDC553  		call wait
+ 271: 1613+10	5350  11C855  	closok:	ld de, dcb
+ 272: 1623+17	5353  CD0C52  	        call close              ; close the TRS-80 file
+ 273: 1640+7+5	5356  2807    	        jr z, cls2ok
+ 274: 1647+4	5358  4F      		ld c, a
+ 275: 1651+17	5359  CD1852  	        call error              ; oops, i/o error
+ 276: 1668+10	535C  C32052  	        jp abort
+ 277: 1678+10	535F  210000  	cls2ok: ld hl, 0	        ; all is well
+ 278: 1688+10	5362  C31C52  		jp exit
+ 279:				
+ 280:				;; Usage message
+ 281: 1698+10	5365  21EC53  	usage:  ld hl, intro            ; what this program is all about
+ 282: 1708+17	5368  CD2452  	        call dsply
+ 283: 1725+10	536B  212A54  	        ld hl, usager           ; error message and exit
+ 284: 1735+17	536E  CD2452  	        call dsply
+ 285: 1752+10	5371  C32052  	        jp abort
+ 286:				
+ 287:				;; interface error
+ 288: 1762+10	5374  215254  	uerror: ld hl, error_m		; display error prefix
+ 289: 1772+17	5377  CD2452  		call dsply
+ 290: 1789+11	537A  DBC5    		in a, (ERROR2)		; get error number
+ 291: 1800+7	537C  FE15    		cp 15h			; check error number
+ 292: 1807+7+5	537E  3801    		jr c, uerrok
+ 293: 1814+4	5380  97      		sub a			; A=0 unknown error
+ 294: 1818+4	5381  6F      	uerrok:	ld l, a
+ 295: 1822+7	5382  2600    		ld h, 00h
+ 296: 1829+11	5384  29      		add hl, hl		; pointers are 2 bytes
+ 297: 1840+10	5385  119E55  		ld de, error_table
+ 298: 1850+11	5388  19      		add hl, de		; hl points to the pointer
+ 299: 1861+7	5389  7E      		ld a, (hl)
+ 300: 1868+6	538A  23      		inc hl
+ 301: 1874+7	538B  66      		ld h, (hl)
+ 302: 1881+4	538C  6F      		ld l, a			; hl points to the string
+ 303: 1885+17	538D  CD2452  		call dsply
+ 304: 1902+10	5390  C32052  	        jp abort
+ 305:				
+ 306:				;; Display message in HL.  03h terminate, 0dh newline and terminate.
+ 307: 1912+10	5393  111D40  	dsply5:	ld de, dodcb$
+ 308: 1922+11	5396  E5      		push hl
+ 309: 1933+7	5397  7E      	dsply0:	ld a, (hl)
+ 310: 1940+7	5398  FE03    		cp 03h
+ 311: 1947+7+5	539A  280A    		jr z, dsply1
+ 312: 1954+11	539C  F5      		push af
+ 313: 1965+17	539D  CD1B00  		call @put
+ 314: 1982+10	53A0  F1      		pop af
+ 315: 1992+6	53A1  23      		inc hl
+ 316: 1998+7	53A2  FE0D    		cp 0dh
+ 317: 2005+7+5	53A4  20F1    		jr nz, dsply0
+ 318: 2012+10	53A6  E1      	dsply1:	pop hl
+ 319: 2022+10	53A7  C9      		ret
+ 320:				
+ 321:				;; Convert (NUL terminated) string in HL to lower case.
+ 322: 2032+11	53A8  E5      	lcconv:	push hl
+ 323: 2043+4	53A9  54      		ld d, h
+ 324: 2047+4	53AA  5D      		ld e, l
+ 325: 2051+7	53AB  7E      	lcloop:	ld a, (hl)
+ 326: 2058+7	53AC  FE5B    		cp 5bh			; use '[' or uparrow as escape
+ 327: 2065+7+5	53AE  2004    		jr nz, lconv1
+ 328: 2072+6	53B0  23      		inc hl
+ 329: 2078+7	53B1  7E      		ld a, (hl)
+ 330: 2085+12	53B2  1809    		jr lconv2		; char after esc: don't convert
+ 331: 2097+7	53B4  D641    	lconv1:	sub 'A'
+ 332: 2104+7	53B6  FE1A    		cp 26
+ 333: 2111+7	53B8  7E      		ld a, (hl)
+ 334: 2118+7+5	53B9  3002    		jr nc, lconv2
+ 335: 2125+7	53BB  F620    		or 20h			; convert to lower case
+ 336: 2132+7	53BD  12      	lconv2:	ld (de), a
+ 337: 2139+6	53BE  23      		inc hl
+ 338: 2145+6	53BF  13      		inc de
+ 339: 2151+4	53C0  B7      		or a			; NUL terminator?
+ 340: 2155+7+5	53C1  20E8    		jr nz, lcloop
+ 341: 2162+10	53C3  E1      		pop hl
+ 342: 2172+10	53C4  C9      		ret
+ 343:				
+ 344:				;;; wait until the interface is ready
+ 345: 2182+19	53C5  E3      	wait:	ex (sp),hl
+ 346: 2201+19	53C6  E3      		ex (sp),hl			; small delay to settle the controller
+ 347: 2220+11	53C7  DBCF    	wait1:	in a, (STATUS)
+ 348: 2231+4	53C9  07      		rlca
+ 349: 2235+7+5	53CA  38FB    		jr c, wait1
+ 350: 2242+11	53CC  DBCF    		in a, (STATUS)			; read status again
+ 351: 2253+7	53CE  E601    		and 01h				; nz = error
+ 352: 2260+7+5	53D0  20A2    		jr nz, uerror
+ 353: 2267+10	53D2  C9      		ret
+ 354:				
+ 355:					
+ 356:				
+ 357:				;; EOF handling differs between TRS-80 DOSes:
+ 358:				;;  For TRSDOS 2.3 and LDOS, word (dcb+12) contains the number of
+ 359:				;;  256 byte records in the file, byte (dcb+8) contains the EOF
+ 360:				;;  offset in the last record (0=256).
+ 361:				;;  For NEWDOS/80 and TRSDOS 1.3, byte (dcb+8) and word (dcb+12) 
+ 362:				;;  form a 24 bit number containing the relative byte address of EOF.
+ 363:				;;  Thus (dcb+12) differs by one if the file length is not a
+ 364:				;;  multiple of 256 bytes.  DOSPLUS also uses this convention,
+ 365:				;;  and NEWDOS 2.1 probably does too (not checked).
+ 366:				
+ 367:				; Returns number of (partial or full) records in BC, destroys A
+ 368:     -	53D3          	getern5:
+ 369: 2277+20	53D3  ED4BD455		ld bc, (dcb+12)
+ 370: 2297+13	53D7  3A2C52  		ld a, (ernldos)         ; get ERN convention
+ 371: 2310+4	53DA  A7      		and a
+ 372: 2314+5+6	53DB  C0      		ret nz                  ; done if TRSDOS 2.3/LDOS convention
+ 373: 2319+13	53DC  3AD055  		ld a, (dcb+8)		; length multiple of 256 bytes?
+ 374: 2332+4	53DF  A7      		and a
+ 375: 2336+5+6	53E0  C8      		ret z                   ; done if so
+ 376: 2341+6	53E1  03      		inc bc			; no, # of records = last full record + 1
+ 377: 2347+10	53E2  C9      		ret	
+ 378:				
+ 379:				; All Model 4 mode operating systems should be TRSDOS/LS-DOS 6.x compatible
+ 380:     -	53E3          	getern6:
+ 381: 2357+20	53E3  ED4BD455		ld bc, (dcb+12)
+ 382: 2377+10	53E7  C9      		ret
+ 383:				
+ 384:     -	53E8  00      	lflag:	defb 0
+ 385:     -	53E9  00      	nflag:	defb 0
+ 386:     -	53EA  0000    	lfname:	defw 0
+ 387:				
+ 388:     -	53EC  4558504F	intro: defb 'EXPORT2 '
+	              52543220
+ 389:				
+ 390:				       INCLUDE VERSION.Z80
+**** VERSION.Z80 ****
+   1:				; Utilities Common Version number
+   2:				
+   3:     -	53F4  322E3034	            DB      '2.04'
+   4:				
+   5:				; Includes machine name in the version message
+   6:				; Can't find another way of doing this
+   7:				
+   8:     -	0000          	IF CPM
+ 391:				ENDIF
+ 392:				
+ 393:     -	53F8  202D2045	       defb ' - Export to SD for the FreHD Hard Drive Emulator', 0dh
+	              78706F72
+	              7420746F
+	              20534420
+	              666F7220
+	              74686520
+	              46726548
+	              44204861
+	              72642044
+	              72697665
+	              20456D75
+	              6C61746F
+	              720D
+ 394:     -	542A  55736167	usager: defb 'Usage: EXPORT2 [-lne] fromfile [sdfile]', 0dh
+	              653A2045
+	              58504F52
+	              5432205B
+	              2D6C6E65
+	              5D206672
+	              6F6D6669
+	              6C65205B
+	              73646669
+	              6C655D0D
+ 395:				
+ 396:     -	5452  4572726F	error_m: defb 'Error: ', 03h
+	              723A2003
+ 397:     -	545A  556E6B6E	fr_unknown: defb 'Unknown error', 0dh			; 0
+	              6F776E20
+	              6572726F
+	              720D
+ 398:     -	5468  4469736B	fr_disk_err: defb 'Disk error', 0dh			; 1
+	              20657272
+	              6F720D
+ 399:     -	5473  496E7465	fr_int_err: defb 'Internal error', 0dh			; 2
+	              726E616C
+	              20657272
+	              6F720D
+ 400:     -	5482  44726976	fr_not_ready: defb 'Drive not ready', 0dh 		; 3
+	              65206E6F
+	              74207265
+	              6164790D
+ 401:     -	5492  46696C65	fr_no_file: defb 'File not found', 0dh	  		; 4
+	              206E6F74
+	              20666F75
+	              6E640D
+ 402:     -	54A1  50617468	fr_no_path: defb 'Path not found', 0dh	  		; 5
+	              206E6F74
+	              20666F75
+	              6E640D
+ 403:     -	54B0  496E7661	fr_invalid_name: defb 'Invalid pathname', 0dh		; 6
+	              6C696420
+	              70617468
+	              6E616D65
+	              0D
+ 404:     -	54C1  41636365	fr_denied: defb 'Access denied', 0dh			; 7
+	              73732064
+	              656E6965
+	              640D
+ 405:     -	54CF  46696C65	fr_exist: defb 'File exists', 0dh			; 8
+	              20657869
+	              7374730D
+ 406:     -	54DB  46696C65	fr_invalid_obj:	defb 'File/dir object invalid', 0dh	; 9
+	              2F646972
+	              206F626A
+	              65637420
+	              696E7661
+	              6C69640D
+ 407:     -	54F3  57726974	fr_write_protected: defb 'Write protected', 0dh		; 10
+	              65207072
+	              6F746563
+	              7465640D
+ 408:     -	5503  496E7661	fr_invalid_drive: defb 'Invalid drive', 0dh		; 11
+	              6C696420
+	              64726976
+	              650D
+ 409:     -	5511  566F6C75	fr_not_enabled:	defb 'Volume not mounted', 0dh		; 12
+	              6D65206E
+	              6F74206D
+	              6F756E74
+	              65640D
+ 410:     -	5524  4E6F2046	fr_no_fs: defb 'No FAT fs found', 0dh			; 13
+	              41542066
+	              7320666F
+	              756E640D
+ 411:     -	5534  6D6B6673	fr_mkfs_aborted: defb 'mkfs aborted', 0dh		; 14
+	              2061626F
+	              72746564
+	              0D
+ 412:     -	5541  54696D65	fr_timeout: defb 'Timeout detected', 0dh		; 15
+	              6F757420
+	              64657465
+	              63746564
+	              0D
+ 413:     -	5552  46696C65	fr_locked: defb 'File locked', 0dh			; 16
+	              206C6F63
+	              6B65640D
+ 414:     -	555E  4E6F7420	fr_not_enough_core: defb 'Not enough core', 0dh		; 17
+	              656E6F75
+	              67682063
+	              6F72650D
+ 415:     -	556E  546F6F20	fr_too_many_open_files:	defb 'Too many open files', 0dh ; 18
+	              6D616E79
+	              206F7065
+	              6E206669
+	              6C65730D
+ 416:     -	5582  496E7661	fr_invalid_param: defb 'Invalid parameter', 0dh		; 19
+	              6C696420
+	              70617261
+	              6D657465
+	              720D
+ 417:     -	5594  4469736B	fr_disk_full: defb 'Disk full', 0dh			; 20
+	              2066756C
+	              6C0D
+ 418:     -	559E  5A546854	error_table: defw fr_unknown, fr_disk_err, fr_int_err, fr_not_ready, fr_no_file
+	              73548254
+	              9254
+ 419:     -	55A8  A154B054		defw fr_no_path, fr_invalid_name, fr_denied, fr_exist, fr_invalid_obj
+	              C154CF54
+	              DB54
+ 420:     -	55B2  F3540355		defw fr_write_protected, fr_invalid_drive, fr_not_enabled
+	              1155
+ 421:     -	55B8  24553455		defw fr_no_fs, fr_mkfs_aborted, fr_timeout, fr_locked
+	              41555255
+ 422:     -	55C0  5E556E55		defw fr_not_enough_core, fr_too_many_open_files, fr_invalid_param
+	              8255
+ 423:     -	55C6  9455    		defw fr_disk_full
+ 424:					
+ 425:     -	55C8          	dcb:	defs 32  ; 32 bytes for MultiDOS
+ 426:				
+ 427:     -	55E8          	iobuf:	defs 256
+ 428:				        
+ 429:     -	522D          	        end export
+
+
+
+Statistics:
+
+     4	passes
+     0	jr promotions
+   115	symbols
+   968	bytes
+
+
+
+Symbol Table:
+
+@abort         =4030      16432
+@close         =4428      17448
+@error         =4409      17417
+@exit          =402D      16429
+@fspec         =441C      17436
+@init          =4420      17440
+@open          =4424      17444
+@put           =1B        27
+@read          =4436      17462
+@write         =4439      17465
+CLOSEFILE      =06        6
+COMMAND2       =C4        196
+CPM            =00        0
+DATA2          =C2        194
+ERROR2         =C5        197
+FA_CREATE_ALWAYS=08        8
+FA_CREATE_NEW  =04        4
+FA_OPEN_ALWAYS =10        16
+FA_OPEN_EXISTING=00        0
+FA_READ        =01        1
+FA_WRITE       =02        2
+OPENFILE       =03        3
+READFILE       =04        4
+SIZE2          =C3        195
+STATUS         =CF        207
+TRSDOS         =01        1
+WRITEFILE      =05        5
+abort           5220      21024
+close           520C      21004
+closit          5349      21321
+closok          5350      21328
+cls2ok          535F      21343
+dcb             55C8      21960
+dodcb$         =401D      16413
+dsply           5224      21028
+dsply0          5397      21399
+dsply1          53A6      21414
+dsply5          5393      21395
+ernldos         522C      21036
+error           5218      21016
+error_m         5452      21586
+error_table     559E      21918
+exit            521C      21020
+export          522D      21037
+flag0           5232      21042
+flag1           523D      21053
+flag2           5264      21092
+flag3           5243      21059
+flagl           524F      21071
+flagn           525A      21082
+fr_denied       54C1      21697
+fr_disk_err     5468      21608
+fr_disk_full    5594      21908
+fr_exist        54CF      21711
+fr_int_err      5473      21619
+fr_invalid_drive 5503      21763
+fr_invalid_name 54B0      21680
+fr_invalid_obj  54DB      21723
+fr_invalid_param 5582      21890
+fr_locked       5552      21842
+fr_mkfs_aborted 5534      21812
+fr_no_file      5492      21650
+fr_no_fs        5524      21796
+fr_no_path      54A1      21665
+fr_not_enabled  5511      21777
+fr_not_enough_core 555E      21854
+fr_not_ready    5482      21634
+fr_timeout      5541      21825
+fr_too_many_open_files 556E      21870
+fr_unknown      545A      21594
+fr_write_protected 54F3      21747
+fromf           526D      21101
+fspec           5200      20992
+getern          5228      21032
+getern5         53D3      21459
+getern6         53E3      21475
+gotu            52AE      21166
+init            5204      20996
+intro           53EC      21484
+iobuf           55E8      21992
+lcconv          53A8      21416
+lcloop          53AB      21419
+lconv1          53B4      21428
+lconv2          53BD      21437
+lflag           53E8      21480
+lfname          53EA      21482
+loop            52F5      21237
+lrlerr         =2A        42
+nflag           53E9      21481
+nlfals          531F      21279
+notlf           531C      21276
+notlst          532F      21295
+notsl           52A7      21159
+open            5208      21000
+opn2ok          52F2      21234
+rdok            5308      21256
+reed            5210      21008
+stlen1          52D5      21205
+stlen2          52DC      21212
+tloop           5318      21272
+uerrok          5381      21377
+uerror          5374      21364
+uname           52C7      21191
+unix0           5279      21113
+unix1           5283      21123
+unix2           5288      21128
+usage           5365      21349
+usager          542A      21546
+usetrs          5292      21138
+ut1             5298      21144
+utdone          52AC      21164
+wait            53C5      21445
+wait1           53C7      21447
+write           5214      21012
+wrok            5345      21317

@@ -1,0 +1,1031 @@
+From 746859771c7baa1bcbece2fc761dfba423cfa68c Mon Sep 17 00:00:00 2001
+From: Tim Halloran <hallorant@gmail.com>
+Date: Sun, 6 Feb 2022 20:44:09 -0500
+Subject: [PATCH] Adds FreHD utility support for MULTIDOS. This is done using a
+ set of _multidos.z80 files and a Makefile_multidos. The MULTIDOS makefile
+ uses http://48k.ca/zmac.html.
+
+A paramater parsing bug was found in import2core.z80 that has been fixed.  The
+flag letter was ORed with 20H to make them lowercase, but the checks were made
+against uppercase constants (e.g., 'N') not lowercase as this would require
+(e.g., 'n').
+---
+ sw/z80/utils/.gitignore           |   3 +
+ sw/z80/utils/Makefile_multidos    |  29 ++
+ sw/z80/utils/export2_multidos.z80 | 428 ++++++++++++++++++++++++++++++
+ sw/z80/utils/fupdate_multidos.z80 | 300 +++++++++++++++++++++
+ sw/z80/utils/import2_multidos.z80 | 104 ++++++++
+ sw/z80/utils/import2core.z80      |  12 +-
+ sw/z80/utils/vhdutl_multidos.z80  |  62 +++++
+ 7 files changed, 932 insertions(+), 6 deletions(-)
+ create mode 100644 sw/z80/utils/.gitignore
+ create mode 100644 sw/z80/utils/Makefile_multidos
+ create mode 100644 sw/z80/utils/export2_multidos.z80
+ create mode 100644 sw/z80/utils/fupdate_multidos.z80
+ create mode 100644 sw/z80/utils/import2_multidos.z80
+ create mode 100644 sw/z80/utils/vhdutl_multidos.z80
+
+diff --git a/sw/z80/utils/.gitignore b/sw/z80/utils/.gitignore
+new file mode 100644
+index 0000000..fab19c3
+--- /dev/null
++++ b/sw/z80/utils/.gitignore
+@@ -0,0 +1,3 @@
++*.cmd
++*.hex
++*.lst
+diff --git a/sw/z80/utils/Makefile_multidos b/sw/z80/utils/Makefile_multidos
+new file mode 100644
+index 0000000..0f075db
+--- /dev/null
++++ b/sw/z80/utils/Makefile_multidos
+@@ -0,0 +1,29 @@
++# Builds MultiDOS versions of the FreHD utilties:
++#  export2.cmd
++#  import2.cmd
++#  vhdutl.cmd
++#  fupdate.cmd
++#
++# Please use zmac from http://48k.ca/zmac.html
++# Assumes Linux or, if on Windows, https://www.msys2.org/ or
++# https://www.cygwin.com/ enviroment is setup.
++
++ZMACFLAGS = --oo cmd,lst --od .
++RM = rm -f
++
++all: export2.cmd import2.cmd vhdutl.cmd fupdate.cmd
++
++export2.cmd: *.z80
++	zmac $(ZMACFLAGS) export2_multidos.z80 -o export2.cmd -o export2.lst
++
++import2.cmd: *.z80
++	zmac $(ZMACFLAGS) import2_multidos.z80 -o import2.cmd -o import2.lst
++
++vhdutl.cmd: *.z80
++	zmac $(ZMACFLAGS) vhdutl_multidos.z80 -o vhdutl.cmd -o vhdutl.lst
++
++fupdate.cmd: *.z80
++	zmac $(ZMACFLAGS) fupdate_multidos.z80 -o fupdate.cmd -o fupdate.lst
++
++clean:
++	$(RM) *.cmd *.lst
+diff --git a/sw/z80/utils/export2_multidos.z80 b/sw/z80/utils/export2_multidos.z80
+new file mode 100644
+index 0000000..41aaa00
+--- /dev/null
++++ b/sw/z80/utils/export2_multidos.z80
+@@ -0,0 +1,428 @@
++;; export2.z80
++;; MultiDOS Version
++;;
++;; Timothy Mann, 8/24/97
++;; Frederic Vecoven, 4/15/13 : adapted for trs_hard emulator
++;; Tim Halloran (2022) : migrated from LDOS code
++;;
++;;	Copyright (c) 1997, Timothy Mann
++;;
++;;	This software may be copied, modified, and used for any
++;;	purpose without fee, provided that (1) the above copyright
++;;	notice is retained, and (2) modified versions are clearly
++;;	marked as having been modified, with the modifier's name and
++;;	the date included.  
++;;
++;; Use hard drive emulator commands to copy a file from TRS-80 to FAT
++;; Usage: EXPORT2 [-lne] fromfile [unixfile]
++;; Parameter -l will convert the Unix file to lower case.
++;;  (Needed for NEWDOS/80.  They insist on uppercasing the command line.)
++;; If the -n parameter is given, each carriage return ('\r')
++;;  in the TRS-80 file is converted to a newline ('\n') in the Unix file.
++;; The program tries to determine what DOS it is running on and use
++;;  the correct FCB end of file convention, but this works only on
++;;  TRSDOS, LDOS, and NEWDOS/80.  For other DOSes that use the
++;;  NEWDOS/80 convention (such as DOSPLUS), give the -e paramter.
++;; If the unixfile parameter is omitted, the fromfile parameter is used,
++;;  with '/' changed to '.'.
++
++; Assembler Control Flags
++
++CPM         EQU     0
++TRSDOS      EQU     1
++
++;; MultiDOS addresses
++@fspec  equ 441ch ; MultiDOS @FLIK
++@init   equ 4420h
++@open   equ 4424h
++@close  equ 4428h
++@read   equ 4436h
++@write  equ 4439h
++@error  equ 4409h
++@exit   equ 402dh ; MultiDOS @TODOS
++@abort  equ 4030h
++@put	equ 001bh ; MultiDOS @PUTBT
++dodcb$	equ 401dh ; MultiDOS @VODCB
++
++;; Model 4 only: file init or open with wrong LRL.  Can be ignored.
++lrlerr  equ 42
++
++	org 5200h
++
++;; MultiDOS jump table
++fspec:	call @fspec
++	ret
++init:	call @init
++	ret
++open:	call @open
++	ret
++close:	call @close
++	ret
++reed:	call @read
++	ret
++write:	call @write
++	ret
++error:	call @error
++	ret
++exit:	call @exit
++	ret
++abort:	call @abort
++	ret
++dsply:	call dsply5
++	ret
++getern:	call getern5
++	ret
++
++; Nonzero for LDOS ern convention
++ernldos: db 1
++
++;; Interface defines
++DATA2	  equ 0c2h
++SIZE2     equ 0c3h
++COMMAND2  equ 0c4h
++ERROR2    equ 0c5h
++STATUS    equ 0cfh
++OPENFILE  equ 03h
++READFILE  equ 04h
++WRITEFILE equ 05h
++CLOSEFILE equ 06h
++
++;; FatFS flags
++FA_OPEN_EXISTING equ 00h
++FA_READ          equ 01h
++FA_WRITE         equ 02h
++FA_CREATE_NEW    equ 04h
++FA_CREATE_ALWAYS equ 08h
++FA_OPEN_ALWAYS   equ 10h
++
++export:
++        ld a,0 ; EOF handling
++        ld (ernldos), a
++
++flag0:	ld a, (hl)		; look for flags
++	cp ' '
++	jp c, usage		; error if line ends here
++	jr nz, flag1
++	inc hl
++	jr flag0
++flag1:	cp '-'
++	jr nz, fromf
++	inc hl
++	ld a, (hl)
++flag3:	or 20h			; make the flag character lowercase
++	cp 'e'
++	jr nz, flagl
++	sub a
++	ld (ernldos), a
++	jr flag2
++flagl:	cp 'l'
++	jr nz, flagn		; check for next flag
++	ld a, 1
++	ld (lflag), a
++	jr flag2
++flagn:	cp 'n'
++	jp nz, usage		; unknown flag
++	ld a, 1
++	ld (nflag), a
++flag2:	inc hl
++	ld a, (hl)
++	cp ' '
++	jr nz, flag3		; another flag follows
++	inc hl
++	jr flag0
++
++fromf:	ld de, dcb              ; ready to get LDOS filename from (HL)
++	ld (lfname), hl		; save if needed to default Unix name
++        call fspec
++        jp nz, usage
++
++unix0:	ld a, (hl)              ; scan over Unix filename
++        cp ' '		        ; first skip spaces
++	jr c, usetrs            ; if no Unix name, use translated TRS name
++        jr nz, unix1
++        inc hl
++	jr unix0
++unix1:	ld de, iobuf+1		; copy Unix filename
++	ld a, ' '
++unix2:	cp (hl)
++	ldi
++	jr c, unix2
++	dec de
++	sub a
++	ld (de), a              ; NUL terminate Unix name
++        jr gotu
++
++usetrs: ld hl, (lfname)		; translate TRS-80 name to Unix
++	ld de, iobuf+1
++ut1:	ld a, (hl)
++	cp ':'			; drivespec?
++	jr z, utdone		; done if so
++	cp ' '+1		; end of line?
++	jr c, utdone		; done if so
++	cp '/'			; change '/' to '.' for extension
++	jr nz, notsl
++	ld a, '.'
++notsl:	ld (de), a
++	inc hl
++	inc de
++	jr ut1
++utdone: sub a			; NUL-terminate Unix name
++	ld (de), a
++
++gotu:   ld hl, iobuf
++        ld de, dcb
++        ld b, 0
++        call open               ; open the TRS-80 file
++        pop hl
++        jr z, uname
++	cp lrlerr
++	jr z, uname
++	ld c, a
++        call error
++        jp abort
++
++;;; open the file on the interface side
++;;; 1) issue command OPENFILE to interface
++;;; 2) compute size = flags (1) + strlen(path) + 1 (null terminator)
++;;; 3) send size to interface
++;;; 4) send the bytes to interface
++;;; 5) wait for CIP to clear
++uname:	ld hl, iobuf+1			; path
++	ld a, (lflag)
++	or a
++	call nz, lcconv			; convert filename to lower case
++
++	ld b, 2				; length = 2 (flag + null-terminator)
++	ld a, 0				; null-terminator
++stlen1:	cp (hl)
++	jr z, stlen2
++	inc b				; found a character
++	inc hl
++	jr stlen1
++stlen2:	ld a, OPENFILE
++	out (COMMAND2), a		; send OPENFILE command
++	call wait
++	ld a, b
++	out (SIZE2), a			; send SIZE2
++	ld c, DATA2
++	ld hl, iobuf
++	ld (hl), FA_CREATE_ALWAYS|FA_WRITE
++	otir
++	call wait
++;; Read
++opn2ok:	call getern		; count down records in bc
++
++loop:	ld de, dcb
++	call reed               ; read 256 bytes from file
++        jr z, rdok		; got a full 256 bytes
++	cp 28			; eof?
++	jr z, closit		; yes, OK
++	ld c, a
++        call error              ; oops, i/o error
++        jp abort
++rdok:	dec bc
++
++;; Translate
++	push bc			; save record count
++        ld a, (nflag)		; check for NL feature
++	and a
++	jr z, nlfals
++	ld hl, iobuf
++	ld a, 0dh
++	ld bc, 000ah		; b := 0, c := 0ah
++tloop:	cp (hl)
++	jr nz, notlf
++	ld (hl), c
++notlf:	inc hl
++	djnz tloop
++nlfals:	pop bc			; restore record count
++
++;; Write
++	ld a, c
++	or b			; last record?
++	push bc			; save record count
++	ld bc, 0100h		; byte count
++	jr nz, notlst
++	ld b, a
++	ld a, (dcb+8)
++	ld c, a
++	dec c			; EOF offset 0: write 256 bytes
++	inc bc
++notlst:
++	ld a, WRITEFILE		; send write command
++	out (COMMAND2), a
++	call wait
++	ld a, c			; send size to interface
++	out (SIZE2), a
++	ld b, a
++	ld c, DATA2
++	ld hl, iobuf
++	otir			; send data
++	call wait		; wait until it's written
++	pop bc
++wrok:	ld a, c
++	or b
++	jr nz, loop
++
++;; Close
++closit: ld a, CLOSEFILE		; send close file
++	out (COMMAND2), a
++	call wait
++closok:	ld de, dcb
++        call close              ; close the TRS-80 file
++        jr z, cls2ok
++	ld c, a
++        call error              ; oops, i/o error
++        jp abort
++cls2ok: ld hl, 0	        ; all is well
++	jp exit
++
++;; Usage message
++usage:  ld hl, intro            ; what this program is all about
++        call dsply
++        ld hl, usager           ; error message and exit
++        call dsply
++        jp abort
++
++;; interface error
++uerror: ld hl, error_m		; display error prefix
++	call dsply
++	in a, (ERROR2)		; get error number
++	cp 15h			; check error number
++	jr c, uerrok
++	sub a			; A=0 unknown error
++uerrok:	ld l, a
++	ld h, 00h
++	add hl, hl		; pointers are 2 bytes
++	ld de, error_table
++	add hl, de		; hl points to the pointer
++	ld a, (hl)
++	inc hl
++	ld h, (hl)
++	ld l, a			; hl points to the string
++	call dsply
++        jp abort
++
++;; Display message in HL.  03h terminate, 0dh newline and terminate.
++dsply5:	ld de, dodcb$
++	push hl
++dsply0:	ld a, (hl)
++	cp 03h
++	jr z, dsply1
++	push af
++	call @put
++	pop af
++	inc hl
++	cp 0dh
++	jr nz, dsply0
++dsply1:	pop hl
++	ret
++
++;; Convert (NUL terminated) string in HL to lower case.
++lcconv:	push hl
++	ld d, h
++	ld e, l
++lcloop:	ld a, (hl)
++	cp 5bh			; use '[' or uparrow as escape
++	jr nz, lconv1
++	inc hl
++	ld a, (hl)
++	jr lconv2		; char after esc: don't convert
++lconv1:	sub 'A'
++	cp 26
++	ld a, (hl)
++	jr nc, lconv2
++	or 20h			; convert to lower case
++lconv2:	ld (de), a
++	inc hl
++	inc de
++	or a			; NUL terminator?
++	jr nz, lcloop
++	pop hl
++	ret
++
++;;; wait until the interface is ready
++wait:	ex (sp),hl
++	ex (sp),hl			; small delay to settle the controller
++wait1:	in a, (STATUS)
++	rlca
++	jr c, wait1
++	in a, (STATUS)			; read status again
++	and 01h				; nz = error
++	jr nz, uerror
++	ret
++
++	
++
++;; EOF handling differs between TRS-80 DOSes:
++;;  For TRSDOS 2.3 and LDOS, word (dcb+12) contains the number of
++;;  256 byte records in the file, byte (dcb+8) contains the EOF
++;;  offset in the last record (0=256).
++;;  For NEWDOS/80 and TRSDOS 1.3, byte (dcb+8) and word (dcb+12) 
++;;  form a 24 bit number containing the relative byte address of EOF.
++;;  Thus (dcb+12) differs by one if the file length is not a
++;;  multiple of 256 bytes.  DOSPLUS also uses this convention,
++;;  and NEWDOS 2.1 probably does too (not checked).
++
++; Returns number of (partial or full) records in BC, destroys A
++getern5:
++	ld bc, (dcb+12)
++	ld a, (ernldos)         ; get ERN convention
++	and a
++	ret nz                  ; done if TRSDOS 2.3/LDOS convention
++	ld a, (dcb+8)		; length multiple of 256 bytes?
++	and a
++	ret z                   ; done if so
++	inc bc			; no, # of records = last full record + 1
++	ret	
++
++; All Model 4 mode operating systems should be TRSDOS/LS-DOS 6.x compatible
++getern6:
++	ld bc, (dcb+12)
++	ret
++
++lflag:	defb 0
++nflag:	defb 0
++lfname:	defw 0
++
++intro: defb 'EXPORT2 '
++
++       INCLUDE VERSION.Z80
++
++       defb ' - Export to SD for the FreHD Hard Drive Emulator', 0dh
++usager: defb 'Usage: EXPORT2 [-lne] fromfile [sdfile]', 0dh
++
++error_m: defb 'Error: ', 03h
++fr_unknown: defb 'Unknown error', 0dh			; 0
++fr_disk_err: defb 'Disk error', 0dh			; 1
++fr_int_err: defb 'Internal error', 0dh			; 2
++fr_not_ready: defb 'Drive not ready', 0dh 		; 3
++fr_no_file: defb 'File not found', 0dh	  		; 4
++fr_no_path: defb 'Path not found', 0dh	  		; 5
++fr_invalid_name: defb 'Invalid pathname', 0dh		; 6
++fr_denied: defb 'Access denied', 0dh			; 7
++fr_exist: defb 'File exists', 0dh			; 8
++fr_invalid_obj:	defb 'File/dir object invalid', 0dh	; 9
++fr_write_protected: defb 'Write protected', 0dh		; 10
++fr_invalid_drive: defb 'Invalid drive', 0dh		; 11
++fr_not_enabled:	defb 'Volume not mounted', 0dh		; 12
++fr_no_fs: defb 'No FAT fs found', 0dh			; 13
++fr_mkfs_aborted: defb 'mkfs aborted', 0dh		; 14
++fr_timeout: defb 'Timeout detected', 0dh		; 15
++fr_locked: defb 'File locked', 0dh			; 16
++fr_not_enough_core: defb 'Not enough core', 0dh		; 17
++fr_too_many_open_files:	defb 'Too many open files', 0dh ; 18
++fr_invalid_param: defb 'Invalid parameter', 0dh		; 19
++fr_disk_full: defb 'Disk full', 0dh			; 20
++error_table: defw fr_unknown, fr_disk_err, fr_int_err, fr_not_ready, fr_no_file
++	defw fr_no_path, fr_invalid_name, fr_denied, fr_exist, fr_invalid_obj
++	defw fr_write_protected, fr_invalid_drive, fr_not_enabled
++	defw fr_no_fs, fr_mkfs_aborted, fr_timeout, fr_locked
++	defw fr_not_enough_core, fr_too_many_open_files, fr_invalid_param
++	defw fr_disk_full
++	
++dcb:	defs 32  ; 32 bytes for MultiDOS
++
++iobuf:	defs 256
++        
++        end export
+diff --git a/sw/z80/utils/fupdate_multidos.z80 b/sw/z80/utils/fupdate_multidos.z80
+new file mode 100644
+index 0000000..26079de
+--- /dev/null
++++ b/sw/z80/utils/fupdate_multidos.z80
+@@ -0,0 +1,300 @@
++;; fupdate.z80
++;; MultiDOS version
++;;
++;; Frederic Vecoven, 4/15/13
++;; Tim Halloran (2022) - migrated from LDOS code
++;;
++;; Usage: FUPDATE fromfile
++;;
++;; FUPDATE will put the hard drive emulator in bootloader mode, and send
++;; the HEX file using the TRS80.
++;;
++
++; Assembler Control Flags
++
++CPM         EQU     0
++TRSDOS      EQU     1
++
++;; MultiDOS addresses
++@fspec  equ 441ch ; MultiDOS @FLIK
++@init   equ 4420h
++@open   equ 4424h
++@close  equ 4428h
++@read   equ 4436h
++@write  equ 4439h
++@error  equ 4409h
++@exit   equ 402dh ; MultiDOS @TODOS
++@abort  equ 4030h
++@put	equ 001bh ; MultiDOS @PUTBT
++@dsp    equ 0033h ; MultiDOS @PUTVO
++@dsply  equ 4467h ; MultiDOS @VOD
++dodcb$	equ 401dh ; MultiDOS @VODCB
++
++;; Model 4 only: file init or open with wrong LRL.  Can be ignored.
++lrlerr  equ 42
++
++;; Interface defines
++DATA2	  equ 0c2h
++SIZE2     equ 0c3h
++COMMAND2  equ 0c4h
++STATUS    equ 0cfh
++READC5	  equ 0c5h  ; should read 4F in bootloader mode
++
++	org 5200h
++
++;; Jump tables for OS independence
++fspec:	call @fspec
++	ret
++init:	call @init
++	ret
++open:	call @open
++	ret
++close:	call @close
++	ret
++reed:	call @read
++	ret
++write:	call @write
++	ret
++error:	call @error
++	ret
++exit:	call @exit
++	ret
++abort:	call @abort
++	ret
++dsply:	call @dsply
++	ret
++dsp:    ld a,c	
++        call @dsp
++	ret
++getern:	call getern5
++	ret
++
++; Nonzero for LDOS ern convention
++ernldos: db 1
++
++fupdate:
++        ld a,0                  ; EOF handling
++        ld (ernldos), a
++
++fromf:	ld de, dcb              ; ready to get LDOS filename from (HL)
++        call fspec
++        jp nz, usage		; Z set if valid
++
++	ld hl, iobuf
++        ld de, dcb
++        ld b, 0
++        call open               ; open the TRS-80 file
++        jr z, opn2ok		; Z set if success
++	cp lrlerr
++	jr z, opn2ok
++	ld c, a			; A error number
++        call error
++        jp abort
++
++;; Enter bootloader
++opn2ok:	ld hl, welcom		; welcome message
++	call dsply
++
++	call inboot		; already in bootloader ?
++	jr z, opn4ok		; yes
++	
++	ld hl,boot2		; print "entering bootloader"
++	call dsply
++	ld a, 07h		; enter bootloader
++	out (COMMAND2), a
++	call wait
++	ld a, 15h
++	out (DATA2), a
++	ld a, 04h
++	out (DATA2), a
++	call wait
++	out (SIZE2), a		; flush eventual buffer in interface
++	call wait
++	call inboot		; check again
++	jr z, opn3ok		; OK !
++	ld hl, notboot		; didn't enter bootloader => error
++	call dsply
++	jp abort
++
++opn4ok:	ld hl,boot1		; "already in bootloader"
++	call dsply
++
++opn3ok: ld hl,eraseF		; we are in bootloader. Send ERASE.
++eloop:	ld a,0dh		; 0D ?
++	cp (hl)
++	jr z,ecom		; yes, commit erase
++	ld a,(hl)		; no, send byte
++	out (DATA2),a
++	inc hl
++	jp eloop
++ecom:	out (SIZE2),a		; commit
++	call wait
++	in a, (STATUS)
++	call disp_status
++
++
++;; Read
++	ld de, dcb
++	call getern		; count down records in bc
++
++loop:	ld de, dcb
++	ld hl, iobuf
++	call reed               ; read 256 bytes from file
++        jr z, rdok		; got a full 256 bytes
++	cp 28			; eof?
++	jr z, closok		; yes, OK
++	ld c, a
++        call error              ; oops, i/o error
++        jp abort
++rdok:	dec bc
++
++;; Process
++	push bc			; save record count
++
++	ld a, c
++	or b			; Z : last record 
++	ld b, 00h		; byte count
++	jr nz, tloop		; jump if not last record
++	ld a, (dcb+8)
++	ld b, a
++
++tloop:	ld a, 0dh		; 0D ?
++	cp (hl)
++	jr z, dolf
++	ld a, 0ah		; 0A ?
++	cp (hl)
++	jr nz,notlf
++dolf:	ld a, (flag)		; anything to commit ?
++	and a
++	jr z, nextb		; no
++	out (SIZE2), a		; yes
++	call wait		; wait until the interface is no more busy
++	in a, (STATUS)		; get status
++	call disp_status
++	xor a
++	ld (flag), a		; clear flag
++	jr nextb	
++notlf:	ld a, (hl)		; get one byte
++	out (DATA2), a		; send it to the interface
++	ld a, 1
++	ld (flag), a		; set flag
++nextb:	inc hl			; next byte
++	djnz tloop
++	
++	pop bc			; restore record count
++
++	ld a, c			; next chunk, if any
++	or b
++	jr nz, loop
++
++
++closok:	ld de, dcb
++        call close              ; close the TRS-80 file
++        jr z, cls2ok
++	ld c, a
++        call error              ; oops, i/o error
++        jp abort
++cls2ok: 
++        ld  hl,usager-1
++        call dsply
++ETX			EQU		3
++GETVER		EQU		0
++
++		include GETVERSION.Z80
++
++    ld hl,0
++    jp exit
++    
++;;; check if we are in bootloader mode (Z set if in bootloader)
++inboot: call wait
++	in a, (READC5)
++	in a, (READC5)
++	cp 04Fh
++	ret
++
++
++;;; wait until the interface is ready
++wait:	ex (sp),hl
++	ex (sp),hl			; small delay to settle the controller
++wait1:	in a, (STATUS)
++	rlca
++	jr c, wait1
++	ret
++
++;;; display A = status as a char
++disp_status:
++	push hl
++	and 07h
++	ld l, a
++	ld h, 00h
++	ld de, status_chars
++	add hl, de		; hl points to the char
++	ld c, (hl)
++	;push af
++	call dsp
++	;pop af
++	pop hl
++	ret
++
++	
++;; Usage message
++usage:  ld hl, intro            ; what this program is all about
++        call dsply
++        ld hl, usager           ; error message and exit
++        call dsply
++        jp abort
++
++;; EOF handling differs between TRS-80 DOSes:
++;;  For TRSDOS 2.3 and LDOS, word (dcb+12) contains the number of
++;;  256 byte records in the file, byte (dcb+8) contains the EOF
++;;  offset in the last record (0=256).
++;;  For NEWDOS/80 and TRSDOS 1.3, byte (dcb+8) and word (dcb+12) 
++;;  form a 24 bit number containing the relative byte address of EOF.
++;;  Thus (dcb+12) differs by one if the file length is not a
++;;  multiple of 256 bytes.  DOSPLUS also uses this convention,
++;;  and NEWDOS 2.1 probably does too (not checked).
++
++; Returns number of (partial or full) records in BC, destroys A
++getern5:
++	ld bc, (dcb+12)
++	ld a, (ernldos)         ; get ERN convention
++	and a
++	ret nz                  ; done if TRSDOS 2.3/LDOS convention
++	ld a, (dcb+8)		; length multiple of 256 bytes?
++	and a
++	ret z                   ; done if so
++	inc bc			; no, # of records = last full record + 1
++	ret	
++
++; All Model 4 mode operating systems should be TRSDOS/LS-DOS 6.x compatible
++getern6:
++	ld bc, (dcb+12)
++	ret
++
++
++intro: defb 'FUPDATE '
++
++       INCLUDE VERSION.Z80
++
++       defb ' - Firmware Update for the FreHD Hard Drive Emulator', 0dh
++usager: defb 'Usage: FUPDATE fromfile', 0dh
++welcom:	defb 'Hard Drive Emulator Firmware Update', 0dh
++notboot:defb 'Error: cannot enter bootloader mode', 0dh
++boot1:	defb 'Interface already in bootloader', 0dh
++boot2:	defb 'Entering bootloader...', 0dh
++status_chars:	defb '.'  ; ok
++	defb 'R'	  ; range error
++	defb 'I'	  ; ignored
++	defb 'C'	  ; checksum error
++	defb 'X'	  ; invalid
++	defb 'S'	  ; sequence error
++	defb 'P'	  ; protected
++	defb '?'	  ; n/a
++
++eraseF:	defb ':02FF00060000F9', 0Dh, 0h
++
++flag:	defb 0
++dcb:	defs 48			; 48 for Model III TRSDOS 1.3
++iobuf:	defs 256
++        
++        end fupdate
+diff --git a/sw/z80/utils/import2_multidos.z80 b/sw/z80/utils/import2_multidos.z80
+new file mode 100644
+index 0000000..5a5b5fb
+--- /dev/null
++++ b/sw/z80/utils/import2_multidos.z80
+@@ -0,0 +1,104 @@
++; IMPORT2 - Utility for the Vecoven Hard Drive Emulator
++; MultiDOS Version - Tim Halloran (2022) - migrated from LDOS code
++
++; TRS-80 IO Port Definitions
++
++DATA2       EQU     0C2H
++SIZE2       EQU     0C3H
++COMMAND2    EQU     0C4H
++ERROR2      EQU     0C5H
++STATUS      EQU     0CFH
++
++; Assembler Control Flags (expected by import2core.z80)
++
++CPM         EQU     0
++TRSDOS      EQU     1
++
++
++; Model I/III/4 MultiDOS addresses
++
++@DSPLY      EQU     4467h ; MultiDOS @VOD
++@DSP        EQU     0033h ; MultiDOS @PUTVO
++@PARAM      EQU     4454h
++@FSPEC      EQU     441Ch ; MultiDOS @FLIK
++@INIT       EQU     4420h
++@OPEN       EQU     4424h
++@CLOSE      EQU     4428h
++@READ       EQU     4436h
++@WRITE      EQU     4439h
++@ERROR      EQU     4409h
++@EXIT       EQU     402dh ; MultiDOS @TODOS
++@ABORT      EQU     4030h       
++@PUT        EQU     001bh ; MultiDOS @PUTBT
++DODCB$      EQU     401dh ; MultiDOS @VODCB
++
++            ORG     5200H
++            
++; MultiDOS jump table (expected by import2core.z80)
++
++DSPLY       CALL    @DSPLY
++            RET
++DSP         NOP
++            CALL    @DSP
++            RET
++SETUP       RET
++FSPEC       CALL    @FSPEC
++            RET
++INIT        CALL    @INIT
++            RET
++FOPEN       CALL    @OPEN
++            RET
++FCLOSE      CALL    @CLOSE
++            RET
++FREAD       CALL    @READ
++            RET
++FWRITE      LD      (DCB+3), HL
++            CALL    @WRITE
++            RET
++ERROR       CALL    @ERROR
++            RET
++EXIT        CALL    @EXIT
++            RET
++ABORT       CALL    @ABORT
++            RET
++SETERN      CALL    SETERN5
++	    RET
++
++IMPORT2
++            PUSH    HL              ; Save INBUF pointer for import2core.z80
++            
++;; EOF handling differs between TRS-80 DOSes:
++;;  For MultiDOS (also TRSDOS 2.3 and LDOS) word (dcb+12) contains the
++;;  number of 256 byte records in the file, byte (dcb+8) contains the EOF
++;;  offset in the last record (0=256).
++;;  For NEWDOS/80 and TRSDOS 1.3, byte (dcb+8) and word (dcb+12) 
++;;  form a 24 bit number containing the relative byte address of EOF.
++;;  Thus (dcb+12) differs by one if the file length is not a
++;;  multiple of 256 bytes.  DOSPLUS also uses this convention,
++;;  and NEWDOS 2.1 probably does too (not checked).
++            
++SETUPERN    LD      A,0             ; EOF HANDLING
++            LD      (ERNLDOS),A
++
++            INCLUDE import2core.z80
++
++SETERN5     LD      HL, (DCB+10)    ; current record number
++            LD      A, (ERNLDOS)    ; get ERN convention
++            OR      A
++            JR      NZ, NOADJ       ; go if TRSDOS 2.3/LDOS convention
++ADJ         OR      C	            ; length multiple of 256 bytes?
++            JR      Z, NOADJ        ; go if so
++            DEC     HL	            ; no, # of records - 1
++NOADJ       LD      (DCB+12), HL
++            RET	
++
++SETERN6     LD      HL, (DCB+10)
++            LD      (DCB+12), HL
++            RET
++
++PARM        DS      2
++          
++DCB         DEFS    32  ; 32 bytes for MultiDOS
++
++            END     IMPORT2
++            
+diff --git a/sw/z80/utils/import2core.z80 b/sw/z80/utils/import2core.z80
+index 2c365e8..c8263c0 100644
+--- a/sw/z80/utils/import2core.z80
++++ b/sw/z80/utils/import2core.z80
+@@ -38,22 +38,22 @@ FLAG0       LD      A,(HL)          ; Look for flags
+             JR      NZ, FLAG1
+             INC     HL
+             JR      FLAG0
+-FLAG1   	CP      '-'             ; Any parameters?
++FLAG1       CP      '-'             ; Any parameters?
+             JR      NZ, SOURCE1     ; No so process the source filename
+             INC     HL
+             LD      A,(HL)
+-FLAG3       OR      20H
+-            CP      'E'
++FLAG3       OR      20H             ; Make the flag character lowercase
++            CP      'e'
+             JR      NZ, FLAGL
+             SUB     A
+             LD      (ERNLDOS), A
+             JR      FLAG2
+-FLAGL       CP      'L'
++FLAGL       CP      'l'
+             JR      NZ,FLAGN        ; Check for next flag
+             LD      A, 1
+             LD      (LFLAG), A
+             JR      FLAG2
+-FLAGN       CP      'N'
++FLAGN       CP      'n'
+             JP      NZ, USAGE       ; Unknown flag
+             LD      A, 1
+             LD      (NFLAG), A
+@@ -361,4 +361,4 @@ ERROR_TABLE
+             DEFW    FR_DISK_FULL	
+ 
+ IOBUF       DEFS    256
+-            
+\ No newline at end of file
++
+diff --git a/sw/z80/utils/vhdutl_multidos.z80 b/sw/z80/utils/vhdutl_multidos.z80
+new file mode 100644
+index 0000000..79d9627
+--- /dev/null
++++ b/sw/z80/utils/vhdutl_multidos.z80
+@@ -0,0 +1,62 @@
++; VHDUTL - Utility for the Vecoven Hard Drive Emulator
++; MultiDOS Version - Tim Halloran (2022) - migrated from LDOS code
++
++; TRS-80 IO Port Definitions
++
++DATA2       EQU     0C2H
++SIZE2       EQU     0C3H
++COMMAND2    EQU     0C4H
++ERROR2      EQU     0C5H
++STATUS      EQU     0CFH
++
++; Assembler Control Flags
++
++CPM         EQU     0
++TRSDOS      EQU     1
++
++; MultiDOS addresses
++@DSPLY      EQU     4467h ; MultiDOS @VOD
++@DSP        EQU     0033h ; MultiDOS @PUTVO
++@PARAM      EQU     4454h
++
++            ORG     5200H
++            
++; MultiDOS jump table
++
++DSPLY       CALL    @DSPLY
++            RET
++DATE        LD      HL,421Ah
++            RET
++TIME        LD      HL,4217h        ; MultiDOS Time Storage: ssmmhhyyddmm
++            RET
++PARAM       LD      HL,(PARM)       ; Use internal parameter parsing for compability
++            DEC     HL              ; with non-LDOS Model III operating systems
++            CALL    PARAM0
++            RET
++DSP         NOP
++            CALL    @DSP
++            RET
++SETCOLS     LD      HL,DIRCOLS
++            LD      (HL),4
++            RET
++DSPBUFFEREND
++            LD      HL,DSPBUFFER+63
++            RET
++SETUP       RET
++DEPART	    RET
++
++VHDUTL
++            PUSH    HL              ; Keep the INBUF pointer
++            LD      (PARM),HL
++VHDINIT     CALL    SETUP           ; Hardware configuration
++
++            INCLUDE utlcore.z80
++
++            INCLUDE param.z80
++
++            INCLUDE trsident.z80
++         
++PARM        DS      2
++               
++            END     VHDUTL
++
+-- 
+2.35.1
+

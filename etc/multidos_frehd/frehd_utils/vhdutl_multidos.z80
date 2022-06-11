@@ -1,0 +1,62 @@
+; VHDUTL - Utility for the Vecoven Hard Drive Emulator
+; MultiDOS Version - Tim Halloran (2022) - migrated from LDOS code
+
+; TRS-80 IO Port Definitions
+
+DATA2       EQU     0C2H
+SIZE2       EQU     0C3H
+COMMAND2    EQU     0C4H
+ERROR2      EQU     0C5H
+STATUS      EQU     0CFH
+
+; Assembler Control Flags
+
+CPM         EQU     0
+TRSDOS      EQU     1
+
+; MultiDOS addresses
+@DSPLY      EQU     4467h ; MultiDOS @VOD
+@DSP        EQU     0033h ; MultiDOS @PUTVO
+@PARAM      EQU     4454h
+
+            ORG     5200H
+            
+; MultiDOS jump table
+
+DSPLY       CALL    @DSPLY
+            RET
+DATE        LD      HL,421Ah
+            RET
+TIME        LD      HL,4217h        ; MultiDOS Time Storage: ssmmhhyyddmm
+            RET
+PARAM       LD      HL,(PARM)       ; Use internal parameter parsing for compability
+            DEC     HL              ; with non-LDOS Model III operating systems
+            CALL    PARAM0
+            RET
+DSP         NOP
+            CALL    @DSP
+            RET
+SETCOLS     LD      HL,DIRCOLS
+            LD      (HL),4
+            RET
+DSPBUFFEREND
+            LD      HL,DSPBUFFER+63
+            RET
+SETUP       RET
+DEPART	    RET
+
+VHDUTL
+            PUSH    HL              ; Keep the INBUF pointer
+            LD      (PARM),HL
+VHDINIT     CALL    SETUP           ; Hardware configuration
+
+            INCLUDE utlcore.z80
+
+            INCLUDE param.z80
+
+            INCLUDE trsident.z80
+         
+PARM        DS      2
+               
+            END     VHDUTL
+
