@@ -1,0 +1,113 @@
+---------------------------------------
+-- 2022 TRS8BIT Wordle Contest Notes --
+---------------------------------------
+
+--------------------------------
+-- Dictionary Encoding Design --
+--------------------------------
+
+WORDS THAT MAKE UP WORDLE
+
+The dictionary we have to consider is built from two files. Each word is
+composed of five small letters. Some facts on the two files:
+
+o  answer.txt contains  2,313 (not sorted) words.
+o  rest.txt   contains 10,647 sorted words.
+
+STORAGE AS A DEPTH-FIRST TRAVERSAL OF A TRIE
+
+For the dictionary we use a custom Trie structure. For an introduction see
+https://en.wikipedia.org/wiki/Trie The structure is stored as a depth-first
+traversal of the Trie. We'll merge and sort answer.txt and rest.txt to save
+space. To show a concrete example, let's encode the answers "tandy" and "taker"
+with non-answers "teeny" and "zoner".
+
+  tandy(answer=0:↑3)ker(answer=126:↑4)eeny(↑5)zoner(END)
+
+The "answer=" values are the index into the answers and the "up" values define
+the Trie. This compactly represents the Trie below as a bit stream.
+
+     t    z
+   a   e  o
+  n k  e  n
+  d e  n  e
+  y r  y  r
+    ↑answer index 126
+  ↑answer index 0
+
+WORD ENCODING
+
+To encode this structure we'll use a stream of bits. Lowercase is used in
+answer.txt and rest.txt. We want to use 5 bits so we'll encode each letter into
+the range 0..26. We do this by subtracting 97 which is the ASCII code for 'a'.
+For example, below we encode the letters in the example above.
+
+  't' value 116-97=19 will be $13
+  'a' value  97-97=0  will be $00
+  'n' value 110-97=13 will be $0d
+  'd' value 100-97=3  will be $03
+  'y' value 121-97=24 will be $18
+  'k' value 107-97=10 will be $0a
+  'e' value 101-97=4  will be $04
+  'r' value 114-97=17 will be $11
+  'z' value 122-97=25 will be $19
+  'o' value 111-97=14 will be $0e
+
+Thus we are encoding each letter in 5 bits as illustrated below.
+
+  +---+---+---+---+---+
+  |       letter      |
+  +---+---+---+---+---+
+
+Before considering "up" counts and answer/non-answer encoding we review a few
+facts that simplify this part of our design.
+
+o Each word is exactly 5 characters.
+o Going up or marking an answer is only required after a word.
+
+ENCODING AFTER A FULL WORD
+
+After a full word we have to encode the following information.
+
+o Is the word in answer.txt or rest.txt
+o If in answer.txt then what is the index, or line position of the word in the
+  file. answer.txt contains 0..2312 answer words ($909) so and index which fits
+  into 12 bits.
+o An "up" count to indicate how many letters in the word the Trie depth-first
+  traversal goes "up".  This is thinking of the Trie as a vertical tree (see
+  example above). It is a "go left" count if you think of the word as going
+  left to right.
+
+Because of the answer flag there are two different encodings in the steam.
+Notice that we are able to optimize the case where the word is in rest.txt.
+This helps because rest.txt contains 10.6k words and answer.txt only has 2.3k
+words.
+
+    ↓ answer flag (0=word is in rest.txt)
+  +---+---+---+---+
+  | 0 | up count  |
+  +---+---+---+---+
+
+    ↓ answer flag (1=word is in answer.txt)
+  +---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+
+  | 1 |     12 bit index into answer.txt file         | up count  |
+  +---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+
+
+We encode the "up" counts in three bits as listed below.
+
+  001 ↑1
+  010 ↑2
+  011 ↑3
+  100 ↑4
+  101 ↑5
+
+END ENCODING
+
+To indicate the traversal of the Trie is complete we use a special "up" count
+encoding. At the end of the Trie depth-first traversal we are at the end of the
+last word. The stream, therefore, finishes up on a three bit "up" count. A zero
+value for "up" count indicates the end of the stream as listed below.
+
+  000 (END)
+
+□
