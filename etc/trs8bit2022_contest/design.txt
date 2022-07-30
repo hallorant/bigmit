@@ -111,3 +111,55 @@ value for "up" count indicates the end of the stream as listed below.
   000 (END)
 
 □
+
+--------------------------------------------------
+-- Size data collected via Java code generation --
+--------------------------------------------------
+
+---------------------------------------------------------
+DICT DATA-ONLY SIZE ANALYSIS
+---------------------------------------------------------
+George's example program data                38,880 bytes
+  -- answer size                              6,939 bytes
+  -- rest size                               31,941 bytes
+---------------------------------------------------------
+Answers/w Huffman encoding                    6,485 bytes
+Rest/Huffman encoding                        29,400 bytes
+---------------------------------------------------------
+Initial design                               25,419 bytes
+ -- Just rest                                18,660 bytes
+ -- As described above
+---------------------------------------------------------
+Trie Initial design/w Huffman encoding       22,862 bytes
+ -- Just answers                              7,704 bytes
+ -- Just rest                                16,401 bytes
+---------------------------------------------------------
+Initial design No answer info (doesn't work) 20,329 bytes
+ -- Sorted trie but cannot look answers
+ -- values by index
+---------------------------------------------------------
+Trie Answers non-sorted then rest            25,325 bytes 
+ -- Answers first, so can count index
+ -- value, then rest
+---------------------------------------------------------
+Trie Answers non-sorted then rest/w Huffman  22,332 bytes
+ -- Just answers                              7,263 bytes
+ -- Just rest                                16,401 bytes
+---------------------------------------------------------
+
+□
+
+------------------------------------------
+-- Dictionary Encoding Design (Updated) --
+------------------------------------------
+
+1) Huffman encode the letters
+
+2) For the answers its okay to just encode them directly. That way they are in
+   order and the code can just count up which answer it is.
+   (6,485 bytes)
+
+3) Use the design above for the rest using Huffman encoding for the letters (not 5 bits).
+   (16,401 bytes)
+
+
