@@ -2,6 +2,85 @@
 -- 2022 TRS8BIT Wordle Contest Notes --
 ---------------------------------------
 
+One idea is to difference between letters for rest.txt we find
+
+LETTER 1: {1=25}
+LETTER 2: {1=142, 2=45, 3=54, 4=24, 5=4, 6=12, 7=1, 8=1, 10=1}
+LETTER 3: {1=1337, 2=414, 3=168, 4=211, 5=44, 6=96, 7=14, 8=21, 9=3, 10=15, 11=1, 12=3, 13=2, 14=4, 16=2, 19=1, 20=1, 21=1, 25=1}
+LETTER 4: {1=1126, 2=953, 3=615, 4=829, 5=252, 6=355, 7=198, 8=173, 9=86, 10=121, 11=95, 12=40, 13=40, 14=57, 15=28, 16=29, 17=16, 18=7, 19=7, 20=17, 21=7, 22=1, 23=2, 24=1, 25=1}
+LETTER 5: {1=405, 2=105, 3=59, 4=276, 5=143, 6=511, 7=124, 8=91, 9=22, 10=177, 11=74, 12=26, 13=37, 14=386, 15=264, 16=39, 17=16, 18=102, 19=6, 20=52, 21=5, 22=1, 23=1, 24=19, 25=1}
+
+This indicates that +1 letter should have frequency of 3010 for Huffman code (we can assume letter 1).
+
+It seems useful to:
+1) Assume the first letter always goes up, takes up no bits.
+2) Include special increment-prior-letter-by-one as the huffman most common case.
+
+
+{a=2477, b=469, c=790, d=1363, e=3397, f=411, g=691, h=809, i=1612, j=55, k=759, l=1471, m=640, n=1330, o=1565, p=727, q=39, r=1919, s=4570, t=1523, u=820, v=267, w=334, x=121, y=1523, z=185}
+@=3010
+
+This gets us to the below sizes
+---------------------------------------------------------
+answer_data_size                              6,549 bytes
+rest_data_size                               14,966 bytes
+total                                        21,515 bytes
+---------------------------------------------------------
+
+□
+
+------------------------------------------
+-- Dictionary Encoding Design (Updated) --
+------------------------------------------
+
+1) Huffman encode the letters
+
+2) For the answers its okay to just encode them directly. That way they are in
+   order and the code can just count up which answer it is.
+   (6,485 bytes)
+
+3) Use the design above for the rest using Huffman encoding for the letters (not 5 bits).
+   (16,401 bytes)
+
+□
+
+--------------------------------------------------
+-- Size data collected via Java code generation --
+--------------------------------------------------
+
+---------------------------------------------------------
+DICT DATA-ONLY SIZE ANALYSIS
+---------------------------------------------------------
+George's example program data                38,880 bytes
+  -- answer size                              6,939 bytes
+  -- rest size                               31,941 bytes
+---------------------------------------------------------
+Answers/w Huffman encoding                    6,485 bytes
+Rest/Huffman encoding                        29,400 bytes
+---------------------------------------------------------
+Initial design                               25,419 bytes
+ -- Just rest                                18,660 bytes
+ -- As described above
+---------------------------------------------------------
+Trie Initial design/w Huffman encoding       22,862 bytes
+ -- Just answers                              7,704 bytes
+ -- Just rest                                16,401 bytes
+---------------------------------------------------------
+Initial design No answer info (doesn't work) 20,329 bytes
+ -- Sorted trie but cannot look answers
+ -- values by index
+---------------------------------------------------------
+Trie Answers non-sorted then rest            25,325 bytes 
+ -- Answers first, so can count index
+ -- value, then rest
+---------------------------------------------------------
+Trie Answers non-sorted then rest/w Huffman  22,332 bytes
+ -- Just answers                              7,263 bytes
+ -- Just rest                                16,401 bytes
+---------------------------------------------------------
+
+□
+
 --------------------------------
 -- Dictionary Encoding Design --
 --------------------------------
@@ -111,55 +190,3 @@ value for "up" count indicates the end of the stream as listed below.
   000 (END)
 
 □
-
---------------------------------------------------
--- Size data collected via Java code generation --
---------------------------------------------------
-
----------------------------------------------------------
-DICT DATA-ONLY SIZE ANALYSIS
----------------------------------------------------------
-George's example program data                38,880 bytes
-  -- answer size                              6,939 bytes
-  -- rest size                               31,941 bytes
----------------------------------------------------------
-Answers/w Huffman encoding                    6,485 bytes
-Rest/Huffman encoding                        29,400 bytes
----------------------------------------------------------
-Initial design                               25,419 bytes
- -- Just rest                                18,660 bytes
- -- As described above
----------------------------------------------------------
-Trie Initial design/w Huffman encoding       22,862 bytes
- -- Just answers                              7,704 bytes
- -- Just rest                                16,401 bytes
----------------------------------------------------------
-Initial design No answer info (doesn't work) 20,329 bytes
- -- Sorted trie but cannot look answers
- -- values by index
----------------------------------------------------------
-Trie Answers non-sorted then rest            25,325 bytes 
- -- Answers first, so can count index
- -- value, then rest
----------------------------------------------------------
-Trie Answers non-sorted then rest/w Huffman  22,332 bytes
- -- Just answers                              7,263 bytes
- -- Just rest                                16,401 bytes
----------------------------------------------------------
-
-□
-
-------------------------------------------
--- Dictionary Encoding Design (Updated) --
-------------------------------------------
-
-1) Huffman encode the letters
-
-2) For the answers its okay to just encode them directly. That way they are in
-   order and the code can just count up which answer it is.
-   (6,485 bytes)
-
-3) Use the design above for the rest using Huffman encoding for the letters (not 5 bits).
-   (16,401 bytes)
-
-
