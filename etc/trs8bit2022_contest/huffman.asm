@@ -1,7 +1,7 @@
 ifndef INCLUDE_HUFFMAN
 INCLUDE_HUFFMAN equ 1
 
-import 'bitstream.asm'
+import bitstream.asm
 
 ;  _            __  __
 ; | |          / _|/ _|
@@ -48,7 +48,7 @@ huffman_letter_decode macro ?byte,?next,?advance,?letter
   cmp ?byte
   jr nz,?next
   ld a,?advance
-  call bs_advance
+  call bitstream_advance
   ld a,'?letter'
   ret
   endm
@@ -56,7 +56,7 @@ huffman_letter_decode macro ?byte,?next,?advance,?letter
 ; Returns the next encoded character as ASCII in A that is referenced by
 ; bitstream.asm. Advances the bitstream past the encoded character bits.
 huffman_decode_char:
-  call bs_get
+  call bitstream_get
   ld (huffman_bits),a ; save the bits in our buffer: huffman_bits
 _decode_S:
   and 11100000b ; 3 bit mask
@@ -116,23 +116,23 @@ _decode_Z:
 _decode_X:
   ld a,(huffman_bits) ; 8 bits (no mask)
   huffman_letter_decode 10101111b,_decode_J,8,'X'
-  ; J and Q require 9 bits to be checked.  bs_get only returns 8 bits in A, so we must
-  ; check A and shift the bitstream to examine the last bit.
+  ; J and Q require 9 bits to be checked.  bitstream_get only returns 8 bits in A,
+  ; so we must check A and shift the bitstream to examine the last bit.
 _decode_J:
   cmp 10101110b ; prefix of J and Q
   jr nz,_decode_failure
   ld a,8
-  call bs_advance
-  call bs_get
+  call bitstream_advance
+  call bitstream_get
   and 10000000b ; just check first bit
   jr z,_decode_Q
   ld a,1
-  call bs_advance
+  call bitstream_advance
   ld a,'J'
   ret
 _decode_Q
   ld a,1
-  call bs_advance
+  call bitstream_advance
   ld a,'Q'
   ret
 _decode_failure:

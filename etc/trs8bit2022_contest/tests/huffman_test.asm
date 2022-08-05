@@ -23,7 +23,7 @@ result byte 0
 
 main:
   z80unit_test 'decode alphabet'
-  bs_reset alphabet
+  bitstream_reset alphabet
 
   call huffman_decode_char
   ld (result),a
@@ -130,7 +130,7 @@ main:
   assertMemString result,'Q'
 
   z80unit_test 'decode word'
-  bs_reset jump
+  bitstream_reset jump
 
   call huffman_decode_char
   ld (result),a
