@@ -5,36 +5,7 @@ import 'z80unit.asm'
 import '../bitstream.asm'
 import '../huffman.asm'
 
-; -----------------------------
-; -- Wordle Huffman encoding --
-; -----------------------------
-;    s       110
-;    e       011
-;    a       1011
-;    r       1001
-;    t       1000
-;    i       0100
-;    o       0011
-;    l       0001
-;    y       11111
-;    n       11110
-;    d       11101
-;    u       10100
-;    c       01011
-;    h       01010
-;    m       00101
-;    p       00100
-;    k       00001
-;    g       00000
-;    b       111000
-;    f       101010
-;    w       1110011
-;    v       1110010
-;    z       1010110
-;    x       10101111
-;    j       101011101
-;    q       101011100
-
+; The alphabet in Huffman priority order.
 ; (start bit) S  E  A     R   T     I   O     L   Y      N
 alphabet byte 11001110b,11100110b,00010000b,11000111b,11111110b
 ; (start bit) D    U      C    H      M      P    K      G
@@ -43,6 +14,10 @@ alphabet byte 11001110b,11100110b,00010000b,11000111b,11111110b
          byte 11100010b,10101110b,01111100b,10101011b,01010111b
 ; (start bit)  J          Q
          byte 11010111b,01101011b,10000000b
+
+; A word: JUMP
+; (start bit) J          U    M      P
+jump     byte 10101110b,11010000b,10100100b
 
 result byte 0
 
@@ -153,6 +128,25 @@ main:
   call huffman_decode_char
   ld (result),a
   assertMemString result,'Q'
+
+  z80unit_test 'decode word'
+  bs_reset jump
+
+  call huffman_decode_char
+  ld (result),a
+  assertMemString result,'J'
+
+  call huffman_decode_char
+  ld (result),a
+  assertMemString result,'U'
+
+  call huffman_decode_char
+  ld (result),a
+  assertMemString result,'M'
+
+  call huffman_decode_char
+  ld (result),a
+  assertMemString result,'P'
 
   z80unit_end_and_exit
   end main

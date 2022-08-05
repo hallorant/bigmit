@@ -1,37 +1,7 @@
 ifndef INCLUDE_DICTIONARY_DATA
 INCLUDE_DICTIONARY_DATA equ 1
 
-dictionary_data_start:
-
-; ----------------------
-; -- Huffman encoding --
-; ----------------------
-;    s       110
-;    e       011
-;    a       1011
-;    r       1001
-;    t       1000
-;    i       0100
-;    o       0011
-;    l       0001
-;    y       11111
-;    n       11110
-;    d       11101
-;    u       10100
-;    c       01011
-;    h       01010
-;    m       00101
-;    p       00100
-;    k       00001
-;    g       00000
-;    b       111000
-;    f       101010
-;    w       1110011
-;    v       1110010
-;    z       1010110
-;    x       10101111
-;    j       101011101
-;    q       101011100
+dictionary_data:
 
 ; ----------------
 ; -- answer.txt --
@@ -40,7 +10,7 @@ dictionary_data_start:
 ; o 5 letters (Huffman).
 ; o To determine answer number, count up while reading.
 ; o To determine end, stop after 2313 words.
-answer_data_start:
+answer_data:
   byte 10001011b,11110111b,01111111b,00110111b,11010100b,00111100b
   byte 10101011b,01011000b,01011010b,00000001b,01010000b,01010100b
   byte 01011100b,10011001b,01001111b,10101100b,01100001b,01010010b
@@ -1102,7 +1072,7 @@ answer_data_start:
   byte 11110011b,00011111b,10011010b,11010111b,01001001b,10111110b
   byte 01001110b,01100010b,10100100b,01011101b,00110111b,01111001b
   byte 11011100b,11010100b
-answer_data_size equ $-answer_data_start
+answer_data_size equ $-answer_data
 
 ; ---------------
 ; -- rest.txt --
@@ -1113,7 +1083,7 @@ answer_data_size equ $-answer_data_start
 ; o 1 to 4 letters (Huffman), followed by 3 bit up-value.
 ; o 3 bit up-value of 1-5 indicating length in characters of the next suffix.
 ; o 3 bit up-value of 0 indicates end of rest.txt words.
-rest_data_start:
+rest_data:
   byte 10110101b,00111110b,10110001b,01000100b,01110010b,00000101b
   byte 00101000b,01001001b,11000101b,10101110b,11001010b,00011100b
   byte 10101010b,10000100b,00011011b,01000101b,00100010b,11110111b
@@ -3632,8 +3602,8 @@ rest_data_start:
   byte 10011001b,10010010b,11111100b,01110010b,00100101b,10111001b
   byte 10101011b,00111010b,11001000b,01011001b,11110000b,01011000b
   byte 10100011b,11110011b,00101011b,11001001b,00010110b,00000000b
-rest_data_size equ $-rest_data_start
+rest_data_size equ $-rest_data
 
-dictionary_data_size equ $-dictionary_data_start
+dictionary_data_size equ $-dictionary_data
 
 endif ; INCLUDE_DICTIONARY_DATA
