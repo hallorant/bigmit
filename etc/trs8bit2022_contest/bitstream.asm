@@ -25,6 +25,7 @@ bitstream_reset macro ?to_address
   endm
 
 ; Returns bits at the current position, msb to lsb, in A.
+; The bitstream is not advanced.
 ; Uses: A,BC,HL
 bitstream_get:
   ld hl,(bitstream_byte_ptr)
@@ -45,7 +46,23 @@ _testifshiftneeded:
   ld a,h
   ret
 
-; Advances this bitsream by A bits.
+; Returns a 3-bit count in A from the bitstream.
+; The bitstream is advanced 3 bits.
+; Uses: A,BC,HL
+bitstream_get_3bit_count:
+  call bitstream_get
+  srl a ; Shift the MSB 3 bits to LSB in the byte
+  srl a
+  srl a
+  srl a
+  srl a
+  ld c,a
+  ld a,3
+  call bitstream_advance ; 3 bits
+  ld a,c
+  ret
+
+; Advances this bitstream by A bits.
 ; Uses: A,B,HL
 bitstream_advance:
   ld hl,(bitstream_byte_ptr)
