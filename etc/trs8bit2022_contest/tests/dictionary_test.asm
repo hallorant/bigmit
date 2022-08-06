@@ -56,51 +56,51 @@ main:
 
   z80unit_test 'getpuz first answers'
 
-  ld de,1
+  ld de,0
   ld hl,buffer
   call getpuz
   assertMemString buffer,'TANDY'
 
-  ld de,2
+  ld de,1
   ld hl,buffer
   call getpuz
   assertMemString buffer,'RADIO'
 
-  ld de,3
+  ld de,2
   ld hl,buffer
   call getpuz
   assertMemString buffer,'SHACK'
 
   z80unit_test 'getpuz last answers'
 
-  ld de,2311
+  ld de,2310
   ld hl,buffer
   call getpuz
   assertMemString buffer,'AVERT'
 
-  ld de,2312
+  ld de,2311
   ld hl,buffer
   call getpuz
   assertMemString buffer,'FICUS'
 
-  ld de,2313
+  ld de,2312
   ld hl,buffer
   call getpuz
   assertMemString buffer,'DWARF'
 
   z80unit_test 'getpuz middle answers'
 
-  ld de,296
+  ld de,295
   ld hl,buffer
   call getpuz
   assertMemString buffer,'EAGLE'
 
-  ld de,959
+  ld de,958
   ld hl,buffer
   call getpuz
   assertMemString buffer,'SPARK'
 
-  ld de,1874
+  ld de,1873
   ld hl,buffer
   call getpuz
   assertMemString buffer,'RUMOR'

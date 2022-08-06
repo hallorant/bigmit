@@ -4,6 +4,7 @@
 
 @dsp	equ	2		; outputs C
 @keyin	equ	9		; wants C = 0
+numans	equ	2313		; number of answers (count of words in answers.txt)
 
 	org	$5200
 start:	ld	h,2		; maybe Model II
@@ -277,7 +278,7 @@ upmsg:	ascii	27,27,0
 winmsg:	ascii	'Correct!  Well done.',13,0
 losmsg:	ascii	'Sorry.  The word was ',0
 
-	include	dict.inc
+	include	dictionary.asm
 
 model:	defs	1
 hint:	defs	5

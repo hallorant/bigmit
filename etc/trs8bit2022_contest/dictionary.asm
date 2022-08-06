@@ -25,6 +25,7 @@ dict_start:
 
 ; -----------------------------------------------------------------
 ; getpuz - put 5 letter answer number DE to memory at HL
+;          DE should be in the range [0,2313) to match data.
 ; -----------------------------------------------------------------
 getpuz:
   jr _getpuz_start
@@ -32,6 +33,7 @@ getpuz_answer_ptr word 0  ; passed value
 getpuz_counter    word 0  ; counts down from passed answer # to 0
 _getpuz_start:
   ld (getpuz_answer_ptr),hl
+  inc de ; shift up so we can count down to zero to find the desired word.
   ld (getpuz_counter),de
   bitstream_reset answer_data
   ; Decode a 5 letter word and store in result memory.
