@@ -1,7 +1,21 @@
 ---------------------------------------
 -- 2022 TRS8BIT Wordle Contest Notes --
 ---------------------------------------
-Just encode both
+
+-------------------------
+-- Implementation Work --
+-------------------------
+
+Implemented the Huffman and created a lot of unit tests with z80unit.  This
+helped a lot to ensure the code worked prior to hooking it up to George's main
+program. The only mistake I made was making the getpuz index 1 based rather
+than 0 based. This mistake was easy to correct and test.
+
+□
+
+--------------------------------------------------------------
+-- Nothing fancy use Huffman and suffix encode the rest.txt --
+--------------------------------------------------------------
 
 {a=2476, b=597, c=883, d=1516, e=3640, f=516, g=785, h=869, i=1717, j=89,
  k=786, l=1643, m=837, n=1543, o=1707, p=830, q=49, r=1933, s=4985, t=1874,
