@@ -13,6 +13,16 @@ answer4 defb 'CIGAR'
 answer5 defb 'FICUS'
 answer6 defb 'DWARF'
 
+rest1 defb 'AAHED' ; first
+rest2 defb 'ZYMIC' ; last
+rest3 defb 'MZEES' ; ^5
+rest4 defb 'MYTHS' ; ^1
+rest5 defb 'ACERS' ; ^2
+rest6 defb 'ZULUS' ; ^3
+rest7 defb 'ZOWIE' ; ^4
+rest8 defb 'DRILY' ; ^2
+rest9 defb 'DROID' ; ^1
+
 badword1 defb '-----'
 badword2 defb 'FFFFF'
 badword3 defb '     '
@@ -128,6 +138,44 @@ main:
   assertEquals8 1,a ; true
 
   ld hl,answer6
+  call isword
+  assertEquals8 1,a ; true
+
+  z80unit_test 'isword from rest'
+
+  ld hl,rest1
+  call isword
+  assertEquals8 1,a ; true
+
+  ld hl,rest2
+  call isword
+  assertEquals8 1,a ; true
+
+  ld hl,rest3
+  call isword
+  assertEquals8 1,a ; true
+
+  ld hl,rest4
+  call isword
+  assertEquals8 1,a ; true
+
+  ld hl,rest5
+  call isword
+  assertEquals8 1,a ; true
+
+  ld hl,rest6
+  call isword
+  assertEquals8 1,a ; true
+
+  ld hl,rest7
+  call isword
+  assertEquals8 1,a ; true
+
+  ld hl,rest8
+  call isword
+  assertEquals8 1,a ; true
+
+  ld hl,rest9
   call isword
   assertEquals8 1,a ; true
 
