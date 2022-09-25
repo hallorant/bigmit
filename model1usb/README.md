@@ -87,9 +87,10 @@ pain to solder).
 ## Caution
 
 Do not cut and "reuse" a USB-A cable to save time. This is a bad idea. We want
-to use 22 gauge wire to ensure good current flow. The Model 1 keyboard uses
-~0.9 amps. A lot of commercial cables are intended for data and use very thin
-wire. Soldering a USB-A plug is easy, it's soldering the DIN that is difficult.
+to use 22 gauge wire (or larger) to ensure good current flow. The Model 1
+keyboard uses ~0.9 amps. A lot of commercial cables are intended for data and
+use very thin wire. Soldering a USB-A plug is easy, it's soldering the DIN that
+is difficult.
 
 ## Some background and theory behind our cable
 
@@ -126,6 +127,9 @@ bring the wire down while soldering to the back. I do not recommend that you
 clamp a pin to an alligator clip holder and solder, I've found that this
 approach often melts the plastic holding the pins. Resulting in a bent pin.
 
+Ensure you give the connections a good tug. If they pull apart you did a bad
+solder job and need to try again.
+
 Next put the entire DIN connector together. We started with this connector
 because you have to slide the cover over the wire. This is easier before the
 USB-A connector is attached.
@@ -140,6 +144,9 @@ is done. The male USB-A connector gets soldered as shown in the image below.
 Note in the image above red is 5V and green in ground. This is a connector I
 keep around to check which side is which. Your cable will probably use black
 for ground.
+
+Ensure you give the connections a good tug. If they pull apart you did a bad
+solder job and need to try again.
 
 You then snap the casing around the metal. I tend to use some CA glue and clamp
 the two sides together to ensure the casing doesn't come apart over time. This
