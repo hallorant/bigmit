@@ -8,8 +8,8 @@ multiple days.
 
 I strongly suggest you do not do this modification on your only working Model 1
 unless you are quite skilled with electronics work. The modification is pretty
-simple but requires one trace cut and the removal of several components from
-the motherboard.  Several wires are then soldered in place. Finally, a
+simple but does require one trace cut and the removal of several components
+from the motherboard.  Several wires are then soldered in place. Finally, a
 5-pin DIN to USB-A cable is constructed.
 
 The image below shows the resulting system.
