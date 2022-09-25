@@ -54,17 +54,25 @@ Here's the list of parts you'll need
   cable I use parallel red-black wire. Inside the computer it doesn't matter.
   Do not use wire-wrap guage wire for this modification!
 
-* Eight MCM4517P15 or MCM6665BP20 memory chips. Search AliExpress or eBay for
-  deals (or reach out to sellers like Mav). Note the mod can be done with the
-  original 4116 memory but it is far more complex and needs a boost-buck
-  transformer like my CoCo2 mod used. I have not fully documented keeping the
-  4116 memory in the computer, but I do sketch how to do it below (not recommended).
-  Memory is socketed (thank goodness) so this is easy to install. Ensure what you
-  buy is in a 16-pin DIP package. Also if you upgraded a CoCo 2 from 16K to 64K,
-  the 16K memory you took out is 4517 memory (and will work).
+* Eight MCM4517P15 (16K) or MCM6665BP20 (64K used as 16K) memory chips. Search
+  AliExpress or eBay for deals (or reach out to sellers like Mav). Note the mod
+  can be done with the original 4116 memory but it is far more complex and needs
+  a boost-buck transformer like my CoCo2 mod used. I have not fully documented
+  keeping the 4116 memory in the computer, but I do sketch how to do it below
+  (not recommended).  Memory is socketed (thank goodness) so this is easy to
+  install. Ensure what you buy is in a 16-pin DIP package. Also if you upgraded a
+  CoCo 2 from 16K to 64K, the 16K memory you took out is 4517 memory (and will
+  work).
 
 * (optional) 2 14-pin DIP sockets and a 14-pin DIP 7 position switch. I'll show
   this below, however, you can just use a short wire.
+
+*NOTE:* If you have done the Rosser 64k-in-the-keyboard modification to your
+Model 1 this conversion is greatly simplified. The 6555 memory you used is
+fine. One could consider doing Rosser's modification prior to this one.  I have
+found Rosser's modification to be very helpful to keep an expansion interface
+(which you pull the memory out of once you do Rosser's modification) stable.  I
+did this with one of my prototype machines, the other used 4517 (16K) memory.
 
 What tools do you need
 
