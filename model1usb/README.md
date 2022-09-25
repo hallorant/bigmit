@@ -156,9 +156,10 @@ for ground.
 Ensure you give the connections a good tug. If they pull apart you did a bad
 solder job and need to try again.
 
-You then snap the casing around the metal. I tend to use some CA glue and clamp
-the two sides together to ensure the casing doesn't come apart over time. This
-is not required.
+You then snap the USB plug casing around the metal. I tend to use some CA glue
+and clamp the two sides together to ensure the casing doesn't come apart over
+time. This glue is not required, but I suggest you keep it in mind if plug
+casing keeps coming apart as you use it.
 
 Your cable is complete. It is a good idea to test it with the continuity tester
 on your multimeter.
@@ -166,3 +167,21 @@ on your multimeter.
 # Modifying the Model 1 computer
 
 TODO
+
+## Some background and theory behind our changes
+
+Changing a Model 1 to use DC (even batteries) has been done in the past.  If
+you really know the computer anyone can do this. It is more complex to keep the
+modification simple. My first prototype was a tangle of wires and cuts. Its
+gotten better.
+
+What we want to do is bypass the power regulation circuits on the motherboard.
+By changing out the memory we have a 5V DC motherboard and an external 5V DC
+power supply. The trick is to channel the power around the power circuits. Also
+we do not want to remove the big transisters (this was required in the CoCo but
+is not in the Model 1).
+
+Clean power also matters a bit more to the Model 1 than in my experience with
+CoCo. Not all USB power supplies will work well with a Model 1. I'll also
+discuss how to use a Meanwell linear power supply (about a $6 part) to get very
+clean power.
