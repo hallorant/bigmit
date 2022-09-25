@@ -56,13 +56,14 @@ Here's the list of parts you'll need
 
 * Eight MCM4517P15 (16K) or MCM6665BP20 (64K used as 16K) memory chips. Search
   AliExpress or eBay for deals (or reach out to sellers like Mav). Note the mod
-  can be done with the original 4116 memory but it is far more complex and needs
-  a boost-buck transformer like my CoCo2 mod used. I have not fully documented
-  keeping the 4116 memory in the computer, but I do sketch how to do it below
-  (not recommended).  Memory is socketed (thank goodness) so this is easy to
-  install. Ensure what you buy is in a 16-pin DIP package. Also if you upgraded a
-  CoCo 2 from 16K to 64K, the 16K memory you took out is 4517 memory (and will
-  work).
+can be done with the original 4116 memory but it is far more complex and needs
+a boost-buck transformer like my [CoCo2 modification to use USB
+power](https://github.com/hallorant/bigmit/tree/master/coco2usb). I have not
+fully documented keeping the 4116 memory in the computer, but I do sketch how
+to do it below (not recommended).  Memory is socketed (thank goodness) so this
+is easy to install. Ensure what you buy is in a 16-pin DIP package. Also if you
+upgraded a CoCo 2 from 16K to 64K, the 16K memory you took out is 4517 memory
+(and will work).
 
 * (optional) 2 14-pin DIP sockets and a 14-pin DIP 7 position switch. I'll show
   this below, however, you can just use a short wire.
@@ -166,22 +167,92 @@ on your multimeter.
 
 # Modifying the Model 1 computer
 
-TODO
+In this section I'll describe how to modify your Model 1 motherboard. We'll
+start by explaining what we are doing and then go into the step-by-step.
 
 ## Some background and theory behind our changes
 
-Changing a Model 1 to use DC (even batteries) has been done in the past.  If
-you really know the computer anyone can do this. It is more complex to keep the
+Changing a Model 1 to use DC (even batteries) has been done in the past.  One
+instance that I'm aware of is dicussed in [TRS-80 Trash Talk Episode
+18](https://www.trs80trashtalk.com/2017/10/these-are-show-notes-for-episode-18-of.html).
+Mike Yetsko created a battery powered TRS80. In this episode Mike describes
+using batteries to supply all three voltages 5V, -5V, and 12V. If you really
+know the computer anyone can do this. It is more complex to keep the
 modification simple. My first prototype was a tangle of wires and cuts. Its
 gotten better.
 
 What we want to do is bypass the power regulation circuits on the motherboard.
-By changing out the memory we have a 5V DC motherboard and an external 5V DC
-power supply. The trick is to channel the power around the power circuits. Also
-we do not want to remove the big transisters (this was required in the CoCo but
-is not in the Model 1).
+The trick is to channel the power around the active power regulation circuits
+(that create the heat in a stock Model 1).  Also we do not want to remove the
+big transisters (this was required in the CoCo but is not in the Model 1). What
+we want is a clean path to the DC power out to the voltage rails.  My pencil
+marks give some insight into earlier attempts and can be ignored. The red-X's
+show where we will remove components and the green show the clear path out of
+the power regulation circuits to the motherboard logic.
+
+!["Motherboard schematic changes"](../etc/images/m1usb_schematic.jpg?raw=true "Motherboard schematic")
+
+
+
+**(OPTION 1) KEEP 4116 MEMORY:** To use the original 4116 memory we have to
+supply each power path with the volatge that it needs. However, there is a
+subtile shortcut that we can do for the -5V. Boost-buck transformers are cheap,
+however we will get 12V and -12V not 12V and -5V. What can we do? The bottom
+path of the schematic above is a circuit to regulate -13.3V (my measurement
+yours will vary) out of the bridge rectivier (CR8) to -5V. What we will do is
+connect our -12V DC to the *(Neg Pt)* (the negative or right side of C1) to use
+part of the Model 1's power regulation to get us -5V. This works very well in
+practice and does not generate excessive heat because the regulation here is
+not active, its just a diode (CR2). In fact, CR2 is a 5% 5.1V Zener diode.
+Perfect.
+
+Given the boost-buck transformer the rest is easy. 5V is hooked up to pin 3 on
+Z1 and 12V is hooked up to pin 3 on Z2. This makes all the power rails exactly
+like the original machine.
+
+To summarize this option we
+
+* Connect 5V DC power into the 5V power grid (the left hand side of R4 as
+  presented below) and into the input of the boost-buck transformer.
+
+* Connect -12V out of the boost-buck transformer to *(Neg Pt)* to get -5V.
+
+* Connect 12V to pin 3 of Z2.
+
+The drawback of this approach is we have to include the boost-buck transfomer.
+The benefit is that we do not need to replace the memory chips.
+
+**(OPTION 2) USE 4517 OR 6665 MEMORY:** If we swap out the memory we can make a
+5V only system. This removes the need for the boost-buck transformer, however,
+there is snag. If you look at the memory chip pinouts for the 4517 (16K) and
+the 6665 (64K using 16K) in the diagram below, in both cases, we have to get 5V
+on the lines where prevously there was 12V. We can safely ignore the -5V lines.
+
+!["Memory pinouts"](../etc/images/m1usb_memory_pinouts.jpg?raw=true "Memory pinouts")
+
+To get 5V where the stock computer had 12V is easy. Simply connect pin 3 of Z1
+to pin 3 of Z2.  This will channel 5V over to the (old) 12V lines and make them
+5V as well.
+
+To summarize this option we
+
+* Change all the memory chips (Z13 through Z20) from 4116 to either 4517 (16K)
+  and the 6665 (64K using 16K).
+
+* Ignore the -5V path (bottom of the diagram above) it will not be used.
+
+* Connect 5V DC power into the 5V power grid (the left hand side of R4 as presented below).
+
+* Bridge pin 3 on Z1 to pin 3 on Z2 to change the 12V path to 5V.
+
+*Note:* If you already did the Rosser 64k-in-the-keyboard mod some of the above
+is not need. That modification disconnected the 12V lines and bridged them to
+5V. So this change will be easier as we discuss below.
+
+## Clean power is needed
 
 Clean power also matters a bit more to the Model 1 than in my experience with
 CoCo. Not all USB power supplies will work well with a Model 1. I'll also
 discuss how to use a Meanwell linear power supply (about a $6 part) to get very
 clean power.
+
