@@ -344,8 +344,92 @@ switches except 3 (which is on).
 !["Switch option to bridge 12V to 5V"](../etc/images/m1usb_bridge_12V_5V_switch.jpg?raw=true "Switch option to bridge 12V to 5V")
 
 It really doesn't matter which you choose (I used the second when I was
-testing). The modification is complete.
+testing). The modification is complete (you can skip the next section).
 
 ## Completing (OPTION BAD) Keep 4116 Memory
 
-[Plug adapter](https://www.amazon.com/gp/product/B081VJ22G4)
+First we need to wire up the [+-12V DC-to-DC
+converter](https://www.ebay.com/itm/124193492824). Check that ground in and
+out are common (be sure!).
+
+!["Converter wiring"](../etc/images/m1usb_converter_wiring.jpg?raw=true "Converter wiring")
+
+The output wires need to be longer than the VIN and GND wires. I strongly
+suggest you test this converter before installing (with a bench power supply or
+a custom USB cable). I've had these be mislabeled and give me, for example,
++-9V rather than +-12V. You should get voltages like those shown in the image
+below.
+
+!["Test converter voltages"](../etc/images/m1usb_test_converter.jpg?raw=true "Test converter voltages")
+
+First solder the 12V wire from the converter to Z2 pin 3 as shown in the image below.
+
+!["12V connection"](../etc/images/m1usb_12v_connection.jpg?raw=true "12V connection")
+
+Next solder the -12V wire to the side of C1 closest to the power switch as
+shown in the image below. This is tricky to do. Tape down the wire so it stays
+in place.
+
+!["-12V connection"](../etc/images/m1usb_-12v_connection.jpg?raw=true "-12V connection")
+
+Next solder the GND wire from the converter to the hole for C8 farthest from
+the power switch (see the image below). We also need to connect the wire from
+the power switch with the input wire from the converter to a new third wire.
+The third wire will connect to the motherboard. Use some shrink cover on this
+connection.
+
+!["GND connection"](../etc/images/m1usb_ground_connection.jpg?raw=true "GND connection")
+
+Trim and solder the new wire you just added (and soldered into a bundle) to the R4 hole closest
+to the power switch. This should look like the image below.
+
+!["5V to motherboard"](../etc/images/m1usb_5v_motherboard_bad_option.jpg?raw=true "5V to motherboard")
+
+The modification is complete.
+
+## Setting up a MEAN WELL power supply
+
+Before we test I want to show how to use a [MEAN WELL RS-15-5 AC to DC power
+supply](https://www.amazon.com/gp/product/B005T6UJBU). This has very low ripple
+and is recommended. This is simple to setup. But you need a [plug
+adapter](https://www.amazon.com/gp/product/B081VJ22G4) and a female USB-A
+connector. My prototype looks like the image below.
+
+!["MEAN WELL setup"](../etc/images/m1usb_mean_well.jpg?raw=true "MEAN WELL setup")
+
+You can create one as you wish. A few notes
+
+* Mine uses USB-A female connectors because I want to be able to quick connect
+  to either USB-A power or the MEAN WELL. This seems to be nice to have. But
+  you could just connect the GND and 5V DC to the DIN power cable if you wish.
+
+* I have two USB-A female connectors because I use this to power both a Model 1
+  keyboard unit as well as a prototype Expansion Interface (EI). This has the
+  advantage that both have a common GND (helps stability). I'm not yet done
+  testing the EI setup (but it is quite similar to OPTION BAD).
+
+* This could clearly be packaged better but I haven't figured out how to do so.
+
+* If I haven't stressed this enough alreadly. This is highly recommened,
+  especially if you choose OPTION BAD.
+
+## Testing your modification and putting the memory back
+
+Ensure your power switch is off on the Model 1 computer. Hook up the power
+cable and connect it to a USB charger or a MEAN WELL. For all this testing I
+suggest you use a clip to connect the negative lead of your multimeter to the
+side of C9 not connected to the power switch (as we do in a stock Model 1).
+
+(TEST 1) Before powering this on check the pin on the power switch one up
+toward where you press the switch. This should read around 5V DC.
+
+(TEST 2) Power on the machine. For OPTION GOOD test that pin 8 of any of the
+DRAM sockets (any of Z13 through Z20) is 5V DC. For OPTION BAD test several
+pins of any of Z13 through Z20. Pin 1 should be -5V DC. Pin 8 should be 12V DC.
+Pin 9 should be 5V DC.
+
+If these tests pass shut off the computer and disconnect the power cable.
+Carefully insert your memory. On the bench connect the power cable, you monitor
+cable, and the keyboard. Turn on the monitor and then the computer. It should
+work as as a Model 1 is expected to work.
+
