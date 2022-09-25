@@ -413,23 +413,48 @@ You can create one as you wish. A few notes
 * If I haven't stressed this enough alreadly. This is highly recommened,
   especially if you choose OPTION BAD.
 
+I suggest adjusting the MEAN WELL output voltage to about 5.1V.
+
 ## Testing your modification and putting the memory back
 
 Ensure your power switch is off on the Model 1 computer. Hook up the power
 cable and connect it to a USB charger or a MEAN WELL. For all this testing I
 suggest you use a clip to connect the negative lead of your multimeter to the
-side of C9 not connected to the power switch (as we do in a stock Model 1).
+side of C9 not connected to the power switch (as we do on a stock Model 1).
 
-(TEST 1) Before powering this on check the pin on the power switch one up
-toward where you press the switch. This should read around 5V DC.
+* **(TEST 1: Any Power?)** Before powering this on check the pin on the power
+  switch one up toward where you press the switch. This should read
+  around 5V DC.
 
-(TEST 2) Power on the machine. For OPTION GOOD test that pin 8 of any of the
-DRAM sockets (any of Z13 through Z20) is 5V DC. For OPTION BAD test several
-pins of any of Z13 through Z20. Pin 1 should be -5V DC. Pin 8 should be 12V DC.
-Pin 9 should be 5V DC.
+* **(TEST 2: Motherboard Grid Okay?)** Power on the machine. For OPTION GOOD
+  test that pin 8 of any of the DRAM sockets (any of Z13 through Z20) is 5V DC.
+  For OPTION BAD we need to test several pins of a socket (any of Z13 through
+  Z20). Pin 1 should be -5V DC. Pin 8 should be 12V DC. Pin 9 should be 5V DC.
+
+If any of these tests fails. Stop, something is wrong. Double-check the
+instructions and see if you shorted something with a solder connection.
 
 If these tests pass shut off the computer and disconnect the power cable.
 Carefully insert your memory. On the bench connect the power cable, you monitor
 cable, and the keyboard. Turn on the monitor and then the computer. It should
 work as as a Model 1 is expected to work.
 
+If you computer doesn't go. Some suggestions are
+
+* Check voltages when the maching is turned on. Do they look okay? Troubleshoot
+  to get power correct.
+
+* If you did OPTION BAD and the screen is scrolling? Try adjusting the MEAN
+  WELL volage a bit. If this doesn't help you likely need to swap out Z5, Z6,
+  and Z57 with new chips (as I noted up above). If you are using USB power
+  (not a MEAN WELL) you may never get OPTION BAD to work. Last resort, convert
+  to OPTION GOOD.
+
+* Use the *TRS-80 micro computer techincal reference handbook* to isolate the
+  problem.
+
+* You can reverse the modification (if you were careful with Z1 and Z2). Just
+  socket Z1 and Z2, undo all the new stuff, and put all the old parts where
+  they belong. Move the wire under the power switch to reconnect the trace cut.
+  I've done this several times. The only real danger is that you destroyed Z1
+  and Z2 when you took them out.
