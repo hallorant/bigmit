@@ -458,3 +458,12 @@ If you computer doesn't go. Some suggestions are
   they belong. Move the wire under the power switch to reconnect the trace cut.
   I've done this several times. The only real danger is that you destroyed Z1
   and Z2 when you took them out.
+
+## (Optional) Marking the power modification more obvious
+
+I have plugged in modified Model 1 computers with the wrong power source. To
+avoid this, the solution I came up with is to paint the power socket orange and
+put a *5V DC* sticker below the power socket. My approach is in the image
+below.
+
+!["Orange power plug"](../etc/images/m1usb_orange.jpg?raw=true "Orange power plug")
