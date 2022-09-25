@@ -30,6 +30,36 @@ Key features of this modification are
 
 * The power switch still works (so does the reset).
 
+## MEAN WELL power supply is recomended
+
+The modification creates the ability to use USB power, but I recommend you
+setup a [MEAN WELL RS-15-5 AC to DC power
+supply](https://www.amazon.com/gp/product/B005T6UJBU). This has very low ripple
+and noise (on par with the original power brick). It also works on AC power
+worldwide. One of these can power a keyboard and an expansion interface in my
+tests.
+
+My experience leads to this rule of thumb. If you changed the memory and have a
+5V only keyboard a USB charger tends to work fine as power. If you want to use
+an expansion interface, or you kept the 4116 memory (using a DC-to-DC
+converter) then you need to use the MEAN WELL.
+
+## Two modification options
+
+There are two options, one I consider GOOD and the other BAD:
+
+**(OPTION GOOD)** This replaces the 4116 memory with either 4517 (16K) or 6665
+(64K used as 16K). This simplifies the modification and allows the entire
+computer to run off 5V DC power. I've had far less trouble with this
+modification.
+
+**(OPTION BAD)** keeps the 4116 memory in the computer but requires a small
+DC-to-DC converter. I've found this is less successful, and more trouble.
+It seems to only work with the MEAN WELL linear power supply (where you have
+clean power and can dial in the voltage to about 5.1V. This also tends to bring
+out weaknesses in the video sync logic. Be prepared to swap out Z5, Z6, and Z57
+with new chips.
+
 ## A word of caution
 
 I strongly suggest starting with a working Model 1. Do not do this modification
@@ -52,28 +82,21 @@ Here's the list of parts you'll need
 
 * Wire at least 22 gauge (to carry DC power). Silicone is recommended. For the
   cable I use parallel red-black wire. Inside the computer it doesn't matter.
-  Do not use wire-wrap guage wire for this modification!
+  Do not use wire-wrap guage wire for any part of this modification!
 
-* Eight MCM4517P15 (16K) or MCM6665BP20 (64K used as 16K) memory chips. Search
-  AliExpress or eBay for deals (or reach out to sellers like Mav). Note the mod
-can be done with the original 4116 memory but it is far more complex and needs
-a boost-buck transformer like my [CoCo2 modification to use USB
-power](https://github.com/hallorant/bigmit/tree/master/coco2usb). I have not
-fully documented keeping the 4116 memory in the computer, but I do sketch how
-to do it below (not recommended).  Memory is socketed (thank goodness) so this
-is easy to install. Ensure what you buy is in a 16-pin DIP package. Also if you
-upgraded a CoCo 2 from 16K to 64K, the 16K memory you took out is 4517 memory
-(and will work).
+* **(OPTION GOOD)** Eight MCM4517P15 (16K) or MCM6665BP20 (64K used as 16K)
+  memory chips. Search AliExpress or eBay for deals (or reach out to sellers like
+  Mav). Memory is socketed (thank goodness) so this is easy to install. Ensure
+  what you buy is in a 16-pin DIP package. Also if you upgraded a CoCo 2 from 16K
+  to 64K, the 16K memory you took out is 4517 memory (and will work). Further, if
+  you have done the Rosser 64K memory-in-the-keyboard you are all set. Rosser's
+  modification already converted your memory to 6665 chips which only require 5V.
 
-* (optional) 2 14-pin DIP sockets and a 14-pin DIP 7 position switch. I'll show
-  this below, however, you can just use a short wire.
+* **(OPTION GOOD)** A 14-pin DIP socket and a 14-pin DIP 7 position switch. I'll show
+  this below, however, you can just use a short wire if you wish.
 
-*NOTE:* If you have done the Rosser 64k-in-the-keyboard modification to your
-Model 1 this conversion is greatly simplified. The 6555 memory you used is
-fine. One could consider doing Rosser's modification prior to this one.  I have
-found Rosser's modification to be very helpful to keep an expansion interface
-(which you pull the memory out of once you do Rosser's modification) stable.  I
-did this with one of my prototype machines, the other used 4517 (16K) memory.
+* **(OPTION BAD)** A DC to DC converter 12V/-12V. I used [this
+  one](https://www.ebay.com/itm/124193492824), pick +-12V no pins.
 
 What tools do you need
 
@@ -192,11 +215,9 @@ the power regulation circuits to the motherboard logic.
 
 !["Motherboard schematic changes"](../etc/images/m1usb_schematic.jpg?raw=true "Motherboard schematic")
 
-
-
-**(OPTION 1) KEEP 4116 MEMORY:** To use the original 4116 memory we have to
+**(OPTION BAD) KEEP 4116 MEMORY:** To use the original 4116 memory we have to
 supply each power path with the volatge that it needs. However, there is a
-subtile shortcut that we can do for the -5V. Boost-buck transformers are cheap,
+subtile shortcut that we can do for the -5V. DC-to-DC transformers are cheap,
 however we will get 12V and -12V not 12V and -5V. What can we do? The bottom
 path of the schematic above is a circuit to regulate -13.3V (my measurement
 yours will vary) out of the bridge rectivier (CR8) to -5V. What we will do is
@@ -206,33 +227,34 @@ practice and does not generate excessive heat because the regulation here is
 not active, its just a diode (CR2). In fact, CR2 is a 5% 5.1V Zener diode.
 Perfect.
 
-Given the boost-buck transformer the rest is easy. 5V is hooked up to pin 3 on
-Z1 and 12V is hooked up to pin 3 on Z2. This makes all the power rails exactly
-like the original machine.
+Given the DC-to-DC converter the rest is easy. 5V is hooked up to Z1 pin 3 and
+12V is hooked up to Z2 pin 3. This makes all the power rails exactly like the
+original machine.
 
 To summarize this option we
 
 * Connect 5V DC power into the 5V power grid (the left hand side of R4 as
-  presented below) and into the input of the boost-buck transformer.
+  presented below) and into the input of the DC-to-DC converter.
 
-* Connect -12V out of the boost-buck transformer to *(Neg Pt)* to get -5V.
+* Connect -12V out of the DC-to-DC converter to *(Neg Pt)* to get -5V.
 
-* Connect 12V to pin 3 of Z2.
+* Connect 12V to Z2 pin 3.
 
-The drawback of this approach is we have to include the boost-buck transfomer.
-The benefit is that we do not need to replace the memory chips.
+The drawback of this approach is we have to include the DC-to-DC converter.
+I've also noted it brings out problems in the video sync circuit.  The benefit
+is that we do not need to replace the memory chips.
 
-**(OPTION 2) USE 4517 OR 6665 MEMORY:** If we swap out the memory we can make a
-5V only system. This removes the need for the boost-buck transformer, however,
+**(OPTION GOOD) USE 4517 OR 6665 MEMORY:** If we swap out the memory we can make a
+5V only system. This removes the need for the DC-to-DC converter, however,
 there is snag. If you look at the memory chip pinouts for the 4517 (16K) and
 the 6665 (64K using 16K) in the diagram below, in both cases, we have to get 5V
 on the lines where prevously there was 12V. We can safely ignore the -5V lines.
 
 !["Memory pinouts"](../etc/images/m1usb_memory_pinouts.jpg?raw=true "Memory pinouts")
 
-To get 5V where the stock computer had 12V is easy. Simply connect pin 3 of Z1
-to pin 3 of Z2.  This will channel 5V over to the (old) 12V lines and make them
-5V as well.
+To get 5V where the stock computer had 12V is easy. Simply connect Z1 pin 3 to
+Z1 pin 12 (connected to Z2 pin 3).  This will channel 5V over to the (old) 12V
+lines and make them 5V as well.
 
 To summarize this option we
 
@@ -243,16 +265,87 @@ To summarize this option we
 
 * Connect 5V DC power into the 5V power grid (the left hand side of R4 as presented below).
 
-* Bridge pin 3 on Z1 to pin 3 on Z2 to change the 12V path to 5V.
+* Bridge Z1 pin 3 to Z1 pin 12 (connected to Z2 pin 3) to change the 12V path to 5V.
 
 *Note:* If you already did the Rosser 64k-in-the-keyboard mod some of the above
 is not need. That modification disconnected the 12V lines and bridged them to
 5V. So this change will be easier as we discuss below.
 
-## Clean power is needed
+## Remove the DRAM chips
 
-Clean power also matters a bit more to the Model 1 than in my experience with
-CoCo. Not all USB power supplies will work well with a Model 1. I'll also
-discuss how to use a Meanwell linear power supply (about a $6 part) to get very
-clean power.
+Start off by removing the socketed Z13-Z20 memory chips. Regardless of option
+we want to test power before we put memory chips back into the machine.
 
+## Removing components
+
+We'll start by removing several components. Required for both options.
+
+* Remove two DIP chips: Z1 and Z2
+
+* Remove resistors: R4, R7, R8, R13, and R18
+
+* Remove capacitor C8 entirely.
+
+* Unsolder and disconnect only the + side of C9 (near the power switch).
+
+Below is a picture of what this should look like.
+
+!["Components to remove"](../etc/images/m1usb_removals.jpg?raw=true "Components to remove")
+
+## Setup the power switch
+
+Flip the computer over to the back and focus near the power connector and power
+switch.  We need to do a trace cut and solder a wire from pin 5 of the power
+connector to the right position on the switch. None of this is labeled so use
+the image below to guide you.
+
+!["Setup the power switch"](../etc/images/m1usb_setup_power_switch.jpg?raw=true "Setup the power switch")
+
+Use the continuity tester on your multimeter to ensure this is all correct.
+Check that the connection on pin 4 of the power connector is not shorted to the
+pin close to it. Also be sure your trace cut is not conducting. I used a Dremel
+tool to do the trace cut (just to be sure) but great care is required (practice
+this a few times if you try it).
+
+The trace cut isolates the power switch lead we will use to connect power to
+the motherboard. To do this turn the board around to show the chips.  You need
+to position the positive lead of C9 to reach the third connection back on the
+left hand side of the power switch. Add a bit of shrink wrap to ensure the C9
+lead doesnt connect with any other power switch terminals. We'll also insert a
+wire of about 4 inches that will connect to the motherboard. The picture below
+shows what this should look like prior to soldering.
+
+!["Power on connections"](../etc/images/m1usb_power_to_motherboard.jpg?raw=true "Power on connections")
+
+I suggest you look over the leads on the switch. I've had to use some sandpaper
+to clean some of these off. If it looks black or dirty do this. We want a good
+solder connection. Then solder the two wires to the power switch.
+
+At this point the procedure differs depending on which option you choose.
+
+## Completing (OPTION GOOD) Using 4517 or 6665 Memory
+
+Trim and solder the wire connected to the power switch to the R4 hole closest
+to the power switch. This should look like the image below.
+
+!["5V to motherboard"](../etc/images/m1usb_5v_motherboard.jpg?raw=true "5V to motherboard")
+
+Finally, we need to bridge the old 12V grid to the old 5V grid so everything is
+5V DC. You can do this one of two ways. The first option is to simply put a
+short wire between Z1 pin 3 and Z1 pin 12 (straight across). This is shown in
+the image below.
+
+!["Wire option to bridge 12V to 5V"](../etc/images/m1usb_bridge_12V_5V_wire.jpg?raw=true "Wire option to bridge 12V to 5V")
+
+The second option is to solder sockets into Z1 (and optionally Z2) and use a 7
+switch DIP. This is shown in the image below. Be sure to turn off all the
+switches except 3 (which is on).
+
+!["Switch option to bridge 12V to 5V"](../etc/images/m1usb_bridge_12V_5V_switch.jpg?raw=true "Switch option to bridge 12V to 5V")
+
+It really doesn't matter which you choose (I used the second when I was
+testing). The modification is complete.
+
+## Completing (OPTION BAD) Keep 4116 Memory
+
+[Plug adapter](https://www.amazon.com/gp/product/B081VJ22G4)
