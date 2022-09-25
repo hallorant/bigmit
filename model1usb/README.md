@@ -149,7 +149,7 @@ is done. The male USB-A connector gets soldered as shown in the image below.
 
 !["USB soldering"](../etc/images/m1usb_usb_soldering.jpg?raw=true "USB soldering")
 
-Note in the image above red is 5V and green in ground. This is a connector I
+Note in the image above red is 5V and green is ground. This is a connector I
 keep around to check which side is which. Your cable will probably use black
 for ground.
 
