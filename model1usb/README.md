@@ -334,7 +334,7 @@ to the power switch. This should look like the image below.
 
 *Note:* Do not do the next step if you have Rosser 64K in-the-keyboard
 modification. The modification already did what the next step asks you to
-accomplish. If you have Rosser's modification, you are done.
+accomplish. If you have Rosser's modification then you are done.
 
 Finally, we need to bridge the old 12V grid to the old 5V grid so everything is
 5V DC. You can do this one of two ways. The first option is to simply put a
