@@ -290,7 +290,7 @@ We'll start by removing several components. Required for both options.
 
 * Unsolder and disconnect only the + side of C9 (near the power switch).
 
-Remove things carefully and save them. Worst comes to worst you can revers the
+Remove things carefully and save them. Worst comes to worst you can reverse the
 modification. Below is a picture of what this should look like.
 
 !["Components to remove"](../etc/images/m1usb_removals.jpg?raw=true "Components to remove")
