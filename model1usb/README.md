@@ -3,8 +3,10 @@
 This modification can be useful if your Radio Shack power brick is bad or
 noticeably hums. You might not have one at all.  The modification lets your
 Model 1 run significantly cooler inside.  I've tested this modification on two
-Model 1 keyboards (one with the Rosser 64k-in-keyboard modification) and run them for
-multiple days.
+Model 1 keyboards (one with the [Rosser 64K in-the-keyboard
+modification](https://www.trs-80.com/wordpress/zaps-patches-pokes-tips/hardware/)
+select *Upgrading the Model I to 64K of DRAMs (pdf)* from the menu that the
+link brings up on Ira's site) and run them for multiple days.
 
 I strongly suggest you do not do this modification on your only working Model 1
 unless you are quite skilled with electronics work. The modification is pretty
@@ -70,7 +72,7 @@ keyboard connector and installing headers or another more robust solution of
 your choice. You'll see my "quick connect" approach in the pictures.
 
 This modification is harder than installing a lowercase modification but easier
-than doing the Rosser 64k in-the-keyboard modification.
+than doing the Rosser 64K in-the-keyboard modification.
 
 ## What you need
 
@@ -89,7 +91,7 @@ Here's the list of parts you'll need
   Mav). Memory is socketed (thank goodness) so this is easy to install. Ensure
   what you buy is in a 16-pin DIP package. Also if you upgraded a CoCo 2 from 16K
   to 64K, the 16K memory you took out is 4517 memory (and will work). Further, if
-  you have done the Rosser 64K memory-in-the-keyboard you are all set. Rosser's
+  you have done the Rosser 64K in-the-keyboard you are all set. Rosser's
   modification already converted your memory to 6665 chips which only require 5V.
 
 * **(OPTION GOOD)** A 14-pin DIP socket and a 14-pin DIP 7 position switch. I'll show
@@ -267,9 +269,9 @@ To summarize this option we
 
 * Bridge Z1 pin 3 to Z1 pin 12 (connected to Z2 pin 3) to change the 12V path to 5V.
 
-*Note:* If you already did the Rosser 64k-in-the-keyboard mod some of the above
-is not need. That modification disconnected the 12V lines and bridged them to
-5V. So this change will be easier as we discuss below.
+*Note:* If you already did the Rosser 64K in-the-keyboard modification some of
+the above is not need. That modification disconnected the 12V lines and bridged
+them to 5V. So this change will be easier as we discuss below.
 
 ## Remove the DRAM chips
 
@@ -329,6 +331,10 @@ Trim and solder the wire connected to the power switch to the R4 hole closest
 to the power switch. This should look like the image below.
 
 !["5V to motherboard"](../etc/images/m1usb_5v_motherboard.jpg?raw=true "5V to motherboard")
+
+*Note:* Do not do the next step if you have Rosser 64K in-the-keyboad
+modification. The modification already did what the next step asks you to
+accomplish. If you have Rosser's modification, you are done.
 
 Finally, we need to bridge the old 12V grid to the old 5V grid so everything is
 5V DC. You can do this one of two ways. The first option is to simply put a
