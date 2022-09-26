@@ -332,7 +332,7 @@ to the power switch. This should look like the image below.
 
 !["5V to motherboard"](../etc/images/m1usb_5v_motherboard.jpg?raw=true "5V to motherboard")
 
-*Note:* Do not do the next step if you have Rosser 64K in-the-keyboad
+*Note:* Do not do the next step if you have Rosser 64K in-the-keyboard
 modification. The modification already did what the next step asks you to
 accomplish. If you have Rosser's modification, you are done.
 
