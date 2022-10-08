@@ -18,3 +18,6 @@ help.  Ian helped us fix FreHDs and sent parts to us as we broke thinks.
   site in late 2021. If you work on this code please note the patch file for
   changes to some of the non-MULTIDOS files. There were bugs in the utilties
   on Fred's side that I fixed.
+* [frehd.rom](./frehd.rom) &ndash; This is needed for any MULTIDOS images to
+  autoboot. Put this file on your SD card. 
+  
