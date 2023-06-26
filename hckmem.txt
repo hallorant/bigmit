@@ -966,3 +966,12 @@ screen with bad Ram or failed CPU.  The other one, lets try and work it out
 once the screen stops moving around.
 
                                                 -- George
+--------------------------------------------------------------------
+- Building TRS80GP trs80gp
+
+hallorant: George do you have a list of the Rasppberyy pi os packages needed
+for a build? I've started poking my way throught this, but figured I'd ask if
+you had a list
+
+George Phillips: Looks like libgtk-3-dev and libpulse-dev is all you need.
+Maybe g++ but I imagine that's already there.
