@@ -1,4 +1,16 @@
 --------------------------------------------------------------------
+- Serial project TA'23
+
+Omniterm on Model 4 to real serial
+trs80gp -ld -m4 -rA /dev/ttyUSB0 -d1 ~/omniterm411.dsk
+
+hallorant: is "trs80gp -m6000" all I need for xenix or are there some other
+flags I should use? (other than -h of course)
+
+George Phillips: That should do it.  -ee if you're using 3.4.
+And -rA /dev/tty for the serial port.
+
+--------------------------------------------------------------------
 - BASIC
 high memory peeks/pokes
 
