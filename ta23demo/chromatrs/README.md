@@ -3,7 +3,7 @@
 This demonstrated the modern ChromaTRS on a Model III. I used two Goteks and
 two disk images. All the files are in the chromatrs subdirectory.
 
-* Boot disk: `TRSDOS v13 SSDD.hfe` this is just stock TRSDOS 1.3
+* Boot disk: `TRSDOS v13.hfe` this is just stock TRSDOS 1.3
 * Data disk: `ChromaTRS TRSDOS v13.hfe` is the ChromaTRS software (disk is formatted for TRSDOS 1.3) 
 
 All of the demos described below assume you have the boot disk in drive 0 and
