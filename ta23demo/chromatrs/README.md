@@ -18,6 +18,9 @@ downloadable with the following copyright notice: This material is licensed
 under Attribution-ShareAlike 4.0 International ([CC BY-SA
 4.0](https://creativecommons.org/licenses/by-sa/4.0/))
 
+Robert wrote all of the software except `TA23/BAS` (but that uses Robert's
+Chroma BASIC).
+
 ## MOUTHMAN/CMD (a PacMan-like game)
 
 Run `MOUTHMAN/CMD` from TRSDOS.
