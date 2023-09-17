@@ -13,9 +13,13 @@ C32DISK/CMD drivers for basic if not)
 
 ## MOUTHMAN/CMD (a PacMan-like game)
 
-Just put therun MOUTHMAN/CMD
+Run `MOUTHMAN/CMD` from TRSDOS.
 
 ## DEMO/BAS
+
+Note in my testing you cannot run `DEMO/BAS` in Chroma BASIC, i.e., using
+`C48DISC/CMD`, you have to use the `COL48/CMD` driver for this demo as
+presented in this section.
 
 To run this demo follow the steps below.
 
@@ -26,9 +30,6 @@ To run this demo follow the steps below.
 1. At the BASIC `>` prompt enter `LOAD"DEMO/BAS"`
 1. At the BASIC `>` prompt enter `RUN` to start the demo
 1. Follow the demo's menu to operate the demo
-
-Note in my testing you cannot run `DEMO/BAS` in Chroma BASIC, i.e., using
-`C48DISC/CMD`, you have to use the `COL48/CMD` driver for this demo.
 
 ## Chroma BASIC
 
@@ -41,3 +42,25 @@ To get Chroma BASIC going follow the steps below.
 1. Do Chroma BASIC programming
 
 
+# MLOGO/BAS and MLOGO/DMO
+
+Follow the instructions above to load Chroma BASIC.
+
+1. At the BASIC `>` prompt enter `LOAD"MLOGO/BAS"`
+1. At the BASIC `>` prompt enter `RUN` to start MLogo
+1. Use the MLogo menu to recall `MLOGO/DMO` and run it
+
+# UFO/BAS
+
+Follow the instructions above to load Chroma BASIC.
+
+1. At the BASIC `>` prompt enter `LOAD"UFO/BAS"`
+1. At the BASIC `>` prompt enter `RUN` to start the game
+
+# TA23/BAS
+
+Follow the instructions above to load Chroma BASIC.
+
+1. At the BASIC `>` prompt enter `LOAD"TA23/BAS"`
+1. At the BASIC `>` prompt enter `RUN` to start the demo
+1. It runs forever so use `BREAK` to stop the demo
