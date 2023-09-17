@@ -1,3 +1,3 @@
 # Tandy Assembly 2023 
 
-ChromaTRS demo is described [here](./chromatrs)
+* A ChromaTRS demo as described [here](./chromatrs).
