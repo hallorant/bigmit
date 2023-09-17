@@ -21,3 +21,7 @@ Why *bigmit*? A homage to [Big Five Software](http://www.trs-80.org/big-five/).
   This directory contains the example source code from my Tandy Assembly 2021
   introduction tutorial to modern TRS-80 z80 assembly programming using George
   Phillip's toolchain. Includes a few pictures of the conference.
+
+* [Tandy Assembly 2022 ChromaTRS, trs80gp RealSerial, and MULTIDOS Use](./ta23demo) &ndash;
+  This directory contains the ChromaTRS demo I did from Tandy Assembly 2023.
+  It includes a new Chroma BASIC program `TA23/BAS` just for the show.
