@@ -34,11 +34,10 @@ Note in my testing you cannot run `DEMO/BAS` in Chroma BASIC, i.e., using
 
 To get Chroma BASIC going follow the steps below.
 
-1. At the DOS prompt run "BASIC"
-1. Run "BASIC" at the TRSDOS prompt.
-1. For "HOW MANY FILES?" just press ENTER
-1. For "MEMORY SIZE?" enter 52100 (36100 if 32K)
-1. At the BASIC ">" prompt enter CMD"I","C48DISK/CMD"
-1. Do Chroma BASIC stuff
+1. Run `BASIC` at the TRSDOS prompt.
+1. For `HOW MANY FILES?` just press ENTER
+1. For `MEMORY SIZE?` enter 52100 (36100 if 32K)
+1. At the BASIC `>` prompt enter `CMD"I","C48DISK/CMD"`
+1. Do Chroma BASIC programming
 
 
