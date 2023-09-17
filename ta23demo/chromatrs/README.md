@@ -11,6 +11,13 @@ the data disk in drive 1 and that you have booted TRSDOS 1.3.  I'm going to
 assume you have a 48K Model III machine (adjust to use the COL32/CMD or
 C32DISK/CMD drivers for basic if not)
 
+## Robert French (author)
+
+Robert French has permitted making the ChromaTRS sofware he wrote freely
+downloadable with the following copyright notice: This material is licensed
+under Attribution-ShareAlike 4.0 International ([CC BY-SA
+4.0](https://creativecommons.org/licenses/by-sa/4.0/))
+
 ## MOUTHMAN/CMD (a PacMan-like game)
 
 Run `MOUTHMAN/CMD` from TRSDOS.
