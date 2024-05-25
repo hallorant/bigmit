@@ -91,15 +91,27 @@ A few words of caution.
 
 CoCo 2 computers that I own that work are
 
+* Color Computer 2 with a Rev A Motherboard
 * Color Computer 2 with a Rev B Motherboard
 * Korean-made Color Computer 2
 
 Other CoCo 2's should work, please reach out to me if you have one that is odd.
 Perhaps it can be supported.
 
-## CoCo 2 Rev B motherboard
+## CoCo 2 Rev A and B motherboard
 
-### Identification (Is my CoCo 2 a Rev B?)
+### Identification: Is my CoCo 2 a Rev A motherboard?
+
+Outside, this has the tall tuner with the channel selector above the video
+output connection. But you want to open up your CoCo 2 and look at the left
+side of the motherboard (just below the transformer). If you have a Rev A
+you'll see an identification as shown in the picture below. Note this is on
+the back side of the motherboard. On the front side my computer looked like
+the Rev B picture in the next section, but just said "REV" with no letter.
+
+!["CoCo 2 Rev A Motherboard Identification"](../etc/images/coco2_rev_a_board_id.jpg?raw=true "CoCo 2 Rev A Motherboard Identification")
+
+### Identification: Is my CoCo 2 a Rev B motherboard?
 
 Outside, this has the tall tuner with the channel selector above the video
 output connection. But you want to open up your CoCo 2 and look at the left
