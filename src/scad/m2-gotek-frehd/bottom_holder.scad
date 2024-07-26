@@ -20,5 +20,5 @@ difference() {
   }
   translate([8,
              3 + bscrew_radius + 15, 1])
-    cylinder(h=tw*3, r=5);
+    cylinder(h=tw*3, r=5.25);
 }
