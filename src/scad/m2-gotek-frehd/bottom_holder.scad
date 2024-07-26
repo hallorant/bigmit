@@ -1,0 +1,24 @@
+$fa = 1;
+$fs = 0.5;
+$fn = 50;
+
+////////////////////////////////
+// All measurements are in mm //
+////////////////////////////////
+
+tw = 1.5; // thickness of any walls
+
+// Bottom screw hole (is 2.5mm in disk plate)
+bscrew_radius = 2.4;
+
+difference() {
+  union() {
+  cube([15.5, 30, tw*2 + 1]);
+  translate([8,
+             3 + bscrew_radius, -9])
+    cylinder(h=10, r=bscrew_radius);
+  }
+  translate([8,
+             3 + bscrew_radius + 15, 1])
+    cylinder(h=tw*3, r=5);
+}
