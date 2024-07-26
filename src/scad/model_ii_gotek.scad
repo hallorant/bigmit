@@ -10,7 +10,7 @@ tw = 1.5; // thickness of any walls
 
 // Disk drive hole (DHOLE)
 dhole_width = 87;
-dhole_height = 213;
+dhole_height = 214;
 dhole_pad_top = 1.5;
 dhole_pad_bottom = 1.5;
 dhole_pad_right = 10;
@@ -32,17 +32,30 @@ abase_total_x_offset_to_dhole = 27 + tw;
 // Bottom screw hole
 bscrew_radius = 2.5;
 bscrew_back_from_dhole = 25.5;
-bscrew_x_offset_from_abase_left_edge = abase_total_width - 30;
+bscrew_x_offset_from_abase_left_edge = abase_total_width - 32;
 
 // Top screw hole
 tscrew_radius = 2.5;
-tscrew_x_offset_from_left_dhole = 30;
-tscrew_back_from_dhole =  21;
+tscrew_x_offset_from_left_dhole = 54;
+tscrew_back_from_dhole =  49;
 
 ///////////////////////////////
 // Disk drive hole faceplate //
 ///////////////////////////////
-translate([-dhole_center_x_offset, 0, 0]) cube([dhole_total_width, tw, dhole_total_height]);
+
+difference() {
+  translate([-dhole_center_x_offset, 0, 0])
+    cube([dhole_total_width, tw, dhole_total_height]);
+  for (xpos=[1:3:87]) {
+    translate([-dhole_center_x_offset - 5 + (dhole_total_width/2) - 38.5 + xpos, -1, 30])
+      cube([1,2*tw,60]);
+    translate([-dhole_center_x_offset - 5 + (dhole_total_width/2) - 38.5 + xpos, -1, 110])
+      cube([1,2*tw,90]);
+  }
+  translate([-dhole_center_x_offset - 5 + (dhole_total_width/2) - 38.5, 1, 95])
+    rotate([90, 0, 0])
+    linear_extrude(tw) text("Drive:0", size=5);
+}
 
 ///////////////////////////////
 // Fits on metal angled base //
@@ -50,10 +63,13 @@ translate([-dhole_center_x_offset, 0, 0]) cube([dhole_total_width, tw, dhole_tot
 union () {
   translate([-dhole_center_x_offset + dhole_pad_left - abase_total_x_offset_to_dhole, 0, 0])
     difference() {
-      cube([abase_total_width, abase_height, tw]);
+      cube([abase_total_width, abase_height, tw*2]);
       translate([bscrew_x_offset_from_abase_left_edge - bscrew_radius,
                  bscrew_back_from_dhole + bscrew_radius, -1])
-        cylinder(h=4, r=bscrew_radius);
+        cylinder(h=tw*3, r=bscrew_radius);
+      translate([bscrew_x_offset_from_abase_left_edge - bscrew_radius,
+                 bscrew_back_from_dhole + bscrew_radius + 15, -1])
+        cylinder(h=tw*3, r=5);
     }
 
   translate([-dhole_center_x_offset + dhole_pad_left - abase_total_x_offset_to_dhole,
@@ -87,8 +103,11 @@ linear_extrude(tw)
 /////////////////////////
 translate([-dhole_center_x_offset, 0, dhole_total_height - tw]) 
   difference() {
-    cube([dhole_total_width, 40, tw]);
+    cube([dhole_total_width, 60, tw*2]);
     translate([dhole_total_width -tscrew_radius - dhole_pad_left - tscrew_x_offset_from_left_dhole,
                tscrew_back_from_dhole + tscrew_radius, -1])
-      cylinder(h=4,r=tscrew_radius);
+      cylinder(h=tw*3,r=tscrew_radius);
+        translate([dhole_total_width -tscrew_radius - dhole_pad_left - tscrew_x_offset_from_left_dhole,
+               tscrew_back_from_dhole + tscrew_radius - 15, -1])
+      cylinder(h=tw*3,r=5);
   }

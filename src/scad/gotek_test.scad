@@ -53,7 +53,7 @@ oled_width = 39;
 oled_height = 13;
 oled_holder_width = oled_width + tw + tw;
 oled_holder_height = oled_height + tw;
-oled_holder_depth = 5;
+oled_holder_depth = 6;
 
 union() {
   difference() {
@@ -63,9 +63,9 @@ union() {
       translate([tw + oled_screen_left_offset, -1, oled_holder_height - oled_screen_height - oled_screen_top_offset])
         cube([oled_screen_width, 30, oled_screen_height]);
   }
-  translate([oled_holder_width - 4*tw, oled_holder_depth - tw, 0])
-    cube([4*tw, tw, oled_holder_height]);
+  translate([oled_holder_width - 2*tw, oled_holder_depth - tw, 0])
+    cube([2*tw, tw, oled_holder_height]);
   translate([5 + tw, oled_holder_depth - tw, 0])
-    cube([5 ,tw, 3*tw]);
+    cube([8 ,tw, 2*tw]);
 }
 
