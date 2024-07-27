@@ -58,6 +58,7 @@ difference() {
   union() {
     translate([-dhole_center_x_offset, 0, 0])
       cube([dhole_total_width, tw, dhole_total_height]);
+
     // gotek 0 oled internal frame
     translate([-dhole_center_x_offset + (dhole_total_width - 70)/2, 0, gotek_0_height]) {
       translate([18-6,0,17]) cube([39,5,tw]);

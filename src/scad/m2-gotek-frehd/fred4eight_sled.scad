@@ -15,8 +15,10 @@ screw_radius = 1.5;
 pin_radius = 1.45;
 rhs_offset = 4;
 lhs_offset = sled_width - rhs_offset;
-nb = 0.1;
+nb = 0;
 sled_mount_hole_height = 14;
+front_back=4.3;
+back_back=73.9;
 
 difference() {
   union() {
@@ -24,18 +26,18 @@ difference() {
     translate([0,-tw,0]) cube([sled_length, tw, 18]);
     translate([0,sled_width,0]) cube([sled_length, tw, 18]);
     // right side
-    translate([4.5+nb, rhs_offset, 0]) cylinder(h=mount_height, r=mount_radius);
-    translate([73.5+nb, rhs_offset, 0]) cylinder(h=mount_height, r=mount_radius);
+    translate([front_back+nb, rhs_offset, 0]) cylinder(h=mount_height, r=mount_radius);
+    translate([back_back+nb, rhs_offset, 0]) cylinder(h=mount_height, r=mount_radius);
     // left side
-    translate([4.5+nb, lhs_offset, 0]) cylinder(h=mount_height, r=mount_radius);
-    translate([73.5+nb, lhs_offset, 0]) cylinder(h=mount_height, r=mount_radius);
+    translate([front_back+nb, lhs_offset, 0]) cylinder(h=mount_height, r=mount_radius);
+    translate([back_back+nb, lhs_offset, 0]) cylinder(h=mount_height, r=mount_radius);
   }
   // right side screw holes
-  translate([4.5+nb, rhs_offset, -1]) cylinder(h=mount_height+2, r=screw_radius);
-  translate([73.5+nb, rhs_offset, -1]) cylinder(h=mount_height+2, r=screw_radius);
+  translate([front_back+nb, rhs_offset, -1]) cylinder(h=mount_height+2, r=screw_radius);
+  translate([back_back+nb, rhs_offset, -1]) cylinder(h=mount_height+2, r=screw_radius);
   // left side screw holes
-  translate([4.5+nb, lhs_offset, -1]) cylinder(h=mount_height+2, r=screw_radius);
-  translate([73.5+nb, lhs_offset, -1]) cylinder(h=mount_height+2, r=screw_radius);
+  translate([front_back+nb, lhs_offset, -1]) cylinder(h=mount_height+2, r=screw_radius);
+  translate([back_back+nb, lhs_offset, -1]) cylinder(h=mount_height+2, r=screw_radius);
   // sled right side mounting holes
   translate([15,1,sled_mount_hole_height])
     rotate([90, 0, 0]) cylinder(h=7, r=screw_radius);
