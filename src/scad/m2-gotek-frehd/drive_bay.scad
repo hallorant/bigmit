@@ -10,7 +10,7 @@ tw = 1.5; // thickness of any walls
 
 // Disk drive hole (DHOLE)
 dhole_width = 87;
-dhole_height = 214;
+dhole_height = 213.5;
 dhole_pad_top = 1.5;
 dhole_pad_bottom = 1.5;
 dhole_pad_right = 10;
@@ -54,32 +54,40 @@ difference() {
       cube([dhole_total_width, tw, dhole_total_height]);
     // gotek 0 oled internal frame
     translate([-dhole_center_x_offset + (dhole_total_width - 70)/2, 0, gotek_start_height + gotek_0_height]) {
-      translate([27-6,0,17]) cube([39,4,tw]);
-      translate([27-6,0,17+12.5+tw]) cube([39,4,tw]);
-      translate([27-6-tw,0,17]) cube([tw,4,12.5+2*tw]);
-      translate([27-6+39,0,17]) cube([tw,4,12.5+2*tw]);
+      translate([18-6,0,17]) cube([39,5,tw]);
+      translate([18-6,0,17+12.5+tw]) cube([39,5,tw]);
+      translate([18-6-tw-11,0,17]) difference() {
+        cube([tw+11,5,12.5+2*tw]);
+        translate([6,6,8]) rotate([90,0,0]) cylinder(h=5,r=4);
+      }
+      translate([18-6+39,0,17]) difference() {
+        union() {
+          cube([tw,5,12.5+2*tw]);
+          translate([0,0,3]) cube([20,5,12.5]);
+        }
+        translate([6,6,8]) rotate([90,0,0]) cylinder(h=5,r=4);
+      }
     }
   }
   for (xpos=[1:4:82]) {
     translate([-dhole_center_x_offset - 5 + (dhole_total_width/2) - 36.5 + xpos, -1, 10])
       cube([1,2*tw,6]);
+    translate([-dhole_center_x_offset - 5 + (dhole_total_width/2) - 36.5 + xpos, -1, dhole_total_height-16])
+      cube([1,2*tw,6]);
   }
   
   // gotek 0
   translate([-dhole_center_x_offset + (dhole_total_width - 70)/2, 0, gotek_start_height + gotek_0_height]) {
-    translate ([10,tw+1,12]) rotate([90,0,0]) cylinder(h=tw*2,r=gotek_button_radius);
-    translate ([18,tw+1,12]) rotate([90,0,0]) cylinder(h=tw*2,r=gotek_button_radius);
-    translate ([10,tw+1,17]) rotate([90,0,0]) cylinder(h=tw*2,r=gotek_led_radius);
-    translate ([27,-1,9]) cube([15,tw*2,8]); // usb slot
-    translate ([27,-1,20]) cube([25,tw*2,10]); // oled slot
-    translate ([12,2,24.8]) rotate([90,0,0]) cylinder(h=tw,r=4.1);
-    translate ([43,1.4,11]) rotate([90, 0, 0]) linear_extrude(2*tw) text("Disk :0", size=4.5);
-    translate([0,-1,7]) cube([70,tw,1]);
-    translate([0,-1,31]) cube([70,tw,1]);
+    translate ([60,tw+1,12]) rotate([90,0,0]) cylinder(h=tw*2,r=gotek_button_radius);
+    translate ([52,tw+1,12]) rotate([90,0,0]) cylinder(h=tw*2,r=gotek_button_radius);
+    translate ([60,tw+1,17]) rotate([90,0,0]) cylinder(h=tw*2,r=gotek_led_radius);
+    translate ([28,-1,9]) cube([15,tw*2,8]); // usb slot
+    translate ([18,-1,20]) cube([25,tw*2,10]); // oled slot
+    translate ([18,0.75,10]) rotate([90, 0, 0]) linear_extrude(2*tw) text(":0", size=7);
   }
   
   // empty space
-  translate([-dhole_center_x_offset + 15,-1,70]) cube([abase_width-20,tw*2,130]);
+  translate([-dhole_center_x_offset + 15,-1,70]) cube([abase_width-20,tw*2,100]);
 }
 
 ///////////////////
@@ -89,15 +97,15 @@ translate([-dhole_center_x_offset + (dhole_total_width - 70)/2 - tw, 0, gotek_st
   difference() {
     cube([tw,95,40]);
     // gotek 0 screw holes
-    translate ([-1,20,10]) rotate([0,90,0]) cylinder(h=tw*2,r=1.6);
-    translate ([-1,75,10]) rotate([0,90,0]) cylinder(h=tw*2,r=1.6);
+    translate ([-1,20-tw,10+tw]) rotate([0,90,0]) cylinder(h=tw*2,r=1.6);
+    translate ([-1,75-tw,10+tw]) rotate([0,90,0]) cylinder(h=tw*2,r=1.6);
   }
 translate([-dhole_center_x_offset + dhole_total_width - (dhole_total_width - 70)/2, 0, gotek_start_height + gotek_0_height])
   difference() {
     cube([tw,95,40]);
     // gotek 0 screw holes
-    translate ([-1,20,10]) rotate([0,90,0]) cylinder(h=tw*2,r=1.6);
-    translate ([-1,75,10]) rotate([0,90,0]) cylinder(h=tw*2,r=1.6);
+    translate ([-1,20-tw,10+tw]) rotate([0,90,0]) cylinder(h=tw*2,r=1.6);
+    translate ([-1,75-tw,10+tw]) rotate([0,90,0]) cylinder(h=tw*2,r=1.6);
   }
 // gotek 0 sled bottom
 translate([-dhole_center_x_offset + (dhole_total_width - 70)/2, 0, gotek_start_height + gotek_0_height])
@@ -114,7 +122,7 @@ union () {
                  bscrew_back_from_dhole + bscrew_radius, -1])
         cylinder(h=tw*3, r=bscrew_radius);
       translate([bscrew_x_offset_from_abase_left_edge - bscrew_radius,
-                 bscrew_back_from_dhole + bscrew_radius + 15, -1])
+                 bscrew_back_from_dhole + bscrew_radius + 35, -1])
         cylinder(h=tw*3, r=5.25);
     }
   translate([-dhole_center_x_offset + dhole_pad_left - abase_total_x_offset_to_dhole,
@@ -145,23 +153,24 @@ translate([-dhole_center_x_offset + dhole_pad_left - abase_total_x_offset_to_dho
 /////////////////////////
 // Fits on top support //
 /////////////////////////
+top_screw_nudge = 0.8;
 translate([-dhole_center_x_offset, 0, dhole_total_height - tw]) 
   difference() {
     cube([dhole_total_width, 60, tw*2]);
-    translate([dhole_total_width -tscrew_radius - dhole_pad_left - tscrew_x_offset_from_left_dhole,
+    translate([dhole_total_width -tscrew_radius - dhole_pad_left - tscrew_x_offset_from_left_dhole - top_screw_nudge,
                tscrew_back_from_dhole + tscrew_radius, -1])
       cylinder(h=tw*3,r=tscrew_radius);
-        translate([dhole_total_width -tscrew_radius - dhole_pad_left - tscrew_x_offset_from_left_dhole,
+        translate([dhole_total_width -tscrew_radius - dhole_pad_left - tscrew_x_offset_from_left_dhole - top_screw_nudge,
                tscrew_back_from_dhole + tscrew_radius - 15, -1])
       cylinder(h=tw*3,r=5.25);
   }
 // sled guide
 translate([dhole_center_x_offset-43, 0, dhole_total_height])
   rotate([0, -90, 0])
-  linear_extrude(tw) polygon(points=[[0, 0],[10, 20],[10, 60],[0, 60]]);
+  linear_extrude(tw) polygon(points=[[0, 0],[10, 10],[10, 60],[0, 60]]);
 translate([dhole_center_x_offset-84, 18, dhole_total_height])
   rotate([0, -90, 0])
-  linear_extrude(tw) polygon(points=[[0, 0],[10, 20],[10, 43],[0, 43]]);
+  linear_extrude(tw) polygon(points=[[0, 0],[10, 10],[10, 43],[0, 43]]);
 // angle supports
 translate([dhole_center_x_offset-tw, 0, dhole_total_height])
   rotate([0, 90, 0])
