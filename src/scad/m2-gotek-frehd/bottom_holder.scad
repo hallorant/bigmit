@@ -15,10 +15,10 @@ difference() {
   union() {
   cube([15.5, 30, tw*2 + 1]);
   translate([8,
-             3 + bscrew_radius, -9])
-    cylinder(h=10, r=bscrew_radius);
+             3 + bscrew_radius, -6])
+    cylinder(h=7, r=bscrew_radius);
   }
   translate([8,
              3 + bscrew_radius + 15, 1])
-    cylinder(h=tw*3, r=5.25);
+    cylinder(h=tw*3, r=5.2);
 }
