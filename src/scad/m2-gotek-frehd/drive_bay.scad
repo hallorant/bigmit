@@ -54,6 +54,8 @@ frehd4eight_height = 170;
 // Disk drive hole faceplate //
 ///////////////////////////////
 
+difference() {  // TODO REMOVE TEST ONLY
+union() {       // TODO REMOVE TEST ONLY
 difference() {
   union() {
     translate([-dhole_center_x_offset, 0, 0])
@@ -94,20 +96,20 @@ difference() {
   }
   
   // FreHD4Eight
-  translate([-dhole_center_x_offset + 10 + tw, -1, frehd4eight_height + 8 + tw]) {
-    cube([30,10,2*tw]);
-    translate ([0,1.75,5]) rotate([90, 0, 0]) linear_extrude(2*tw) text("FreHD4Eight", size=3);
-    translate ([73,1.75,9]) rotate([90, 0, 0]) linear_extrude(2*tw) text("On", size=2);
-    translate ([73,1.75,1]) rotate([90, 0, 0]) linear_extrude(2*tw) text("Off", size=2);
-    translate ([75,3,6]) rotate([90, 0, 0]) cylinder(h=tw*3, r=2);
+  translate([-dhole_center_x_offset + 14 + tw, -1, frehd4eight_height + 8 + tw]) {
+    // sd card hole
+    translate([0,0,0.5]) cube([30,10,2*tw]);
+    translate ([0,1.5,9]) rotate([90, 0, 0]) linear_extrude(2*tw) text("FreHD", size=7);
+    // switch hole
+    translate ([75,3,10]) rotate([90, 0, 0]) cylinder(h=tw*3, r=8.25);
+    translate ([75-(4.5/2),-3,1.8]) cube([4.5,10,16.5]);
+    translate ([75,-3,9.5]) cube([9,10,1]);
   }
-  for (xpos=[32:2:65]) {
+  translate([-dhole_center_x_offset, -1.5,frehd4eight_height-7]) cube([dhole_total_width,2,tw]); // line
+  for (xpos=[36:2:65]) { // grill to see leds
     translate([-dhole_center_x_offset - 5 + (dhole_total_width/2) - 36.5 + xpos, -1, frehd4eight_height + 9.5])
       cube([1,2*tw,10]);
   }
-
-  // empty space
-  translate([-dhole_center_x_offset + 20,-1,65]) cube([abase_width-30,tw*2,100]);
 }
 
 ///////////////////
@@ -118,15 +120,15 @@ translate([-dhole_center_x_offset + (dhole_total_width - 70)/2 - tw, 0, gotek_0_
   difference() {
     cube([tw,95,gotek_sled_sides_height]);
     // gotek 0 screw holes
-    translate ([-1,20-tw,10+tw]) rotate([0,90,0]) cylinder(h=tw*2,r=1.6);
-    translate ([-1,75-tw,10+tw]) rotate([0,90,0]) cylinder(h=tw*2,r=1.6);
+    translate ([-1,24-tw,11+tw]) rotate([0,90,0]) cylinder(h=tw*2,r=1.6);
+    translate ([-1,79-tw,11+tw]) rotate([0,90,0]) cylinder(h=tw*2,r=1.6);
   }
 translate([-dhole_center_x_offset + dhole_total_width - (dhole_total_width - 70)/2, 0, gotek_0_height])
   difference() {
     cube([tw,95,gotek_sled_sides_height]);
     // gotek 0 screw holes
-    translate ([-1,20-tw,10+tw]) rotate([0,90,0]) cylinder(h=tw*2,r=1.6);
-    translate ([-1,75-tw,10+tw]) rotate([0,90,0]) cylinder(h=tw*2,r=1.6);
+    translate ([-1,24-tw,11+tw]) rotate([0,90,0]) cylinder(h=tw*2,r=1.6);
+    translate ([-1,79-tw,11+tw]) rotate([0,90,0]) cylinder(h=tw*2,r=1.6);
   }
 // gotek 0 sled bottom
 translate([-dhole_center_x_offset + (dhole_total_width - 70)/2, 0, gotek_0_height])
@@ -158,7 +160,18 @@ translate([-dhole_center_x_offset, 0, frehd4eight_height])
     cube([dhole_total_width, 65, tw]);
     translate([10,5,-1]) cube([dhole_total_width-20,95,2*tw]);
   }
-
+// FreHD4Eight switch reinforcement
+difference() {
+  translate([-dhole_center_x_offset, 0, frehd4eight_height]) {
+    union() {
+      translate([0,1,20]) cube([dhole_total_width, 5, 5]);
+      translate([dhole_total_width-28,1,11]) cube([28, 5, 20]);
+    }
+  }
+  translate([-dhole_center_x_offset + 14 + tw, -1, frehd4eight_height + 8 + tw]) {
+      translate ([75,10,10]) rotate([90, 0, 0]) cylinder(h=10, r=10.25);
+  }
+}
 
 ///////////////////////////////
 // Fits on metal angled base //
@@ -172,7 +185,7 @@ union () {
         cylinder(h=tw*3, r=bscrew_radius);
       translate([bscrew_x_offset_from_abase_left_edge - bscrew_radius,
                  bscrew_back_from_dhole + bscrew_radius + 35, -1])
-        cylinder(h=tw*3, r=5.25);
+        cylinder(h=tw*3, r=5);
     }
   translate([-dhole_center_x_offset + dhole_pad_left - abase_total_x_offset_to_dhole,
              0, -abase_depth])
@@ -211,7 +224,7 @@ translate([-dhole_center_x_offset, 0, dhole_total_height - tw])
       cylinder(h=tw*3,r=tscrew_radius);
         translate([dhole_total_width -tscrew_radius - dhole_pad_left - tscrew_x_offset_from_left_dhole - top_screw_nudge,
                tscrew_back_from_dhole + tscrew_radius - 15, -1])
-      cylinder(h=tw*3,r=5.25);
+      cylinder(h=tw*3,r=5);
   }
 // sled guide
 translate([dhole_center_x_offset-43, 0, dhole_total_height])
@@ -227,8 +240,8 @@ translate([dhole_center_x_offset-tw, 0, dhole_total_height])
     linear_extrude(tw) 
       polygon(points=[[0, 0],[80, 0],[50,65],[0, 65]]);
     // FreHD4Eight screw holes
-    translate ([-1,2*tw+0.1+15,-(dhole_total_height-frehd4eight_height)+2*tw+14]) rotate([0,90,0]) cylinder(h=tw*2,r=1.6);
-    translate ([-1,2*tw+0.1+55,-(dhole_total_height-frehd4eight_height)+2*tw+14]) rotate([0,90,0]) cylinder(h=tw*2,r=1.6);
+    translate ([-1,tw+0.1+15,-(dhole_total_height-frehd4eight_height)+2*tw+12]) rotate([0,90,0]) cylinder(h=tw*2,r=1.6);
+    translate ([-1,tw+0.1+55,-(dhole_total_height-frehd4eight_height)+2*tw+12]) rotate([0,90,0]) cylinder(h=tw*2,r=1.6);
   }
 translate([dhole_center_x_offset - dhole_total_width, 0, dhole_total_height])
   difference() {
@@ -236,6 +249,10 @@ translate([dhole_center_x_offset - dhole_total_width, 0, dhole_total_height])
     linear_extrude(tw) 
       polygon(points=[[0, 0],[80, 0],[50,65],[0, 65]]);
     // FreHD4Eight screw holes
-    translate ([-1,2*tw+0.1+15,-(dhole_total_height-frehd4eight_height)+2*tw+14]) rotate([0,90,0]) cylinder(h=tw*2,r=1.6);
-    translate ([-1,2*tw+0.1+55,-(dhole_total_height-frehd4eight_height)+2*tw+14]) rotate([0,90,0]) cylinder(h=tw*2,r=1.6);
+    translate ([-1,tw+0.1+15,-(dhole_total_height-frehd4eight_height)+2*tw+12]) rotate([0,90,0]) cylinder(h=tw*2,r=1.6);
+    translate ([-1,tw+0.1+55,-(dhole_total_height-frehd4eight_height)+2*tw+12]) rotate([0,90,0]) cylinder(h=tw*2,r=1.6);
   }
+  
+} // TODO REMOVE TEST ONLY
+//translate([-dhole_center_x_offset-20,-3,-50]) cube([/*width*/200,170,/*height*/210]);
+} // TODO REMOVE TEST ONLY
