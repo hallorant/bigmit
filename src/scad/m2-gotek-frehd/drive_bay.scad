@@ -87,26 +87,27 @@ difference() {
   
   // gotek 0
   translate([-dhole_center_x_offset + (dhole_total_width - 70)/2, 0, gotek_0_height]) {
-    translate ([60,tw+1,13.5]) rotate([90,0,0]) cylinder(h=tw*2,r=gotek_button_radius);
-    translate ([52,tw+1,13.5]) rotate([90,0,0]) cylinder(h=tw*2,r=gotek_button_radius);
-    translate ([60,tw+1,20]) rotate([90,0,0]) cylinder(h=tw*2,r=gotek_led_radius);
-    translate ([26.25,-1,9.5]) cube([15,tw*2,9]); // usb slot
-    translate ([18,-1,23]) cube([25,tw*2,10]); // oled slot
+    translate ([60,tw+1,14.5]) rotate([90,0,0]) cylinder(h=tw*2,r=gotek_button_radius);
+    translate ([52,tw+1,14.5]) rotate([90,0,0]) cylinder(h=tw*2,r=gotek_button_radius);
+    translate ([60,tw+1,21]) rotate([90,0,0]) cylinder(h=tw*2,r=gotek_led_radius);
+    translate ([27.,-1,9.5]) cube([16,tw*2,9]); // usb slot
+    translate ([18,-1,23.5]) cube([25,tw*2,9.5]); // oled slot
     translate ([-2,0.75,14]) rotate([90, 0, 0]) linear_extrude(2*tw) text(":0", size=14);
   }
   
   // FreHD4Eight
   translate([-dhole_center_x_offset + 14 + tw, -1, frehd4eight_height + 8 + tw]) {
     // sd card hole
-    translate([0,0,0.5]) cube([30,10,2*tw]);
-    //translate ([0,1.5,9]) rotate([90, 0, 0]) linear_extrude(2*tw) text("FreHD", size=7);
+    translate([-1,0,0.5]) cube([30,10,3.8]);
+    // label
+    translate ([0,1.5,9]) rotate([90, 0, 0]) linear_extrude(2*tw) text("FreHD", size=7);
     // switch hole
-    translate ([75,3,10]) rotate([90, 0, 0]) cylinder(h=tw*3, r=8.25);
-    translate ([75-(4.5/2),-3,1.8]) cube([4.5,10,16.5]);
-    translate ([75,-3,9.5]) cube([9,10,1]);
+    translate ([68,3,10]) rotate([90, 0, 0]) cylinder(h=tw*3, r=7.5);
+    translate ([68-(5.5/2),-3,2]) cube([5.5,10,16]);
+    translate ([67.5,-3,9]) cube([9,10,2]);
   }
-  translate([-dhole_center_x_offset, -1.5,frehd4eight_height-7]) cube([dhole_total_width,2,tw]); // line
-  for (xpos=[36:2:65]) { // grill to see leds
+  translate([-dhole_center_x_offset, -1,frehd4eight_height-5]) cube([dhole_total_width,4,1]); // line
+  for (xpos=[36:2:60]) { // grill to see leds
     translate([-dhole_center_x_offset - 5 + (dhole_total_width/2) - 36.5 + xpos, -1, frehd4eight_height + 9.5])
       cube([1,2*tw,10]);
   }
@@ -120,21 +121,21 @@ translate([-dhole_center_x_offset + (dhole_total_width - 70)/2 - tw, 0, gotek_0_
   difference() {
     cube([tw,95,gotek_sled_sides_height]);
     // gotek 0 screw holes
-    translate ([-1,24-tw,11+tw]) rotate([0,90,0]) cylinder(h=tw*2,r=1.6);
-    translate ([-1,79-tw,11+tw]) rotate([0,90,0]) cylinder(h=tw*2,r=1.6);
+    translate ([-1,23,10+tw]) rotate([0,90,0]) cylinder(h=tw*2,r=1.6);
+    translate ([-1,78,10+tw]) rotate([0,90,0]) cylinder(h=tw*2,r=1.6);
   }
 translate([-dhole_center_x_offset + dhole_total_width - (dhole_total_width - 70)/2, 0, gotek_0_height])
   difference() {
     cube([tw,95,gotek_sled_sides_height]);
     // gotek 0 screw holes
-    translate ([-1,24-tw,11+tw]) rotate([0,90,0]) cylinder(h=tw*2,r=1.6);
-    translate ([-1,79-tw,11+tw]) rotate([0,90,0]) cylinder(h=tw*2,r=1.6);
+    translate ([-1,23,10+tw]) rotate([0,90,0]) cylinder(h=tw*2,r=1.6);
+    translate ([-1,78,10+tw]) rotate([0,90,0]) cylinder(h=tw*2,r=1.6);
   }
 // gotek 0 sled bottom
 translate([-dhole_center_x_offset + (dhole_total_width - 70)/2, 0, gotek_0_height])
   difference() {
     cube([70,95,tw]);
-    translate([10,55,-1]) cube([50,95,2*tw]);
+    translate([10,5,-1]) cube([50,95,2*tw]);
   }
 // gotek 1 sled bottom
 translate([-dhole_center_x_offset + (dhole_total_width - 70)/2, 0, gotek_1_height])
@@ -165,11 +166,12 @@ difference() {
   translate([-dhole_center_x_offset, 0, frehd4eight_height]) {
     union() {
       translate([0,1,20]) cube([dhole_total_width, 5, 5]);
-      translate([dhole_total_width-28,1,11]) cube([28, 5, 20]);
+      translate([dhole_total_width-31,1,13]) cube([31, 5, 18]);
     }
   }
   translate([-dhole_center_x_offset + 14 + tw, -1, frehd4eight_height + 8 + tw]) {
-      translate ([75,10,10]) rotate([90, 0, 0]) cylinder(h=10, r=10.25);
+    translate ([68,10,10]) rotate([90, 0, 0]) cylinder(h=10, r=9);
+    translate ([85,10,2]) rotate([90, 0, 0]) cube([10,10,10]);
   }
 }
 
@@ -184,7 +186,7 @@ union () {
                  bscrew_back_from_dhole + bscrew_radius, -1])
         cylinder(h=tw*3, r=bscrew_radius);
       translate([bscrew_x_offset_from_abase_left_edge - bscrew_radius,
-                 bscrew_back_from_dhole + bscrew_radius + 35, -1])
+                 bscrew_back_from_dhole + bscrew_radius + 60, -1])
         cylinder(h=tw*3, r=5.2);
     }
   translate([-dhole_center_x_offset + dhole_pad_left - abase_total_x_offset_to_dhole,
@@ -240,8 +242,8 @@ translate([dhole_center_x_offset-tw, 0, dhole_total_height])
     linear_extrude(tw) 
       polygon(points=[[0, 0],[80, 0],[50,65],[0, 65]]);
     // FreHD4Eight screw holes
-    translate ([-1,tw+0.1+15,-(dhole_total_height-frehd4eight_height)+2*tw+12]) rotate([0,90,0]) cylinder(h=tw*2,r=1.6);
-    translate ([-1,tw+0.1+55,-(dhole_total_height-frehd4eight_height)+2*tw+12]) rotate([0,90,0]) cylinder(h=tw*2,r=1.6);
+    translate ([-1,tw+0.1+15,-(dhole_total_height-frehd4eight_height)+2*tw+12.6]) rotate([0,90,0]) cylinder(h=tw*2,r=1.6);
+    translate ([-1,tw+0.1+55,-(dhole_total_height-frehd4eight_height)+2*tw+12.6]) rotate([0,90,0]) cylinder(h=tw*2,r=1.6);
   }
 translate([dhole_center_x_offset - dhole_total_width, 0, dhole_total_height])
   difference() {
@@ -249,11 +251,15 @@ translate([dhole_center_x_offset - dhole_total_width, 0, dhole_total_height])
     linear_extrude(tw) 
       polygon(points=[[0, 0],[80, 0],[50,65],[0, 65]]);
     // FreHD4Eight screw holes
-    translate ([-1,tw+0.1+15,-(dhole_total_height-frehd4eight_height)+2*tw+12]) rotate([0,90,0]) cylinder(h=tw*2,r=1.6);
-    translate ([-1,tw+0.1+55,-(dhole_total_height-frehd4eight_height)+2*tw+12]) rotate([0,90,0]) cylinder(h=tw*2,r=1.6);
+    translate ([-1,tw+0.1+15,-(dhole_total_height-frehd4eight_height)+2*tw+12.6]) rotate([0,90,0]) cylinder(h=tw*2,r=1.6);
+    translate ([-1,tw+0.1+55,-(dhole_total_height-frehd4eight_height)+2*tw+12.6]) rotate([0,90,0]) cylinder(h=tw*2,r=1.6);
   }
-  
 } // TODO REMOVE TEST ONLY
-translate([-dhole_center_x_offset-20,-3,-50]) cube([/*width*/200,170,/*height*/68]);
-translate([-dhole_center_x_offset-20,-3,60]) cube([/*width*/200,170,/*height*/500]);
+// just gotek
+//translate([-dhole_center_x_offset-20,-3,-50]) cube([/*width*/200,170,/*height*/68]);
+//translate([-dhole_center_x_offset-20,-3,60]) cube([/*width*/200,170,/*height*/500]);
+//Just FreHD
+//translate([-dhole_center_x_offset-20,-3,-60]) cube([/*width*/200,170,/*height*/220]);
+//translate([-dhole_center_x_offset+10,10,-60]) cube([/*width*/90,160,/*height*/230]);
+//translate([-dhole_center_x_offset-20,20,60]) cube([/*width*/550,70,/*height*/500]);
 } // TODO REMOVE TEST ONLY
