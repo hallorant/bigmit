@@ -338,10 +338,10 @@ translate([-dhole_center_x_offset, 0, dhole_total_height - tw])
 // sled guide
 translate([dhole_center_x_offset-43, 0, dhole_total_height])
   rotate([0, -90, 0])
-  linear_extrude(tw) polygon(points=[[0, 0],[10, 10],[10, 60],[0, 60]]);
+  linear_extrude(tw) polygon(points=[[0, 0],[5, 10],[5, 60],[0, 60]]);
 translate([dhole_center_x_offset-84, 18, dhole_total_height])
   rotate([0, -90, 0])
-  linear_extrude(tw) polygon(points=[[0, 0],[10, 10],[10, 43],[0, 43]]);
+  linear_extrude(tw) polygon(points=[[0, 0],[5, 10],[5, 43],[0, 43]]);
 // angle supports
 translate([dhole_center_x_offset-tw, 0, dhole_total_height])
   difference() {
