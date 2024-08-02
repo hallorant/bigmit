@@ -44,11 +44,12 @@ gotek_1_height = 38 + gotek_0_height;
 gotek_2_height = 38 + gotek_1_height;
 gotek_3_height = 38 + gotek_2_height;
 gotek_total_height = 38 + gotek_3_height;
-gotek_button_radius = 2;
-gotek_led_radius = 1.7;
+gotek_button_radius = 2.25;
+gotek_led_radius = 1.8;
 gotek_sled_sides_height = 38*4-10;
 
 frehd4eight_height = 170;
+small_magnet_hole_radius = 4.05;
 
 ///////////////////////////////
 // Disk drive hole faceplate //
@@ -65,14 +66,14 @@ difference() {
       translate([18-6,0,20+12.5+tw]) cube([39,5,1]);
       translate([18-6-tw-11,0,20]) difference() {
         cube([tw+11,5,12+2*tw]);
-        translate([6,6,8]) rotate([90,0,0]) cylinder(h=5,r=4.1);
+        translate([6,6,8]) rotate([90,0,0]) cylinder(h=5,r=small_magnet_hole_radius);
       }
       translate([18-6+39,0,20]) difference() {
         union() {
-          cube([tw,5,12+2*tw]);
-          translate([0,0,3]) cube([20,5,12]);
+          translate([-0.6,0,0]) cube([tw,5,12+2*tw]);
+          translate([0,0,4]) cube([20,5,11]);
         }
-        translate([6,6,8]) rotate([90,0,0]) cylinder(h=5,r=4.1);
+        translate([6,6,8]) rotate([90,0,0]) cylinder(h=5,r=small_magnet_hole_radius);
       }
     }
     // gotek 1 oled internal frame
@@ -81,14 +82,14 @@ difference() {
       translate([18-6,0,20+12.5+tw]) cube([39,5,1]);
       translate([18-6-tw-11,0,20]) difference() {
         cube([tw+11,5,12+2*tw]);
-        translate([6,6,8]) rotate([90,0,0]) cylinder(h=5,r=4.1);
+        translate([6,6,8]) rotate([90,0,0]) cylinder(h=5,r=small_magnet_hole_radius);
       }
       translate([18-6+39,0,20]) difference() {
         union() {
-          cube([tw,5,12+2*tw]);
-          translate([0,0,3]) cube([20,5,12]);
+          translate([-0.6,0,0]) cube([tw,5,12+2*tw]);
+          translate([0,0,4]) cube([20,5,11]);
         }
-        translate([6,6,8]) rotate([90,0,0]) cylinder(h=5,r=4.1);
+        translate([6,6,8]) rotate([90,0,0]) cylinder(h=5,r=small_magnet_hole_radius);
       }
     }
     // gotek 2 oled internal frame
@@ -97,14 +98,14 @@ difference() {
       translate([18-6,0,20+12.5+tw]) cube([39,5,1]);
       translate([18-6-tw-11,0,20]) difference() {
         cube([tw+11,5,12+2*tw]);
-        translate([6,6,8]) rotate([90,0,0]) cylinder(h=5,r=4.1);
+        translate([6,6,8]) rotate([90,0,0]) cylinder(h=5,r=small_magnet_hole_radius);
       }
       translate([18-6+39,0,20]) difference() {
         union() {
-          cube([tw,5,12+2*tw]);
-          translate([0,0,3]) cube([20,5,12]);
+          translate([-0.6,0,0]) cube([tw,5,12+2*tw]);
+          translate([0,0,4]) cube([20,5,11]);
         }
-        translate([6,6,8]) rotate([90,0,0]) cylinder(h=5,r=4.1);
+        translate([6,6,8]) rotate([90,0,0]) cylinder(h=5,r=small_magnet_hole_radius);
       }
     }
     // gotek 3 oled internal frame
@@ -113,14 +114,14 @@ difference() {
       translate([18-6,0,20+12.5+tw]) cube([39,5,1]);
       translate([18-6-tw-11,0,20]) difference() {
         cube([tw+11,5,12+2*tw]);
-        translate([6,6,8]) rotate([90,0,0]) cylinder(h=5,r=4.1);
+        translate([6,6,8]) rotate([90,0,0]) cylinder(h=5,r=small_magnet_hole_radius);
       }
       translate([18-6+39,0,20]) difference() {
         union() {
-          cube([tw,5,12+2*tw]);
-          translate([0,0,3]) cube([20,5,12]);
+          translate([-0.6,0,0]) cube([tw,5,12+2*tw]);
+          translate([0,0,4]) cube([20,5,11]);
         }
-        translate([6,6,8]) rotate([90,0,0]) cylinder(h=5,r=4.1);
+        translate([6,6,8]) rotate([90,0,0]) cylinder(h=5,r=small_magnet_hole_radius);
       }
     }
   }
@@ -133,49 +134,49 @@ difference() {
   
   // gotek 0
   translate([-dhole_center_x_offset + (dhole_total_width - 70)/2, 0, gotek_0_height]) {
-    translate ([60,tw+1,14.5]) rotate([90,0,0]) cylinder(h=tw*2,r=gotek_button_radius);
-    translate ([52,tw+1,14.5]) rotate([90,0,0]) cylinder(h=tw*2,r=gotek_button_radius);
-    translate ([60,tw+1,21]) rotate([90,0,0]) cylinder(h=tw*2,r=gotek_led_radius);
-    translate ([27.,-1,9.5]) cube([16,tw*2,9]); // usb slot
+    translate ([59.5,tw+1,14.5]) rotate([90,0,0]) cylinder(h=tw*2,r=gotek_button_radius);
+    translate ([51.5,tw+1,14.5]) rotate([90,0,0]) cylinder(h=tw*2,r=gotek_button_radius);
+    translate ([59.5,tw+1,21]) rotate([90,0,0]) cylinder(h=tw*2,r=gotek_led_radius);
+    translate ([26.5,-1,9.5]) cube([16,tw*2,9]);  // usb slot
     translate ([18,-1,23.5]) cube([25,tw*2,9.5]); // oled slot
-    translate ([-2,0.75,14]) rotate([90, 0, 0]) linear_extrude(2*tw) text(":0", size=14);
+    translate ([18,0.75,11.5]) rotate([90, 0, 0]) linear_extrude(2*tw) text("0", size=7);
   }
   // gotek 1
   translate([-dhole_center_x_offset + (dhole_total_width - 70)/2, 0, gotek_1_height]) {
-    translate ([60,tw+1,14.5]) rotate([90,0,0]) cylinder(h=tw*2,r=gotek_button_radius);
-    translate ([52,tw+1,14.5]) rotate([90,0,0]) cylinder(h=tw*2,r=gotek_button_radius);
-    translate ([60,tw+1,21]) rotate([90,0,0]) cylinder(h=tw*2,r=gotek_led_radius);
-    translate ([27.,-1,9.5]) cube([16,tw*2,9]); // usb slot
+    translate ([59.5,tw+1,14.5]) rotate([90,0,0]) cylinder(h=tw*2,r=gotek_button_radius);
+    translate ([51.5,tw+1,14.5]) rotate([90,0,0]) cylinder(h=tw*2,r=gotek_button_radius);
+    translate ([59.5,tw+1,21]) rotate([90,0,0]) cylinder(h=tw*2,r=gotek_led_radius);
+    translate ([26.5,-1,9.5]) cube([16,tw*2,9]);  // usb slot
     translate ([18,-1,23.5]) cube([25,tw*2,9.5]); // oled slot
-    translate ([-2,0.75,14]) rotate([90, 0, 0]) linear_extrude(2*tw) text(":1", size=14);
+    translate ([18,0.75,11.5]) rotate([90, 0, 0]) linear_extrude(2*tw) text("1", size=7);
   }
   // gotek 2
   translate([-dhole_center_x_offset + (dhole_total_width - 70)/2, 0, gotek_2_height]) {
-    translate ([60,tw+1,14.5]) rotate([90,0,0]) cylinder(h=tw*2,r=gotek_button_radius);
-    translate ([52,tw+1,14.5]) rotate([90,0,0]) cylinder(h=tw*2,r=gotek_button_radius);
-    translate ([60,tw+1,21]) rotate([90,0,0]) cylinder(h=tw*2,r=gotek_led_radius);
-    translate ([27.,-1,9.5]) cube([16,tw*2,9]); // usb slot
+    translate ([59.5,tw+1,14.5]) rotate([90,0,0]) cylinder(h=tw*2,r=gotek_button_radius);
+    translate ([51.5,tw+1,14.5]) rotate([90,0,0]) cylinder(h=tw*2,r=gotek_button_radius);
+    translate ([59.5,tw+1,21]) rotate([90,0,0]) cylinder(h=tw*2,r=gotek_led_radius);
+    translate ([26.5,-1,9.5]) cube([16,tw*2,9]);  // usb slot
     translate ([18,-1,23.5]) cube([25,tw*2,9.5]); // oled slot
-    translate ([-2,0.75,14]) rotate([90, 0, 0]) linear_extrude(2*tw) text(":2", size=14);
+    translate ([18,0.75,11.5]) rotate([90, 0, 0]) linear_extrude(2*tw) text("2", size=7);
   }
   // gotek 3
   translate([-dhole_center_x_offset + (dhole_total_width - 70)/2, 0, gotek_3_height]) {
-    translate ([60,tw+1,14.5]) rotate([90,0,0]) cylinder(h=tw*2,r=gotek_button_radius);
-    translate ([52,tw+1,14.5]) rotate([90,0,0]) cylinder(h=tw*2,r=gotek_button_radius);
-    translate ([60,tw+1,21]) rotate([90,0,0]) cylinder(h=tw*2,r=gotek_led_radius);
-    translate ([27.,-1,9.5]) cube([16,tw*2,9]); // usb slot
+    translate ([59.5,tw+1,14.5]) rotate([90,0,0]) cylinder(h=tw*2,r=gotek_button_radius);
+    translate ([51.5,tw+1,14.5]) rotate([90,0,0]) cylinder(h=tw*2,r=gotek_button_radius);
+    translate ([59.5,tw+1,21]) rotate([90,0,0]) cylinder(h=tw*2,r=gotek_led_radius);
+    translate ([26.5,-1,9.5]) cube([16,tw*2,9]);  // usb slot
     translate ([18,-1,23.5]) cube([25,tw*2,9.5]); // oled slot
-    translate ([-2,0.75,14]) rotate([90, 0, 0]) linear_extrude(2*tw) text(":3", size=14);
+    translate ([18,0.75,11.5]) rotate([90, 0, 0]) linear_extrude(2*tw) text("3", size=7);
   }
   
   // FreHD4Eight
   translate([-dhole_center_x_offset + 14 + tw, -1, frehd4eight_height + 8 + tw]) {
     // sd card hole
-    translate([-1,0,0.5]) cube([30,10,3.8]);
+    translate([-1,0,0.5]) cube([30,10,3.5]);
     // label
     translate ([0,1.5,9]) rotate([90, 0, 0]) linear_extrude(2*tw) text("FreHD", size=7);
     // switch hole
-    translate ([68,3,10]) rotate([90, 0, 0]) cylinder(h=tw*3, r=7.5);
+    translate ([68,3,10]) rotate([90, 0, 0]) cylinder(h=tw*3, r=7.3);
     translate ([68-(5.5/2),-3,2]) cube([5.5,10,16]);
     translate ([67.5,-3,9]) cube([9,10,2]);
   }
@@ -194,23 +195,23 @@ translate([-dhole_center_x_offset + (dhole_total_width - 70)/2 - tw, 0, 0])
     translate([0,0,gotek_0_height]) cube([tw,95,gotek_sled_sides_height]);
     // gotek 0 screw holes
     translate([0,0,gotek_0_height]) {
-      translate ([-1,23,10+tw]) rotate([0,90,0]) cylinder(h=tw*2,r=1.6);
-      translate ([-1,78,10+tw]) rotate([0,90,0]) cylinder(h=tw*2,r=1.6);
+      translate ([-1,22,10.5+tw]) rotate([0,90,0]) cylinder(h=tw*2,r=1.6);
+      translate ([-1,76.6,10.5+tw]) rotate([0,90,0]) cylinder(h=tw*2,r=1.6);
     }
     // gotek 1 screw holes
     translate([0,0,gotek_1_height]) {
-      translate ([-1,23,10+tw]) rotate([0,90,0]) cylinder(h=tw*2,r=1.6);
-      translate ([-1,78,10+tw]) rotate([0,90,0]) cylinder(h=tw*2,r=1.6);
+      translate ([-1,22,10.5+tw]) rotate([0,90,0]) cylinder(h=tw*2,r=1.6);
+      translate ([-1,76.6,10.5+tw]) rotate([0,90,0]) cylinder(h=tw*2,r=1.6);
     }
     // gotek 2 screw holes
     translate([0,0,gotek_2_height]) {
-      translate ([-1,23,10+tw]) rotate([0,90,0]) cylinder(h=tw*2,r=1.6);
-      translate ([-1,78,10+tw]) rotate([0,90,0]) cylinder(h=tw*2,r=1.6);
+      translate ([-1,22,10.5+tw]) rotate([0,90,0]) cylinder(h=tw*2,r=1.6);
+      translate ([-1,76.6,10.5+tw]) rotate([0,90,0]) cylinder(h=tw*2,r=1.6);
     }
     // gotek 3 screw holes
     translate([0,0,gotek_3_height]) {
-      translate ([-1,23,10+tw]) rotate([0,90,0]) cylinder(h=tw*2,r=1.6);
-      translate ([-1,78,10+tw]) rotate([0,90,0]) cylinder(h=tw*2,r=1.6);
+      translate ([-1,22,10.5+tw]) rotate([0,90,0]) cylinder(h=tw*2,r=1.6);
+      translate ([-1,76.6,10.5+tw]) rotate([0,90,0]) cylinder(h=tw*2,r=1.6);
     }
   }
 translate([-dhole_center_x_offset + dhole_total_width - (dhole_total_width - 70)/2, 0, 0])
@@ -218,23 +219,23 @@ translate([-dhole_center_x_offset + dhole_total_width - (dhole_total_width - 70)
     translate([0,0,gotek_0_height]) cube([tw,95,gotek_sled_sides_height]);
     // gotek 0 screw holes
     translate([0,0,gotek_0_height]) {
-      translate ([-1,23,10+tw]) rotate([0,90,0]) cylinder(h=tw*2,r=1.6);
-      translate ([-1,78,10+tw]) rotate([0,90,0]) cylinder(h=tw*2,r=1.6);
+      translate ([-1,22,10.5+tw]) rotate([0,90,0]) cylinder(h=tw*2,r=1.6);
+      translate ([-1,76.6,10.5+tw]) rotate([0,90,0]) cylinder(h=tw*2,r=1.6);
     }
     // gotek 1 screw holes
     translate([0,0,gotek_1_height]) {
-      translate ([-1,23,10+tw]) rotate([0,90,0]) cylinder(h=tw*2,r=1.6);
-      translate ([-1,78,10+tw]) rotate([0,90,0]) cylinder(h=tw*2,r=1.6);
+      translate ([-1,22,10.5+tw]) rotate([0,90,0]) cylinder(h=tw*2,r=1.6);
+      translate ([-1,76.6,10.5+tw]) rotate([0,90,0]) cylinder(h=tw*2,r=1.6);
     }
     // gotek 2 screw holes
     translate([0,0,gotek_2_height]) {
-      translate ([-1,23,10+tw]) rotate([0,90,0]) cylinder(h=tw*2,r=1.6);
-      translate ([-1,78,10+tw]) rotate([0,90,0]) cylinder(h=tw*2,r=1.6);
+      translate ([-1,22,10.5+tw]) rotate([0,90,0]) cylinder(h=tw*2,r=1.6);
+      translate ([-1,76.6,10.5+tw]) rotate([0,90,0]) cylinder(h=tw*2,r=1.6);
     }
     // gotek 3 screw holes
     translate([0,0,gotek_3_height]) {
-      translate ([-1,23,10+tw]) rotate([0,90,0]) cylinder(h=tw*2,r=1.6);
-      translate ([-1,78,10+tw]) rotate([0,90,0]) cylinder(h=tw*2,r=1.6);
+      translate ([-1,22,10.5+tw]) rotate([0,90,0]) cylinder(h=tw*2,r=1.6);
+      translate ([-1,76.6,10.5+tw]) rotate([0,90,0]) cylinder(h=tw*2,r=1.6);
     }
   }
 // gotek 0 sled bottom
