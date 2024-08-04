@@ -6,7 +6,7 @@ post_h = 32;
 post_r = 1.25;
 
 difference() {
-    cube([35,84,3]);
+    cube([35,84,4]);
     // together side posts
     translate([7, 5, -1]) cylinder(h=post_h, r=post_r);
     translate([29, 5, -1]) cylinder(h=post_h, r=post_r);
