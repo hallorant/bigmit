@@ -55,10 +55,10 @@ difference() {
   }
   
   // text
-  translate([19.5,5,0.5]) rotate([180,0,180]) linear_extrude(2) text("P", size=4);
-  translate([47,5,0.5]) rotate([180,0,180]) linear_extrude(2) text("V", size=4);
-  translate([95,5,0.5]) rotate([180,0,180]) linear_extrude(2) text("T", size=4);
+  translate([18.5,5,0.5]) rotate([180,0,180]) linear_extrude(2) text("P", size=4, font=":style=Bold");
+  translate([46,5,0.5]) rotate([180,0,180]) linear_extrude(2) text("V", size=4, font=":style=Bold");
+  translate([96,5,0.5]) rotate([180,0,180]) linear_extrude(2) text("T", size=4, font=":style=Bold");
   
-  translate([74,3.25,0.5]) rotate([180,0,180]) linear_extrude(2) text("R/S", size=4);
-  translate([77,18,0.5]) rotate([180,0,180]) linear_extrude(2) text("FreHD", size=4);
+  translate([74,2.5,0.5]) rotate([180,0,180]) linear_extrude(2) text("R/S", size=4, font=":style=Bold");
+  translate([77.5,19,0.5]) rotate([180,0,180]) linear_extrude(2) text("FreHD", size=4, font=":style=Bold");
 }
