@@ -49,17 +49,16 @@ difference() {
   dinn_hole(75);
   
   // ROM switch hole
-  translate([68,7.5,-1]) union() {
-    cube([4,10,5]);
-    translate([1.5,0,0]) cube([1,10,10]);
+  translate([68.05,8,-1]) union() {
+    cube([3.9,9,5]);
+    translate([1.5,0,0]) cube([0.9,9,10]);
   }
   
   // text
-  translate([12,8,0.5]) rotate([180,0,180]) linear_extrude(2) text("ON", size=3);
-  translate([35.5,0.7,0.5]) rotate([180,0,180]) linear_extrude(2) text("POWER", size=3);
-  translate([61.5,0.7,0.5]) rotate([180,0,180]) linear_extrude(2) text("VIDEO", size=3);
-  translate([89,0.7,0.5]) rotate([180,0,180]) linear_extrude(2) text("TAPE", size=3);
+  translate([19.5,5,0.5]) rotate([180,0,180]) linear_extrude(2) text("P", size=4);
+  translate([47,5,0.5]) rotate([180,0,180]) linear_extrude(2) text("V", size=4);
+  translate([95,5,0.5]) rotate([180,0,180]) linear_extrude(2) text("T", size=4);
   
-  translate([73,3,0.5]) rotate([180,0,180]) linear_extrude(2) text("R/S", size=3);
-  translate([75,19,0.5]) rotate([180,0,180]) linear_extrude(2) text("FreHD", size=3);
+  translate([74,3.25,0.5]) rotate([180,0,180]) linear_extrude(2) text("R/S", size=4);
+  translate([77,18,0.5]) rotate([180,0,180]) linear_extrude(2) text("FreHD", size=4);
 }
