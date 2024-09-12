@@ -26,11 +26,12 @@ module cassette_hole() {
   union() {
     translate([0,diameter/2,0]) cylinder(h=height, r=diameter/2);
     translate([-9.5,diameter/2-3,0]) cube([19,6,height]);
+    translate([0,8.5,-19]) cylinder(h=20, r=12);
   }
 }
 
 module plug_hole() {
-  depth=10;
+  depth=20;
   translate([0,0,-(depth-3)])
   union() {
     difference() {
@@ -48,6 +49,7 @@ module front_panel() {
   difference() {
     union() {
       cube([95,39.5,1]);
+      translate ([6,0,-14]) cube([95-12,39.5,14]);
       translate ([3.5,3,2]) linear_extrude(1) #text("CASSETTE", size=4);
     }
     translate([18.25,9.5,-1]) cassette_hole();
