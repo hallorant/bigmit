@@ -22,11 +22,11 @@ module screw_hole() {
 
 module cassette_hole() {
   height=4;
-  diameter=16.3;
+  diameter=16.5;
   union() {
     translate([0,diameter/2,-16]) cylinder(h=20, r=diameter/2);
-    translate([-9.25,diameter/2-3,0]) cube([18.5,6,height]);
-    translate([0,8,-19.5]) cylinder(h=20, r=12);
+    translate([-9.5,diameter/2-3,0]) cube([19.5,6,height]);
+    translate([0,diameter/2,-19.5]) cylinder(h=20, r=12);
     translate([-13,diameter/2-3,-19.5]) cube([30,6,20]);
   }
 }
@@ -51,9 +51,9 @@ module front_panel() {
     union() {
       translate([0,0,-0.5]) cube([95,39.5,1.5]);
       translate ([6,0,-14]) cube([95-12,39.5,14]);
-      translate ([2,2,0]) linear_extrude(1.5) text("CASSETTE", font="Ariel:style=Bold", size=5);
+      translate ([5,3,0]) linear_extrude(2) text("CASSETTE", font="Ariel:style=Bold", size=4);
     }
-    translate([18.25,9.5,-1]) cassette_hole();
+    translate([18.25,11,-1]) cassette_hole();
     translate([50,9.5,-1]) plug_hole();
   }
 }
@@ -78,7 +78,7 @@ module bottom_flap() {
 difference() {
   union() {
     front_panel();
-    translate([0,38.5,0]) top_flap();
+    translate([0,38,0]) top_flap();
     translate([0,0,-14]) bottom_flap();
   }
 
