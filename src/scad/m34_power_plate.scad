@@ -27,7 +27,7 @@ module cassette_hole() {
     translate([0,diameter/2,-16]) cylinder(h=20, r=diameter/2);
     translate([-9.5,diameter/2-3,0]) cube([19.5,6,height]);
     translate([0,diameter/2,-19.5]) cylinder(h=20, r=12);
-    translate([-13,diameter/2-3,-19.5]) cube([30,6,20]);
+    translate([-15,diameter/2-3,-19.5]) cube([30,6,20]);
   }
 }
 
@@ -51,9 +51,9 @@ module front_panel() {
     union() {
       translate([0,0,-0.5]) cube([95,39.5,1.5]);
       translate ([6,0,-14]) cube([95-12,39.5,14]);
-      translate ([5,3,0]) linear_extrude(2) text("CASSETTE", font="Ariel:style=Bold", size=4);
+      translate ([10,3,0]) linear_extrude(2) text("CASSETTE", font="Ariel:style=Bold", size=4);
     }
-    translate([18.25,11,-1]) cassette_hole();
+    translate([23.25,11,-1]) cassette_hole();
     translate([50,9.5,-1]) plug_hole();
   }
 }
