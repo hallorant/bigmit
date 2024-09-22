@@ -64,6 +64,8 @@ module top_flap() {
     translate([-6,2,8]) screw_oval();
     translate([91,2,8]) screw_oval();
     translate([28.5,2,8]) screw_hole();
+    translate([-1,-1,15]) cube([7,4,6]);
+    translate([90,-1,20]) rotate([0,45,0]) cube([10,4,6]);
   }
 }
 
