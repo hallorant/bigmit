@@ -4,12 +4,14 @@ $fn = 50;
 
 keyangle=9;
 screwr=1.7;
+mountr=2.25;
 
 module post() {
   difference() {
     translate([0,0,-2])cylinder(h=22, r=4.3);
     translate([0,0,-2.5]) cylinder(h=21, r=screwr);
     translate([0,0,15]) cylinder(h=6, r=3.5);
+    translate([0,0,-1]) cylinder(h=5, r=mountr);
   }
 }
 
@@ -22,5 +24,6 @@ union() {
   difference() {
     translate([-6,-9,-1]) rotate([keyangle,0,0]) cube([12,19,2]);
     translate([0,0,-2.5]) cylinder(h=21, r=screwr);
+    translate([0,0,-1]) cylinder(h=5, r=mountr);
   }
 }
