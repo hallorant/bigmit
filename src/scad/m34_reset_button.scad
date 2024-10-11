@@ -2,14 +2,15 @@ $fa = 1;
 $fs = 0.5;
 $fn = 50;
 
-tk=0.5;
-
+// Holder (suggested clear)
+// Use 'adj' to adjust fit of button (less is looser).
 difference() {
+  adj=0.2;
   union() {
     translate([-2,-2,0]) cube([18,18,0.75]);
     translate([0.75,0.75,0]) cube([12.5,12.5,7]);
   }
-  translate([1.75,1.75,-0.5]) cube([10.5,10.5,8]);
+  translate([1.75+(adj/2),1.75+(adj/2),-0.5]) cube([10.5-adj,10.5-adj,8]);
   
   translate([6,0.74,-1]) cube([2,2,7]);
   translate([6,11.26,-1]) cube([2,2,7]);
@@ -18,6 +19,7 @@ difference() {
   translate([11.26,6,-1]) cube([2,2,7]);
 }
 
+// Button (suggested orange)
 translate([40,1.75,0]) {
   
   difference() {
