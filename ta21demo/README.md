@@ -8,7 +8,8 @@ Assembly Language Programming in the Modern Era*. You can see it
 This directory contains all the sample code I demonstrated.
 
 At my table I showed off USB-powered CoCo2 and CoCo3 computers. Showing the
-CoCo displaying its screen on a Model 1 monitor.
+CoCo displaying its screen on a Model 1 monitor. You can see information how to
+convert a CoCo2 to USB power [here](../coco2usb).
 
 # Pictures of my table at the event
 
