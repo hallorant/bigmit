@@ -122,10 +122,10 @@ translate([-dhole_center_x_offset + dhole_total_width - (dhole_total_width - 70)
 translate([-dhole_center_x_offset + (dhole_total_width - 70)/2, 0, gotek_0_height]) {
   difference() {
    cube([70,dhole_depth,tw]);
-   translate([10,15,-1]) cylinder(h=tw,r=7.5);
-   translate([61,15,-1]) cylinder(h=tw,r=7.5);
-   translate([10,dhole_depth-15,-1]) cylinder(h=tw,r=7.5);
-   translate([61,dhole_depth-15,-1]) cylinder(h=tw,r=7.5);
+   translate([10,10,-1]) cylinder(h=tw,r=5);
+   translate([60,10,-1]) cylinder(h=tw,r=5);
+   translate([10,dhole_depth-10,-1]) cylinder(h=tw,r=5);
+   translate([60,dhole_depth-10,-1]) cylinder(h=tw,r=5);
   }
 }
 // gotek 1 sled bottom
