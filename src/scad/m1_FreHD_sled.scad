@@ -25,6 +25,7 @@ difference() {
     translate([0,0,2]) prism(60, 10, 70);
     translate([60,10+10+space,2]) rotate([0,0,180]) prism(60, 10, 70);
     cube([60,53,2]);
+    translate([0,10,0]) cube([60+80,space,2]);
   }
   translate([-5,0,60]) cube([70,53,20]);
 }
