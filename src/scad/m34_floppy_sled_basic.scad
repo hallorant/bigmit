@@ -5,10 +5,10 @@ $fn = 50;
 thk=1.5;
 
 // Front plate sizes
-front_wd=149;
-front_ht=86;
+front_wd=150;
+front_ht=87;
 // Shelf sizes
-shelf_wd=145;
+shelf_wd=146;
 shelf_dp=160;
 shelf_inset=(front_wd-shelf_wd)/2;
 
@@ -26,7 +26,10 @@ module side() {
 union() {
   // FRONT PLATE
   cube([front_wd,front_ht,thk]); // front
+  
   translate([0,front_ht-2*thk,0]) cube([front_wd,2*thk,2*thk]); // top strengther
+  translate([0,0,0]) cube([2*thk,front_ht,2*thk]); // side strengther
+  translate([front_wd-2*thk,0,0]) cube([2*thk,front_ht,2*thk]); // side strengther
   // SHELF
   translate([shelf_inset,0,0]) cube([shelf_wd,thk,shelf_dp]); // bottom
   translate([shelf_inset,0,0]) side(); // side
