@@ -9,9 +9,9 @@ module hole() {
 
 difference() {
   translate([0,0,-5]) linear_extrude(10) {
-    polygon(points=[[-4,0],[4,0],[5,6],
-      [40,6],[41,0],[49,0],
-      [48,10],[-3,10]]);
+    polygon(points=[[-4,0],[4,0],[5,2],
+      [40,2],[41,0],[49,0],
+      [48,4],[-3,4]]);
   }
   translate([0,-3,0]) hole();
   translate([45,-3,0]) hole();
