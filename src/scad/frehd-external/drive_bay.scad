@@ -7,7 +7,7 @@ $fn = 50;
 ////////////////////////////////
 
 tw = 1.5; // thickness of any walls
-total_width = 107;
+total_width = 105;
 
 
 difference() {
@@ -32,9 +32,9 @@ translate([0, 0, 35]) cube([total_width, 90, tw]);
 difference() {
   cube([total_width, 90, tw]);
   translate([8,10,-1]) cylinder(h=tw,r=5);
-  translate([99,10,-1]) cylinder(h=tw,r=5);
-  translate([8,70,-1]) cylinder(h=tw,r=5);
-  translate([99,70,-1]) cylinder(h=tw,r=5);
+  translate([98,10,-1]) cylinder(h=tw,r=5);
+  translate([8,80,-1]) cylinder(h=tw,r=5);
+  translate([98,80,-1]) cylinder(h=tw,r=5);
 }
 
 // Side supports
@@ -46,5 +46,5 @@ module side() {
     translate ([-1,tw+0.1+55,2*tw+12.6]) rotate([0,90,0]) cylinder(h=tw*2,r=1.6);
   }
 }
-translate([-tw, 0, 0]) side();
+translate([0, 0, 0]) side();
 translate([total_width, 0, 0]) side();
