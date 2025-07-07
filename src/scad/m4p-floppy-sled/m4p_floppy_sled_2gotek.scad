@@ -152,7 +152,7 @@ face_ht = 146;
 gotek_hole_wd = 70;
 gotek_hole_ht = 78;
 
-sled_depth = 130;
+sled_depth = 135;
 
 module face_plate() {
   difference() {
@@ -162,15 +162,51 @@ module face_plate() {
   }
 }
 
+module side_plate() {
+  cube([2*thk,face_ht,2*thk]);
+}
+
+module sled_support() {
+  cube([thk,34,dhole_depth/2]);
+  translate([0,face_ht-35,0]) cube([thk,34,dhole_depth/2]);
+}
+
+module sled_holes_one_drive() {
+  translate([11.5,thk,48]) rotate([90,0,0]) cylinder(h=4*thk,r=2,center=true);
+  translate([11.5,thk,127.5]) rotate([90,0,0]) cylinder(h=4*thk,r=2,center=true);
+}
+
+module sled_holes() {
+  sled_holes_one_drive();
+  translate([41.5,0,0]) sled_holes_one_drive();
+}
+  
+
 module top() {
-  cube([face_wd,2*thk,sled_depth]);
+  difference() {
+    cube([face_wd,2*thk,sled_depth]);
+    sled_holes();
+  }
+}
+
+module bottom() {
+  difference() {
+    cube([face_wd,2*thk,dhole_depth]);
+    sled_holes();
+  }
 }
   
 
 union() {
   face_plate();
-  translate([-34,30,0]) dual_gotek();
+  //translate([-34,30,0]) dual_gotek();
   // top and bottom
-  top();
+  bottom();
   translate([0,face_ht-2*thk,0]) top();
+  // side support
+  side_plate();
+  translate([face_wd-2*thk,0,0]) side_plate();
+  // sled support attaches sled to top and bottom
+  translate([4.5,0,0]) sled_support();
+  translate([face_wd-4.5-thk,0,0]) sled_support();
 }
