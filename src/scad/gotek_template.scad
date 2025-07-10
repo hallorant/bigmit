@@ -9,8 +9,8 @@ gotek_width = 73;
 gotek_depth = 85;
 gotek_rail_depth = 60;
 
-module gotek() {
-  gotek_faceplate();
+module gotek(drive_num="") {
+  gotek_faceplate(drive_num);
   translate([(gotek_width-70)/2-tw,0,0])          gotek_side(); // left from front
   translate([gotek_width-(gotek_width-70)/2,0,0]) gotek_side(); // right from front
   translate([(gotek_width-70)/2,0, gotek_height]) gotek_floor(); // top
@@ -18,7 +18,7 @@ module gotek() {
 }
 
 
-module gotek_faceplate() {
+module gotek_faceplate(drive_num) {
   gotek_button_radius = 2.25;
   magnet_hole_radius = 4.05;
   led_radius = 1.8;
@@ -48,7 +48,7 @@ module gotek_faceplate() {
       translate ([59.5,tw+1,21]) rotate([90,0,0])   cylinder(h=tw*2,r=led_radius);
       translate ([26.5,-1,9.5]) cube([16,tw*2,9]);  // usb slot
       translate ([18,-1,23.5]) cube([25,tw*2,9.5]); // oled slot
-      translate ([18,0.75,11.5]) rotate([90, 0, 0]) linear_extrude(2*tw) text("#", size=7);
+      translate ([18,0.75,11.5]) rotate([90, 0, 0]) linear_extrude(2*tw) text(drive_num, size=7);
     }
   }
 }
@@ -69,8 +69,4 @@ module gotek_floor() {
   }
 }
 
-
-
-
-
-gotek();
+gotek(drive_num="0");
