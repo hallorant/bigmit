@@ -12,7 +12,7 @@ difference() {
   // Room for dip connector
   translate([11,0,-1]) cube([5,20,10]);
   // Room for usb
-  translate([53,11,-1]) cube([30,20,10]);
+  translate([52,11,-1]) cube([30,20,10]);
   // Label back of OLED holder
   translate ([50,9,3.5]) rotate([0, 0, 180]) linear_extrude(2) text("oled (back)", size=5);
   
