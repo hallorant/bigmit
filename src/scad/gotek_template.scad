@@ -7,6 +7,7 @@ tw = 1.5; // thickness of walls
 gotek_height = 38;
 gotek_width = 73;
 gotek_depth = 85;
+gotek_rail_depth = 60;
 
 module gotek() {
   gotek_faceplate();
@@ -29,10 +30,10 @@ module gotek_faceplate() {
       translate([(gotek_width-70)/2,0,0]) {
         translate([18-6,0,20]) cube([39,5.5,tw]);
         translate([18-6,0,20+12.5+tw]) cube([39,5.5,1]);
-        translate([0,0,rail_height]) cube([2,gotek_depth,2]);
+        translate([0,0,rail_height]) cube([2,gotek_rail_depth,2]);
         translate([0,5+6,rail_height-3]) rotate([0,0,6]) cube([.5,4,8]);
         translate([18-6-tw-11,0,20]) cube([tw+11,5.5,12+2*tw]);
-        translate([gotek_width-3*tw,0,rail_height]) cube([2,gotek_depth,2]);
+        translate([gotek_width-3*tw,0,rail_height]) cube([2,gotek_rail_depth,2]);
         translate([gotek_width-2*tw-0.5,5+6,rail_height-3]) rotate([0,0,-6]) cube([.5,4,8]);
         translate([18-6+39,0,20]) union() {
             translate([-0.6,0,0]) cube([tw,5.5,12+2*tw]);
