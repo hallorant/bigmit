@@ -21,6 +21,7 @@ module gotek_faceplate() {
   gotek_button_radius = 2.25;
   magnet_hole_radius = 4.05;
   led_radius = 1.8;
+  rail_height = 33-4.25;
   difference() {
     union() {
       // faceplate
@@ -28,17 +29,15 @@ module gotek_faceplate() {
       translate([(gotek_width-70)/2,0,0]) {
         translate([18-6,0,20]) cube([39,5,tw]);
         translate([18-6,0,20+12.5+tw]) cube([39,5,1]);
-        translate([18-6-tw-11,0,20]) difference() {
-          cube([tw+11,5,12+2*tw]);
-          translate([6,6,8]) rotate([90,0,0]) cylinder(h=5,r=magnet_hole_radius);
-        }
-        translate([18-6+39,0,20]) difference() {
-          union() {
+        translate([0,0,rail_height]) cube([2,gotek_depth,2]);
+        translate([0,5+5.5,rail_height-3]) rotate([0,0,6]) cube([.5,4,8]);
+        translate([18-6-tw-11,0,20]) cube([tw+11,5,12+2*tw]);
+        translate([gotek_width-3*tw,0,rail_height]) cube([2,gotek_depth,2]);
+        translate([gotek_width-2*tw-0.5,5+5.5,rail_height-3]) rotate([0,0,-6]) cube([.5,4,8]);
+        translate([18-6+39,0,20]) union() {
             translate([-0.6,0,0]) cube([tw,5,12+2*tw]);
             translate([0,0,4]) cube([20,5,11]);
           }
-          translate([6,6,8]) rotate([90,0,0]) cylinder(h=5,r=magnet_hole_radius);
-        }
       }
     }
     // cutouts
