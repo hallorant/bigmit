@@ -40,14 +40,14 @@ difference() {
   translate([back_back+nb, lhs_offset, -1]) cylinder(h=mount_height+2, r=screw_radius);
   // sled right side mounting holes
   translate([15,1,sled_mount_hole_height])
-    rotate([90, 0, 0]) cylinder(h=7, r=screw_radius);
+    rotate([90, 0, 0]) cylinder(h=7, r=screw_radius-0.2);
   translate([55,1,sled_mount_hole_height])
-    rotate([90, 0, 0]) cylinder(h=7, r=screw_radius);
+    rotate([90, 0, 0]) cylinder(h=7, r=screw_radius-0.2);
   // sled left side mounting holes
   translate([15,sled_width-1,sled_mount_hole_height])
-    rotate([-90, 0, 0]) cylinder(h=7, r=screw_radius);
+    rotate([-90, 0, 0]) cylinder(h=7, r=screw_radius-0.2);
   translate([55,sled_width-1,sled_mount_hole_height])
-    rotate([-90, 0, 0]) cylinder(h=7, r=screw_radius);
+    rotate([-90, 0, 0]) cylinder(h=7, r=screw_radius-0.2);
   // lightners
   translate([10,15,-1]) cube([60,sled_width-30,tw+2]);
   translate ([6,34,2]) rotate([0, 0, 90]) linear_extrude(2*tw) text("FreHD (front)", size=4);
