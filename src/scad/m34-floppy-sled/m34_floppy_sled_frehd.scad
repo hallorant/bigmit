@@ -60,7 +60,7 @@ module side() {
     }
     translate([-1,22,53]) rotate([0,90,0]) cylinder(h=4*thk,r=2);
     translate([-1,22,132]) rotate([0,90,0]) cylinder(h=4*thk,r=2);
-    // Screwdrover hole
+    // Screwdriver hole
     translate([-1,39,17]) rotate([0,90,0]) cylinder(h=4*thk,r=5);
   }
 }
@@ -68,8 +68,16 @@ module side() {
 union() {
   // FRONT PLATE
   difference() {
-    cube([front_wd,front_ht,thk]); // front plate
+    union() {
+      cube([front_wd,front_ht,thk]); // front plate
+      translate([33,59,thk-0.4]) cube([15,17,thk]); // SWITCH support
+    }
     translate([25,23,-1]) cube([100,35,2*thk]); // cutout for frehd plate
+    // SWITCH cutout
+    translate([33+7.5,60+7.5,-1]) {
+      cylinder(h=10,r=3.1);
+      translate([-1.1,0,2.3]) cube([2.2,8,2]);
+    }
   }
   translate([front_wd-22,23,0]) rotate([90,0,180]) frehd();
   translate([25,1,0]) cube([thk,23,60]);
