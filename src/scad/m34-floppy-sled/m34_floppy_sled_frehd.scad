@@ -75,7 +75,7 @@ union() {
     translate([25,23,-1]) cube([100,35,2*thk]); // cutout for frehd plate
     // SWITCH cutout
     translate([33+7.5,60+7.5,-1]) {
-      cylinder(h=10,r=3.1);
+      cylinder(h=10,r=3.3);
       translate([-1.1,0,2.3]) cube([2.2,8,2]);
     }
   }

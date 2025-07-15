@@ -92,6 +92,7 @@ module side() {
     translate([-1,22,132]) rotate([0,90,0]) cylinder(h=4*thk,r=2);
     // Screwdriver hole
     translate([-1,18,22]) rotate([0,90,0]) cylinder(h=4*thk,r=5);
+    translate([-1,18,77]) rotate([0,90,0]) cylinder(h=4*thk,r=5);
   }
 }
 
