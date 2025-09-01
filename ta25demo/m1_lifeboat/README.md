@@ -2,10 +2,20 @@
 
 This is a remapped version of CP/M that runs on a stock Model 1 with disks.
 
-## Keyboard
+## Keyboard remapping
 
-* Lifeboat CP/M uses Shift-↓ for the Ctrl key. So to press Ctrl-Z you would hold down Shift and ↓ and press Z.
+* Lifeboat CP/M uses Shift-↓ for the Ctrl key. So to press Ctrl-Z you would
+  hold down the Shift and ↓ keys and then press Z. This is much easier to do on
+  a real Model 1 keyboard than an emulator using a modern keyboard.
 * PIP uses <> instead of [].
+
+## Format and backup of disks
+
+* To format a floppy you use FORMAT under Lifeboat CP/M.
+* To backup a CP/M disk in A: to a new disk in B:
+  * Run ```FORMAT``` and select drive B
+  * Run ```SYSGEN``` and select A for the source and B for the destination
+  * Run ```PIP B:=A:*.*<OV>```
 
 ## Files
 
