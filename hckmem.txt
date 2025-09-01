@@ -987,3 +987,15 @@ you had a list
 
 George Phillips: Looks like libgtk-3-dev and libpulse-dev is all you need.
 Maybe g++ but I imagine that's already there.
+--------------------------------------------------------------------
+- Model 1 serial RS-232-C (Mav reproduction)
+
+The board has no switchs (different from original)
+* IN a,($e9) results in a being ED or 1110 1101
+  Decode using Table 6 on page 17 of TRS-80 RS-232-C manual:
+  -D7=1 : even parity (but off due to D3)
+  -D6=1 D5=1 : 8 data bits
+  -D4=0 : 2 stop bits
+  -D3=1 : parity inhibit (no parity)
+  -D2=1 D1=0 D0=1 : 5H which is 130 baud (Table 5 on page 16)
+--------------------------------------------------------------------
