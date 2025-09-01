@@ -22,3 +22,8 @@ This is a remapped version of CP/M that runs on a stock Model 1 with disks.
 | File | Description |
 |------|-------------|
 | LifeboatCPMv1.41UserNotes.pdf | Notes on use and setup of Lifeboat CP/M. |
+| m1_lifeboat_cpm.* |
+| m1_lifeboat_mbasic_5_11.* | Microsoft Basic v 5.11 |
+| m1_lifeboat_mbasic_5_22.* | Microsoft Basic v 5.22 and ELIZA.BAS |
+| m1_lifeboat_tools.* | Squeezer and other tools |
+| m1_lifeboat_bdsc.* | BD Software C compiler and linker |
