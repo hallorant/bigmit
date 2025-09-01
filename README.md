@@ -12,6 +12,10 @@ Why *bigmit*? A homage to [Big Five Software](http://www.trs-80.org/big-five/).
 * [z80unit](./z80unit) &ndash; A programmer-friendly unit testing library for
   TRS-80 assembly. Supports all z80 TRS-80s and most DOSs.
 
+* [CoCo 2 USB power](./coco2usb) &ndash; Covert your CoCo2 to use USB power.
+
+* [Model 1 USB power](./model1usb) &ndash; Covert your Model 1 to use USB power.
+
 ## Tandy Assembly
 
 I've been to every Tandy Assembly except the first one.
