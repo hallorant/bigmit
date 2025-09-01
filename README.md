@@ -12,6 +12,10 @@ Why *bigmit*? A homage to [Big Five Software](http://www.trs-80.org/big-five/).
 * [z80unit](./z80unit) &ndash; A programmer-friendly unit testing library for
   TRS-80 assembly. Supports all z80 TRS-80s and most DOSs.
 
+## Tandy Assembly
+
+I've been to every Tandy Assembly except the first one.
+
 * [Tandy Assembly 2019 VBLANK Modification Exhibit](./ta19demo) &ndash; This
   directory contains the z80 assembly code for my Tandy Assembly 2019
   Raycaster.  I exhibited at Tandy Assembly 2019 with George Phillips the
