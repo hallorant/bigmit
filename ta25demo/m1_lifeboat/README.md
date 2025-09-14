@@ -50,6 +50,54 @@ assembly source is include on ```m1_lifeboat_cpm.hfe``` as well as
 This utility is designed to be build under CP/M. Just run ```ASM R32BAUD``` to
 get an Intel HEX file then ```LOAD R32BAUD``` to get a COM executable.
 
+### Device mappings
+
+##
+	trs80gp -m1 -d0 m1_lifeboat_cpm.hfe
+
+The ```STAT DEV:``` command shows mappings from virtual to real devices and the
+```STAT VAL:``` command shows the options.
+
+The listing below shows these commands under Lifeboat.
+
+##
+	A>STAT DEV:
+	CON: IS TRS:
+	RDR: IS XXX:
+	PUN: IS XXX:
+	LST: IS LPT:
+	A>STAT VAL:
+	CON: = TRS: LPT: R32: T32:
+	RDR: = XXX: XXX: XXX: XXX:
+	PUN: = XXX: XXX: XXX: XXX:
+	LST: = TRS: LPT: R32: T32:
+	A>_
+
+Under Lifeboat you really can only remap the CON (console) and LST (printer) device.
+
+### Serial print to a terminal
+
+##
+	trs80gp -m1 -d0 m1_lifeboat_cpm.hfe -r :dt1
+
+
+This opens a terminal connected to the Model 1.
+
+##
+	48K TRS-80 CP/M  V 1.41  COPYRIGHT (C) 1979
+	LIFEBOAT ASSOCIATES - SMALL SYSTEM SOFTWARE
+	A>R32BAUD 600
+	R32: DEVICE SET TO 600 BAUD
+	     (8 DATA BITS, 1 STOP BIT, NO PARITY)
+	A>STAT LST:=R32:
+	A>PIP LST:=DUMP.ASM
+
+This sets baud to 600 (you can choose any value) then maps the LST virtual
+device to the serial link to the DT1 terminal. The PIP command lists the
+DUMP.ASM file to the terminal. Normally, in ```trs80gp``` the PIP command would
+send the listing to the LPT device which is emulated printer.
+
+
 ## Files
 
 | File | Description |
