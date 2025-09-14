@@ -22,6 +22,21 @@ The disk images are setup for a TRS-80 Model 1 with a Gotek or with
   * Run ```SYSGEN``` and select A for the source and B for the destination
   * Run ```PIP B:=A:*.*<OV>```
 
+## Model 1 serial support
+
+If you read ```LifeboatCPMv1.41UserNotes.pdf``` you will note that the Model 1
+serial support relies on changing the switches on the serial board in the
+expansion interface. With original hardware this means to change settings you
+need to open up the expansion interace. With Mav's reproduction *RS232C Serial
+board kit for the Tandy Radio Shack TRS-80 Model I*, which is what I have in my
+Model 1. there are no setting switches.
+
+I've created the ```R32BAUD``` utility to help this problem. It will change the
+baud rate to any of 110, 300, 600, 1200, or 2400 using 8 bits, no parity, and 1
+stop bit. The assembly source is include on ```m1_lifeboat_cpm.hfe``` as well
+as [here](./asm/r32baud.asm).
+
+
 ## Files
 
 | File | Description |
