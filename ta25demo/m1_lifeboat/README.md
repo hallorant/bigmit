@@ -52,9 +52,6 @@ get an Intel HEX file then ```LOAD R32BAUD``` to get a COM executable.
 
 ### Device mappings
 
-##
-	trs80gp -m1 -d0 m1_lifeboat_cpm.hfe
-
 The ```STAT DEV:``` command shows mappings from virtual to real devices and the
 ```STAT VAL:``` command shows the options.
 
@@ -80,8 +77,8 @@ Under Lifeboat you really can only remap the CON (console) and LST (printer) dev
 ##
 	trs80gp -m1 -d0 m1_lifeboat_cpm.hfe -r :dt1
 
-
-This opens a terminal connected to the Model 1.
+This opens a terminal connected to the Model 1 under ```trs80gp```. You could
+use a real Model 1 with a serial terminal connected to it.
 
 ##
 	48K TRS-80 CP/M  V 1.41  COPYRIGHT (C) 1979
