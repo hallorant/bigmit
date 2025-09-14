@@ -47,6 +47,9 @@ assembly source is include on ```m1_lifeboat_cpm.hfe``` as well as
 	     (8 DATA BITS, 1 STOP BIT, NO PARITY)
 	A>_
 
+This utility is designed to be build under CP/M. Just run ```ASM R32BAUD``` to
+get an Intel HEX file then ```LOAD R32BAUD``` to get a COM executable.
+
 ## Files
 
 | File | Description |
