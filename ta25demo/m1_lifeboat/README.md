@@ -89,11 +89,36 @@ use a real Model 1 with a serial terminal connected to it.
 	A>STAT LST:=R32:
 	A>PIP LST:=DUMP.ASM
 
-This sets baud to 600 (you can choose any value) then maps the LST virtual
-device to the serial link to the DT1 terminal. The PIP command lists the
-DUMP.ASM file to the terminal. Normally, in ```trs80gp``` the PIP command would
-send the listing to the LPT device which is emulated printer.
+This sets baud to 600 (note trs80gp is allows any value, a real terminal has to
+match the termial baud setting) then maps the LST virtual device to the serial
+link to the DT1 terminal. The PIP command lists the DUMP.ASM file to the
+terminal. Normally, in ```trs80gp``` the PIP command would send the listing to
+the LPT device which is emulated printer.
 
+### Use the terimal as the CP/M console
+
+##
+        trs80gp -m1 -d0 m1_lifeboat_cpm.hfe -r :dt1
+
+This opens a terminal connected to the Model 1 under ```trs80gp```. You could
+use a real Model 1 with a serial terminal connected to it.
+
+##
+	48K TRS-80 CP/M  V 1.41  COPYRIGHT (C) 1979
+	LIFEBOAT ASSOCIATES - SMALL SYSTEM SOFTWARE
+	A>R32BAUD 600
+	R32: DEVICE SET TO 600 BAUD
+	     (8 DATA BITS, 1 STOP BIT, NO PARITY)
+	A>STAT CON:=R32:
+
+At this point you should see ```A>``` on the terminal. You can type and use the
+terminal. Notice that the DT1 is 80 columns while the model 1 is not.  To put
+the prompt back on the Model 1 type the following on the DT1 terminal.
+
+##
+	A>STAT CON:=TRS:
+
+At this point you should see ```A>``` on the Model 1.
 
 ## Files
 
