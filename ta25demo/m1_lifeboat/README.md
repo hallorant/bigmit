@@ -27,15 +27,25 @@ The disk images are setup for a TRS-80 Model 1 with a Gotek or with
 If you read ```LifeboatCPMv1.41UserNotes.pdf``` you will note that the Model 1
 serial support relies on changing the switches on the serial board in the
 expansion interface. With original hardware this means to change settings you
-need to open up the expansion interace. With Mav's reproduction *RS232C Serial
-board kit for the Tandy Radio Shack TRS-80 Model I*, which is what I have in my
-Model 1. there are no setting switches.
+need to open up the expansion interace. Mav's reproduction *RS232C Serial board
+kit for the Tandy Radio Shack TRS-80 Model I* does not setting switches. I have
+this reproduction in my Model 1. I wanted to improve the flexibility of
+Lifeboat CP/M for serial use.
 
-I've created the ```R32BAUD``` utility to help this problem. It will change the
-baud rate to any of 110, 300, 600, 1200, or 2400 using 8 bits, no parity, and 1
-stop bit. The assembly source is include on ```m1_lifeboat_cpm.hfe``` as well
-as [here](./asm/r32baud.asm).
+I've created the ```R32BAUD``` utility. It will change the baud rate to any of
+110, 300, 600, 1200, or 2400 using 8 bits, no parity, and 1 stop bit. The
+assembly source is include on ```m1_lifeboat_cpm.hfe``` as well as
+[here](./asm/r32baud.asm).
 
+##
+	48K TRS-80 CP/M  V 1.41  COPYRIGHT (C) 1979
+	LIFEBOAT ASSOCIATES - SMALL SYSTEM SOFTWARE
+	A>R32BAUD
+	USAGE: R32BAUD 110, 300, 600, 1200, OR 2400
+	A>R32BAUD 1200
+	R32: DEVICE SET TO 1200 BAUD
+	     (8 DATA BITS, 1 STOP BIT, NO PARITY)
+	A>_
 
 ## Files
 
