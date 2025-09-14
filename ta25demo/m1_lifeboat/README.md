@@ -5,7 +5,7 @@ The disk images are setup for a TRS-80 Model 1 with a Gotek or with
 [trs80gp](http://48k.ca/trs80gp.html).
 
 ##
-		trs80gp -m1 -d0 m1_lifeboat_cpm.hfe
+	trs80gp -m1 -d0 m1_lifeboat_cpm.hfe
 
 ## Keyboard remapping
 
