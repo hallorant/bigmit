@@ -7,4 +7,5 @@ slides are
 
 # CP/M on the TRS-80 Table Display
 
-* Model 1 CP/M [Lifeboat](./m1_lifeboat)
+* Stock Model 1 CP/M [Lifeboat](./m1_lifeboat) version 1.41
+* Stock Model 1 CP/M [FMG](./m1_fmg) version 1.5
