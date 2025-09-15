@@ -125,7 +125,7 @@ At this point you should see ```A>``` on the Model 1.
 | File | Description |
 |------|-------------|
 | LifeboatCPMv1.41UserNotes.pdf | Notes on use and setup of Lifeboat CP/M. |
-| m1_lifeboat_cpm.hfe |
+| m1_lifeboat_cpm.hfe | Lifeboat CP/M v 1.41 |
 | m1_lifeboat_mbasic_5_11.hfe | Microsoft Basic v 5.11 |
 | m1_lifeboat_mbasic_5_22.hfe | Microsoft Basic v 5.22 and ELIZA.BAS |
 | m1_lifeboat_tools.hfe | Squeezer and other tools |
