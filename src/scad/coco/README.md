@@ -27,3 +27,10 @@ made are
 |------|-------------|
 | FD502_bottom.stl | fiscap's STL case bottom. |
 | FD502_top.stl | fiscap's STL case top. |
+| coco-diag-bottom.scad | Diagnostic cartridge bottom. |
+| coco-diag-top.scad | Diagnostic cartridge top. |
+| coco-fd501-bottom.scad | FD-510 Floppy controller cartridge bottom. |
+| coco-fd501-top.scad | FD-510 Floppy controller cartridge top. |
+| coco-rs232-bottom.scad | RS-232 Pack cartridge bottom. |
+| coco-rs232-bottom-noholes.scad | RS-232 Pack cartridge bottom. Useful for earlier card that didn't have four mounting holes |
+| coco-rs232-top.scad | RS-232 Pack cartridge top. |
