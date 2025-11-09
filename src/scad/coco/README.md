@@ -6,7 +6,7 @@ CoCo Diagnostic cartridge, the CoCo RS-232 cartridge, and the FD-501 CoCo
 floppy disk controller cartridge.
 
 These are all remixes for [fiscap](https://www.thingiverse.com/fiscap) which
-was calld the [TRS-80 Color Computer RE-FD-502
+was called the [TRS-80 Color Computer RE-FD-502
 Case](https://www.thingiverse.com/thing:5470278).
 
 In some ways mine are actually worse than what fiscap did for the FD-501. The
