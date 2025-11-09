@@ -14,6 +14,8 @@ difference() {
   union() {
     import("FD502_bottom.stl");
     translate([60,0.6,66]) cube([10,2,10]);
+    // fix small slot on bottom
+    translate([105,0.5,35]) cube([4,2.7,70]);
   }
   translate([59.5,5,63]) cube([12,10,15]);
   // fix db25 end
