@@ -21,6 +21,9 @@ made are
 * Added a design for Ian's RS-232 pack.
 * Added a design for Ian's Diagnostics cartridge.
 
+Note: to use these you need to open OpenSCAD and load the source files and then
+render to export STL for your 3d-printer.
+
 ## Files
 
 | File | Description |
@@ -32,5 +35,5 @@ made are
 | coco-fd501-bottom.scad | FD-510 Floppy controller cartridge bottom. |
 | coco-fd501-top.scad | FD-510 Floppy controller cartridge top. |
 | coco-rs232-bottom.scad | RS-232 Pack cartridge bottom. |
-| coco-rs232-bottom-noholes.scad | RS-232 Pack cartridge bottom. Useful for earlier card that didn't have four mounting holes |
+| coco-rs232-bottom-noholes.scad | RS-232 Pack cartridge bottom. Useful for the older version of the cartridge that didn't have four mounting holes |
 | coco-rs232-top.scad | RS-232 Pack cartridge top. |
