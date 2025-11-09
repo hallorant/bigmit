@@ -14,7 +14,7 @@ fiscap design is really nice but I found it hard to 3d-print. the changes I've
 made are
 
 * I made the top and bottom flat (removing the indent) so it would print with
-* better quality. Simply lay the tops and bottoms on the printer deck, with the
+  better quality. Simply lay the tops and bottoms on the printer deck, with the
   sides going up. This should print well even on cheap printers.
 * For the FD-510 the floppy opening was pretty tight I made it larger (should
   fit most cables now).
