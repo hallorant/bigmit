@@ -15,7 +15,7 @@ Troubleshoot TRS-80s*.  You can see
 slides are
 [here](https://docs.google.com/presentation/d/1VNWidXKnvpIm3qWRo8w7yRHjuUdeObwH152IBmLfzcI/edit?usp=sharing).
 
-# Pictures the event
+# Pictures of the event
 
 ![Mav introducing Steve Leininger](../etc/images/ta24_mavandsteve.jpg?raw=true "Mav introducing Steve Leininger")
 

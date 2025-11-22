@@ -10,7 +10,7 @@ slides are
 * Stock Model 1 CP/M [Lifeboat](./m1_lifeboat) version 1.41
 * Stock Model 1 CP/M [FMG](./m1_fmg) version 1.5
 
-# Pictures the event
+# Pictures of the event
 
 ![Music performance using TRS-80 computers](../etc/images/ta25_music.jpg?raw=true "Music performance using TRS-80 computers")
 ![My Table Exhibit](../etc/images/ta25_table_whole.jpg?raw=true "My Table Exhibit")
