@@ -12,6 +12,7 @@ slides are
 
 # Pictures the event
 
+![Music performance using TRS-80 computers](../etc/images/ta25_music.jpg?raw=true "Music performance using TRS-80 computers")
 ![My Table Exhibit](../etc/images/ta25_table_whole.jpg?raw=true "My Table Exhibit")
 ![CoCo1 being used as a CP/M serial terminal](../etc/images/ta25_table_coco1_serial.jpg?raw=true "CoCo1 being used as a CP/M serial terminal")
 ![CoCo1 signed by Paul Schreiber (passed in 2025)](../etc/images/ta25_table_paul.jpg?raw=true "My Table CoCo1 signed by Paul Schreiber")
