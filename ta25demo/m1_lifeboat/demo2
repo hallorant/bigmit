@@ -1,0 +1,1 @@
+trs80gp -m1 -r :dt1 -d0 m1_lifeboat_cpm.hfe -d1 m1_lifeboat_mbasic_5_11.hfe

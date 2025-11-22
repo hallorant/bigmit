@@ -1,0 +1,1 @@
+trs80gp -m1 -d0 m1_lifeboat_cpm.hfe -d1 blank.hfe
