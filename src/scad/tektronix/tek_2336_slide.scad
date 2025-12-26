@@ -37,8 +37,8 @@ module guide() {
   difference() {
     cube([6,2.3,9.5]);
     // Wing cuttouts
-    translate([6/2-2.5/2,0,9.5-1.6]) cube([2.5,2.6,2.1]);
-    translate([6/2-2.5/2,0,-0.5]) cube([2.5,2.6,2.1]);
+    translate([6/2-2/2,0,9.5-1.6]) cube([2,2.6,2.1]);
+    translate([6/2-2/2,0,-0.5]) cube([2,2.6,2.1]);
   }
 }
 
@@ -52,7 +52,6 @@ difference() {
     translate([4-1.5,-2,(sheight/2)-(9.5/2)]) guide();
   }
   // screw mount hole (needs to be through entire slider)
-  r=1.5;
-  translate([4-1.5,-2,(sheight/2)-(8/2)])
-  rotate([90,0,0]) translate([3,9.5/2-r/2,-2.6]) cylinder(3.6,r,r);
+  r=2.5;
+  rotate([90,0,0]) translate([5.5,sheight/2,-0.8]) cylinder(5,r,r);
 }
