@@ -53,5 +53,5 @@ difference() {
   }
   // screw mount hole (needs to be through entire slider)
   r=2.5;
-  rotate([90,0,0]) translate([5.5,sheight/2,-0.8]) cylinder(5,r,r);
+  rotate([90,0,0]) translate([5.5,sheight/2,-0.4]) cylinder(3.7,r,r);
 }
