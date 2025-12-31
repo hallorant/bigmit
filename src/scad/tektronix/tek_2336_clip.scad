@@ -19,7 +19,7 @@ module clip() {
         difference() {
           translate([0.25,0,0.5]) cube([4.5,10,4.5]);
           // Screw cutout
-          translate([-1,4.5,-1]) cylinder(8,3,3);
+          translate([-1,4.5,-1]) cylinder(8,2.2,2.2);
         }
       }
     }
@@ -27,9 +27,9 @@ module clip() {
     translate([-0.5,2.5,1]) cube([14,12.5,2]);
     rotate([37,0,0]) translate([-0.5,0,0.4]) cube([14,12.5,5]);
     // screw hole
-    translate([5,20.5,-2]) cylinder(6,1.5,1.5);
+    translate([5,20.5,-2]) cylinder(6,1.2,1.2);
     // Skirt for flush screw
-    translate([5,20.5,0.3]) cylinder(2,3.4,1);
+    translate([5,20.5,0.3]) cylinder(1.4,2.2,1.2);
   }
 }
 

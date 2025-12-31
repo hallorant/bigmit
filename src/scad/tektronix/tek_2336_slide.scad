@@ -52,6 +52,6 @@ difference() {
     translate([4-1.5,-2,(sheight/2)-(9.5/2)]) guide();
   }
   // screw mount hole (needs to be through entire slider)
-  r=2.5;
-  rotate([90,0,0]) translate([5.5,sheight/2,-0.4]) cylinder(3.7,r,r);
+  r=1.6;
+  rotate([90,0,0]) translate([5.5,sheight/2,-0.4]) #cylinder(3.3,r,r);
 }
