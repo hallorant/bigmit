@@ -20,7 +20,8 @@ Why *bigmit*? A homage to [Big Five Software](http://www.trs-80.org/big-five/).
 
 I've been to every Tandy Assembly except the first one.
 
-* Tandy Assembly 2018 (I missed this one)
+* Tandy Assembly 2017 &ndash; The OG at the Christopher Conference Center and
+  Inn in Chillicothe, Ohio. Sadly I missed this one.
 
 * Tandy Assembly 2018 &ndash; Welcomed Stewart Cheifet host of "Computer
   Chronicles" as the keynote speaker. First one I attended and I didn't give a
