@@ -20,11 +20,19 @@ Why *bigmit*? A homage to [Big Five Software](http://www.trs-80.org/big-five/).
 
 I've been to every Tandy Assembly except the first one.
 
+* Tandy Assembly 2018 (I missed this one)
+
+* Tandy Assembly 2018 &ndash; Welcomed Stewart Cheifet host of "Computer
+  Chronicles" as the keynote speaker. First one I attended and I didn't give a
+  talk or have a table.
+
 * [Tandy Assembly 2019 VBLANK Modification Exhibit](./ta19demo) &ndash; This
   directory contains the z80 assembly code for my Tandy Assembly 2019
   Raycaster.  I exhibited at Tandy Assembly 2019 with George Phillips the
   Model I no-chip VBLANK Modification. Includes a few pictures of the conference
   this was the year we were in the Museum across from the Courtyard.
+
+* Tandy Assembly had no event in 2020 due to covid.
 
 * [Tandy Assembly 2021 Modern z80 Assembly Programming](./ta21demo) &ndash;
   This directory contains the example source code from my Tandy Assembly 2021
@@ -47,3 +55,11 @@ I've been to every Tandy Assembly except the first one.
   This was fun meeting the creators of the Model 1 TRS-80. My exibit had an
   original Model 1 4K level 1 system and a hot rod Model 1 with tons of modifications
   that Steve Leininger enjoyed seeing. I did a tech talk on using a Logic Analyzer.
+
+* [Tandy Assembly 2025 CP/M on the TRS-80](./ta25demo) &ndash; I did a nice
+  table showing CP/M on various z80 TRS-80 machines and did a tech talk.
+
+* [Tandy Assembly 2026 Getting Started with Color Computer (6809) Assembly
+  Language](./ta26demo) &ndash; I did a table showing off assembly development
+  including a terminal connected to an OS-9 CoCo. This was an all CoCo year for
+  me.
