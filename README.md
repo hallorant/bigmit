@@ -59,6 +59,7 @@ I've been to every Tandy Assembly except the first one.
 
 * [Tandy Assembly 2025 CP/M on the TRS-80](./ta25demo) &ndash; I did a nice
   table showing CP/M on various z80 TRS-80 machines and did a tech talk.
+  A musical event that included a concert by DOWNPOLY. Was not one to miss.
 
 * [Tandy Assembly 2026 Getting Started with Color Computer (6809) Assembly
   Language](./ta26demo) &ndash; I did a table showing off assembly development
