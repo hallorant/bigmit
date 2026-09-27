@@ -37,6 +37,10 @@ To run SDS80 on trs80gp:
 ```
 trs80gp -mc SDS80C.ccc
 ```
+
+Due to the cassette auto-save delay, especially in EDTASM+,
+you might want to add ``-csd 50`` (which is 5 seconds).
+
 ## Using XRoar
 
 I installed XRoar with [Homebrew](https://brew.sh/) on my MacBook and it went

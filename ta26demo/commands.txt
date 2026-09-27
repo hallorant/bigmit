@@ -1,0 +1,7 @@
+lwasm hello.asm --format=decb --output=hello.bin
+decb dskini hello.dsk
+decb copy -2 -b hello.bin hello.dsk,HELLO.BIN
+
+lwasm hibasic.asm --format=decb --output=hibasic.bin
+decb dskini hibasic.dsk
+decb copy -2 -b hibasic.bin hibasic.dsk,HIBASIC.BIN
