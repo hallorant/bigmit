@@ -1,0 +1,8 @@
+# 1. Extract the 1024-byte XRoar Header
+dd if=68IDE.ide of=part1_header.bin bs=1 count=1024
+
+# 2. Extract the Floppy Boot Partition (630 sectors * 512 bytes = 322,560 bytes)
+dd if=68IDE.ide of=part2_boot.dsk bs=1 skip=1024 count=322560
+
+# 3. Extract the clean, raw EOU VHD image (Everything after the header + boot disk)
+dd if=68IDE.ide of=part3_stock.VHD bs=1 skip=323584

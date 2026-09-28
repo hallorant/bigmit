@@ -1,0 +1,1 @@
+cat part1_header.bin part2_boot.dsk part3_stock.VHD > 68IDE.ide

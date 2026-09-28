@@ -1,0 +1,22 @@
+---------------------------
+-- XRoar NitrOS-9 images --
+---------------------------
+https://github.com/n6il/eou_ide/releases
+
+lwasm -9l --format=os9 -ohios9 hios9.asm -lhios9.lst
+
+68IDE.IDE is further specialized:
+        Header: 1024 byte header required for XRoar. Not seen by the CoCo
+	First Partition: Sectors 0-629: Contains the 68IDE.dsk with padding
+           for 512-byte sectors.
+	Second Partition: Sector 630+: Contains the 68SDC.VHD image from
+           EOU verbatim without any modifications.
+The "split" script puts these into 3 parts (saved in ./disk directory).
+To put back use:
+  cat part1_header.bin part2_boot.dsk part3_stock.VHD > 68IDE.ide
+To run NitrOS-9 in XRoar use ./start-ide.sh
+
+os9 dir part3_stock.VHD,cmds
+os9 copy hios9 part3_stock.VHD,cmds/hios9
+os9 attr part3_stock.VHD,cmds/hios9
+os9 attr -e part3_stock.VHD,cmds/hios9
